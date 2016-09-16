@@ -41,12 +41,12 @@ $( document ).ready( function() {
 
     // click handlers to create/close fit windows
     $( document ).on( "click", fit_selector, function(e) {
-        e.preventDefault();
-
         // this handler does not handle clicks inside its own windows
         if ( $( this ).hasClass( "fit_window") ) {
             return;
         }
+
+        e.preventDefault();
 
         // hide window if it already exists
         if ( this.fit_window && document.contains( this.fit_window[0] ) ) {
@@ -208,7 +208,7 @@ function fit_overlay_show( dna, fit_name ) {
     html += '<span class="fit_scrollable"><span class="fit_content">';
 
     html += '<span style="background-image: url(https://image.eveonline.com/Type/' + ship_id + '_32.png)" class="fit_ship_icon" />';
-    html += '[' + fit_item_cache[ ship_id ].name + ', <a href="' + fit_urlify( dna ) + '">' + ( fit_name || fit_item_cache[ ship_id ].name ) + '</a>]';
+    html += '[' + fit_item_cache[ ship_id ].name + ', <a target="_blank" href="' + fit_urlify( dna ) + '">' + ( fit_name || fit_item_cache[ ship_id ].name ) + '</a>]';
 
     var empty_slots;
 
