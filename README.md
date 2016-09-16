@@ -1,6 +1,7 @@
 # eve-fit-display
 A nearly standalone (EVE Online) fit display script for inclusion in arbitrary websites.
 (Does require jQuery to be loaded before this script.)
+https://quiescens.github.io/eve-fit-display/examples.html to see it in action.
 
 With the impending removal of the in game browser, ship fittings will have to be viewable out of game (unless you plan to make all your visitors log in and send fits via CREST).
 
