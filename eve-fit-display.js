@@ -105,7 +105,6 @@ $( document ).ready( function() {
         fit_drag = null;
     });
     $( window ).on( "resize", function(e) {
-        console.log("moo");
         $( ".fit_window" ).each( function() {
             fit_window = $(this);
             if ( fit_window.height() > window.innerHeight - 50 ) {
