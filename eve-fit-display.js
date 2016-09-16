@@ -1,12 +1,24 @@
-
-
 // all related globals are prefixed with "fit_" to try to avoid collision
 
-// config stuff
+// config stuff ( can be overridden in a script block placed immediately after the script tag for this script )
 var fit_preload_initial = 50;
 var fit_preload_interval = 10;
 var fit_selector = "[href^=fitting],[data-dna]";
 function fit_urlify(dna) { return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); }
+var fit_style = `
+    <style>
+        .fit_window { font-family: sans-serif; line-height: 1; background: #eee; border: 1px solid; position:fixed; opacity: 0.95; min-width: 150px; min-height: 100px; }
+        .fit_window .fit_title { position: absolute; top: 0; left: 0; width: 100%; background: #ccc; cursor: move; }
+        .fit_window .close_button { position: absolute; top: 0; right: 5px; cursor: pointer; height: 1em; width: 1em; background-size: 1em 1em; background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8c3ZnIHdpZHRoPSIxMSIgaGVpZ2h0PSIxMSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBvcGFjaXR5PSIuNjU5Ij4KPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjExIiBoZWlnaHQ9IjExIiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSJub25lIiAvPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiM1NTU1NTUiIHN0cm9rZS13aWR0aD0iMSIgZD0iTTAuNSwwLjUgaDEwIHYxMCBILjUgeiBNLjUsLjUgbDEwLDEwIE0xMC41LC41IEwuNSwxMC41IiAvPgo8L2c+Cjwvc3ZnPg==); }
+        .fit_window .fit_scrollable { padding-right: 17px; text-align: left; overflow: auto; display: inline-block; max-width: 100%; max-height: 100%; }
+        .fit_window .fit_content { display: table; margin-top: 15px; padding: 5px; white-space: nowrap; }
+        .fit_window .fit_item_icon { display: inline-block; vertical-align: middle; margin: 1px 2px; background-size: 20px 20px; height: 20px; width: 20px; }
+        .fit_window .fit_ship_icon { display: inline-block; vertical-align: middle; margin: 1px 2px; background-size: 32px 32px; height: 32px; width: 32px; }
+        .fit_window .fit_info_icon { display: inline-block; margin: 0 2px; height: 1em; width: 1em; float:right; background-size: 1em 1em; background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxNi4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DQo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB3aWR0aD0iNTEycHgiIGhlaWdodD0iNTEycHgiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA1MTIgNTEyOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8Zz4NCgk8Zz4NCgkJPGNpcmNsZSBjeD0iMjUxLjUiIGN5PSIxNzIiIHI9IjIwIi8+DQoJCTxwb2x5Z29uIHBvaW50cz0iMjcyLDM0NCAyNzIsMjE2IDIyNCwyMTYgMjI0LDIyNCAyNDAsMjI0IDI0MCwzNDQgMjI0LDM0NCAyMjQsMzUyIDI4OCwzNTIgMjg4LDM0NCAJCSIvPg0KCTwvZz4NCgk8Zz4NCgkJPHBhdGggZD0iTTI1Niw0OEMxNDEuMSw0OCw0OCwxNDEuMSw0OCwyNTZjMCwxMTQuOSw5My4xLDIwOCwyMDgsMjA4YzExNC45LDAsMjA4LTkzLjEsMjA4LTIwOEM0NjQsMTQxLjEsMzcwLjksNDgsMjU2LDQ4eg0KCQkJIE0yNTYsNDQ2LjdjLTEwNS4xLDAtMTkwLjctODUuNS0xOTAuNy0xOTAuN2MwLTEwNS4xLDg1LjUtMTkwLjcsMTkwLjctMTkwLjdjMTA1LjEsMCwxOTAuNyw4NS41LDE5MC43LDE5MC43DQoJCQlDNDQ2LjcsMzYxLjEsMzYxLjEsNDQ2LjcsMjU2LDQ0Ni43eiIvPg0KCTwvZz4NCjwvZz4NCjwvc3ZnPg0K); }
+        .fit_window .copy_only { position: absolute; display:inline-block; line-height: 0; font-size: 0; }
+        .fit_window .nocopy::after { content: attr(data-content); }
+    </style>
+    `;
 
 // variables
 var fit_x = 0;
@@ -25,20 +37,7 @@ $( document ).ready( function() {
     fit_mark( "document ready start" );
 
     // insert required DOM elements / styles
-    var style = $("<style></style>");
-    $( "head" ).append( style );
-    var sheet = style[0].sheet;
-    var height_rule = 
-    sheet.insertRule(".fit_window { font-family: sans-serif; line-height: 1; background: #eee; border: 1px solid; position:fixed; opacity: 0.95; min-width: 150px; min-height: 100px; }", 0);
-    sheet.insertRule(".fit_window .fit_title { position: absolute; top: 0; left: 0; width: 100%; background: #ccc; cursor: move; }", 0);
-    sheet.insertRule(".fit_window .close_button { position: absolute; top: 0; right: 5px; cursor: pointer; }", 0);
-    sheet.insertRule(".fit_window .fit_scrollable { padding-right: 17px; text-align: left; overflow: auto; display: inline-block; max-width: 100%; max-height: 100%; }", 0);
-    sheet.insertRule(".fit_window .fit_content { display: table; margin-top: 15px; padding: 5px; white-space: nowrap; }", 0);
-    sheet.insertRule(".fit_window .fit_item_icon { display: inline-block; vertical-align: middle; margin: 1px 2px; background-size: 20px 20px; height: 20px; width: 20px; }", 0);
-    sheet.insertRule(".fit_window .fit_ship_icon { display: inline-block; vertical-align: middle; margin: 1px 2px; background-size: 32px 32px; height: 32px; width: 32px; }", 0);
-    sheet.insertRule(".fit_window .fit_info_icon { margin: 0 2px; height: 1em; width: 1em; float:right; }", 0);
-    sheet.insertRule(".fit_window .copy_only { position: absolute; display:inline-block; line-height: 0; font-size: 0; }", 0);
-    sheet.insertRule(".fit_window .nocopy::after { content: attr(data-content); }", 0);
+    $( "head" ).append( fit_style );
 
     // click handlers to create/close fit windows
     $( document ).on( "click", fit_selector, function(e) {
@@ -59,7 +58,7 @@ $( document ).ready( function() {
         var fit_name = $(this).text();
 
         // create loading placeholder
-        fit_window = $( '<span class="fit_window" data-dna="'+ dna +'"><div class="fit_title">&nbsp;</div><span class="close_button">X</span><span class="fit_content">Loading...</span></span>' );
+        fit_window = $( '<span class="fit_window" data-dna="'+ dna +'"><div class="fit_title">&nbsp;</div><span class="close_button"></span><span class="fit_content">Loading...</span></span>' );
         this.fit_window = fit_window;
         fit_window.css( "z-index", fit_zindex++ );
         fit_window.css( "left", fit_x + 10 );
@@ -191,7 +190,7 @@ function fit_overlay_show( dna, fit_name ) {
         var total_slots = 0;
         for ( var item_id in slots ) {
             total_slots += slots[ item_id ];
-            html += '<a target="_blank" href="https://o.smium.org/db/type/' + item_id + '"><img class="fit_info_icon" src="data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%0A%09xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%0A%09viewBox%3D%220%200%2062%2062%22%0A%09width%3D%22620%22%20height%3D%22620%22%0A%09version%3D%221.0%22%3E%0A%09%3Cdefs%3E%0A%09%09%3ClinearGradient%20id%3D%22fieldGradient%22%0A%09%09%09gradientUnits%3D%22userSpaceOnUse%22%0A%09%09%09x1%3D%2242.9863%22%20y1%3D%227.01270%22%0A%09%09%09x2%3D%2222.0144%22%20y2%3D%2251.9871%22%3E%0A%09%09%09%3Cstop%20offset%3D%220.0%22%20stop-color%3D%22%23BCD6FE%22%20%2F%3E%0A%09%09%09%3Cstop%20offset%3D%221.0%22%20stop-color%3D%22%236787D3%22%20%2F%3E%0A%09%09%3C%2FlinearGradient%3E%0A%09%09%3ClinearGradient%20id%3D%22edgeGradient%22%0A%09%09%09gradientUnits%3D%22userSpaceOnUse%22%0A%09%09%09x1%3D%2255.4541%22%20y1%3D%2242.7529%22%0A%09%09%09x2%3D%229.54710%22%20y2%3D%2216.2485%22%3E%0A%09%09%09%3Cstop%20offset%3D%220.0%22%20stop-color%3D%22%233057A7%22%20%2F%3E%0A%09%09%09%3Cstop%20offset%3D%221.0%22%20stop-color%3D%22%235A7AC6%22%20%2F%3E%0A%09%09%3C%2FlinearGradient%3E%0A%09%09%3CradialGradient%20id%3D%22shadowGradient%22%3E%0A%09%09%09%3Cstop%20offset%3D%220.0%22%20stop-color%3D%22%23C0C0C0%22%20%2F%3E%0A%09%09%09%3Cstop%20offset%3D%220.88%22%20stop-color%3D%22%23C0C0C0%22%20%2F%3E%0A%09%09%09%3Cstop%20offset%3D%221.0%22%20stop-color%3D%22%23C0C0C0%22%20stop-opacity%3D%220.0%22%20%2F%3E%0A%09%09%3C%2FradialGradient%3E%0A%09%3C%2Fdefs%3E%0A%09%3Ccircle%20id%3D%22shadow%22%20r%3D%2226.5%22%20cy%3D%2229.5%22%20cx%3D%2232.5%22%0A%09%09fill%3D%22url%28%23shadowGradient%29%22%0A%09%09transform%3D%22matrix%281.0648%2C0.0%2C0.0%2C1.064822%2C-2.1%2C1.0864%29%22%20%2F%3E%0A%09%3Ccircle%20id%3D%22field%22%20r%3D%2225.8%22%20cx%3D%2231%22%20cy%3D%2231%22%0A%09%09fill%3D%22url%28%23fieldGradient%29%22%20stroke%3D%22url%28%23edgeGradient%29%22%20stroke-width%3D%222%22%20%2F%3E%0A%09%3Cg%20id%3D%22info%22%20fill%3D%22white%22%3E%0A%09%09%3Cpolygon%20points%3D%2223%2C25%2035%2C25%2035%2C44%2039%2C44%2039%2C48%2023%2C48%2023%2C44%2027%2C44%2027%2C28%2023%2C28%2023%2C25%22%20%2F%3E%0A%09%09%3Ccircle%20r%3D%224%22%20cx%3D%2231%22%20cy%3D%2217%22%20%2F%3E%0A%09%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A" /></a>';
+            html += '<a target="_blank" href="https://o.smium.org/db/type/' + item_id + '"><span class="fit_info_icon" /></a>';
             html += '<span style="background-image: url(https://image.eveonline.com/Type/' + item_id + '_32.png)" class="fit_item_icon" />';
             if ( expand ) {
                 html += '<span class="copy_only">' + ( fit_item_cache[ item_id ].name + '<br />').repeat(slots[ item_id ] - 1) + "</span>";
@@ -206,7 +205,7 @@ function fit_overlay_show( dna, fit_name ) {
 
     var html = '';
     html += '<div class="fit_title">&nbsp;</div>';
-    html += '<span class="close_button">X</span>';
+    html += '<span class="close_button"></span>';
     html += '<span class="fit_scrollable"><span class="fit_content">';
 
     html += '<span style="background-image: url(https://image.eveonline.com/Type/' + ship_id + '_32.png)" class="fit_ship_icon" />';
