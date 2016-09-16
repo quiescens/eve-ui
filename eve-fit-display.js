@@ -6,6 +6,7 @@
 var fit_preload_initial = 50;
 var fit_preload_interval = 10;
 var fit_selector = "[href^=fitting],[data-dna]";
+function fit_urlify(dna) { return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); }
 
 // variables
 var fit_x = 0;
@@ -209,7 +210,7 @@ function fit_overlay_show( dna, fit_name ) {
     html += '<span class="fit_scrollable"><span class="fit_content">';
 
     html += '<span style="background-image: url(https://image.eveonline.com/Type/' + ship_id + '_32.png)" class="fit_ship_icon" />';
-    html += '[' + fit_item_cache[ ship_id ].name + ', <a href="fitting:' + dna + '">' + ( fit_name || fit_item_cache[ ship_id ].name ) + '</a>]';
+    html += '[' + fit_item_cache[ ship_id ].name + ', <a href="' + fit_urlify( dna ) + '">' + ( fit_name || fit_item_cache[ ship_id ].name ) + '</a>]';
 
     var empty_slots;
 
