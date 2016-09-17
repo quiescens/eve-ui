@@ -28,8 +28,8 @@ var eveui_drag_x = 0;
 var eveui_drag_y = 0;
 var eveui_zindex = 100;
 var eveui_preload_timer;
-var eveui_dna_preload = eveui_preload_initial;
-var eveui_dna_cache = {};
+var eveui_fit_preload = eveui_preload_initial;
+var eveui_fit_cache = {};
 var eveui_item_cache = {};
 
 $( document ).ready( function() {
@@ -72,7 +72,7 @@ $( document ).ready( function() {
             eveui_overlay_show( dna, eveui_name );
             eveui_mark( "fit window populated" );
         }).fail( function() {
-            delete eveui_dna_cache[ dna ];
+            delete eveui_fit_cache[ dna ];
         });
     });
 
@@ -264,17 +264,17 @@ function eveui_overlay_hide() {
 function eveui_lazy_preload() {
     // preload timer function
     var action_taken = false;
-    if ( eveui_dna_preload > 0 ) {
+    if ( eveui_fit_preload > 0 ) {
         $( eveui_selector ).each( function( i ) {
             var dna = $(this).data("dna") || this.href.substring(8);
 
             // skip if already pending or cached
-            if ( eveui_dna_cache.hasOwnProperty( dna ) ) {
+            if ( eveui_fit_cache.hasOwnProperty( dna ) ) {
                 return;
             }
             action_taken = true;
 
-            eveui_dna_preload--;
+            eveui_fit_preload--;
             eveui_cache_items( dna ).always( function() {
                 clearTimeout( eveui_preload_timer );
                 eveui_preload_timer = setTimeout( eveui_lazy_preload, eveui_preload_interval );
@@ -291,8 +291,8 @@ function eveui_lazy_preload() {
 
 function eveui_cache_items( dna ) {
     // caches all items required to process the specified fit
-    if( typeof ( eveui_dna_cache[ dna ] ) === "object" ) {
-        return eveui_dna_cache[ dna ];
+    if( typeof ( eveui_fit_cache[ dna ] ) === "object" ) {
+        return eveui_fit_cache[ dna ];
     }
 
     var pending = [];
@@ -324,7 +324,7 @@ function eveui_cache_items( dna ) {
             })
         );
     }
-    return eveui_dna_cache[ dna ] = $.when.apply( null, pending );
+    return eveui_fit_cache[ dna ] = $.when.apply( null, pending );
 }
 
 
