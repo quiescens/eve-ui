@@ -68,7 +68,7 @@ $( document ).ready( function() {
         eveui_window.css( "z-index", eveui_zindex++ );
         eveui_window.css( "left", eveui_x + 10 );
         eveui_window.css( "top", eveui_y - 10 );
-        eveui_window.insertAfter( this );
+        eveui_window.appendTo( "body" );
         
         eveui_mark( "fit window created" );
 
@@ -103,7 +103,7 @@ $( document ).ready( function() {
         eveui_window.css( "z-index", eveui_zindex++ );
         eveui_window.css( "left", eveui_x + 10 );
         eveui_window.css( "top", eveui_y - 10 );
-        eveui_window.insertAfter( this );
+        eveui_window.appendTo( "body" );
 
         eveui_mark( "item window created" );
 
@@ -162,6 +162,9 @@ $( document ).ready( function() {
             }
             if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
                 eveui_window.css( "top", window.innerHeight - eveui_window.height() - 25 );
+            }
+            if ( eveui_window[0].getBoundingClientRect().right > window.innerWidth ) {
+                eveui_window.css( "left", window.innerWidth - eveui_window.width() - 25 );
             }
         });
     });
