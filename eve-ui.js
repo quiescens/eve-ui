@@ -277,35 +277,35 @@ function eveui_fit_show( dna, eveui_name ) {
 
     var empty_slots;
 
-    function slot_thingy( slot_discrepancy ) {
-        if ( slot_discrepancy > 0 ) {
+    function slot_discrepancy( slot_count ) {
+        if ( slot_count > 0 ) {
             return '<tr><td><span class="eveui_item_icon" /><span class="nocopy" data-content="Empty x' + empty_slots + '"></span><br />';
         }
-        if ( slot_discrepancy < 0 ) {
+        if ( slot_count < 0 ) {
             return '<tr><td><span class="eveui_item_icon" /><span class="nocopy" data-content="Excess x' + empty_slots + '"></span><br />';
         }
     }
     empty_slots = ship.hiSlots - item_rows( high_slots );
     if ( empty_slots ) {
-        html += slot_thingy( empty_slots );
+        html += slot_discrepancy( empty_slots );
     }
 
     html += '<tr /><th>&nbsp;';
     empty_slots = ship.medSlots - item_rows( med_slots );
     if ( empty_slots ) {
-        html += slot_thingy( empty_slots );
+        html += slot_discrepancy( empty_slots );
     }
 
     html += '<tr /><th>&nbsp;';
     empty_slots = ship.lowSlots - item_rows( low_slots );
     if ( empty_slots ) {
-        html += slot_thingy( empty_slots );
+        html += slot_discrepancy( empty_slots );
     }
 
     html += '<tr /><th>&nbsp;';
     empty_slots = ship.rigSlots - item_rows( rig_slots );
     if ( empty_slots ) {
-        html += slot_thingy( empty_slots );
+        html += slot_discrepancy( empty_slots );
     }
 
     html += '<tr /><th>&nbsp;';
