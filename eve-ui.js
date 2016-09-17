@@ -122,10 +122,10 @@ $( document ).ready( function() {
             eveui_window.find(".eveui_title").html(item.name);
 
             if ( eveui_window.height() > window.innerHeight - 50 ) {
-                eveui_window.css("height", window.innerHeight - 50 + 'px');
+                eveui_window.css( "height", window.innerHeight - 50 );
             }
             if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
-                eveui_window.css("top", window.innerHeight - eveui_window.height() - 25 );
+                eveui_window.css( "top", window.innerHeight - eveui_window.height() - 25 );
             }
 
             eveui_mark( "item window populated" );
@@ -161,10 +161,11 @@ $( document ).ready( function() {
     $( window ).on( "resize", function(e) {
         $( ".eveui_window" ).each( function() {
             eveui_window = $(this);
+            eveui_window.css( "height", "" );
             if ( eveui_window.height() > window.innerHeight - 50 ) {
-                eveui_window.css("height", window.innerHeight - 50 + 'px');
+                eveui_window.css( "height", window.innerHeight - 50 );
             } else {
-                eveui_window.css("height", "");
+                eveui_window.css( "height", "" );
             }
         });
     });
@@ -300,10 +301,10 @@ function eveui_fit_show( dna, eveui_name ) {
     eveui_window.html( html );
 
     if ( eveui_window.height() > window.innerHeight - 50 ) {
-        eveui_window.css("height", window.innerHeight - 50 + 'px');
+        eveui_window.css( "height", window.innerHeight - 50 );
     }
     if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
-        eveui_window.css("top", window.innerHeight - eveui_window.height() - 25 );
+        eveui_window.css( "top", window.innerHeight - eveui_window.height() - 25 );
     }
 }
 
