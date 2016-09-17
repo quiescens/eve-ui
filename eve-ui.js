@@ -121,12 +121,7 @@ $( document ).ready( function() {
             eveui_window.find(".eveui_content").html(html);
             eveui_window.find(".eveui_title").html(item.name);
 
-            if ( eveui_window.height() > window.innerHeight - 50 ) {
-                eveui_window.css( "height", window.innerHeight - 50 );
-            }
-            if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
-                eveui_window.css( "top", window.innerHeight - eveui_window.height() - 25 );
-            }
+            $( window ).trigger( "resize" );
 
             eveui_mark( "item window populated" );
         }).fail( function() {
@@ -164,8 +159,9 @@ $( document ).ready( function() {
             eveui_window.css( "height", "" );
             if ( eveui_window.height() > window.innerHeight - 50 ) {
                 eveui_window.css( "height", window.innerHeight - 50 );
-            } else {
-                eveui_window.css( "height", "" );
+            }
+            if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
+                eveui_window.css( "top", window.innerHeight - eveui_window.height() - 25 );
             }
         });
     });
@@ -300,12 +296,7 @@ function eveui_fit_show( dna, eveui_name ) {
     var eveui_window = $( '.eveui_window[data-dna="' + dna + '"]' );
     eveui_window.html( html );
 
-    if ( eveui_window.height() > window.innerHeight - 50 ) {
-        eveui_window.css( "height", window.innerHeight - 50 );
-    }
-    if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
-        eveui_window.css( "top", window.innerHeight - eveui_window.height() - 25 );
-    }
+    $( window ).trigger( "resize" );
 }
 
 function eveui_lazy_preload() {
