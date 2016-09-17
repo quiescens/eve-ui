@@ -207,6 +207,7 @@ function fit_overlay_show( dna, fit_name ) {
     html += '<span class="close_button"></span>';
     html += '<span class="fit_scrollable"><span class="fit_content">';
 
+    html += '<a target="_blank" href="https://o.smium.org/db/type/' + ship_id + '"><span class="fit_info_icon" /></a>';
     html += '<span style="background-image: url(https://image.eveonline.com/Type/' + ship_id + '_32.png)" class="fit_ship_icon" />';
     html += '[' + fit_item_cache[ ship_id ].name + ', <a target="_blank" href="' + fit_urlify( dna ) + '">' + ( fit_name || fit_item_cache[ ship_id ].name ) + '</a>]';
 

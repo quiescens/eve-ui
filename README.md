@@ -1,7 +1,10 @@
-# eve-fit-display
+# eve-ui
 A nearly standalone (EVE Online) fit display script for inclusion in arbitrary websites.
-(Does require jQuery to be loaded before this script.)
-https://quiescens.github.io/eve-fit-display/examples.html to see it in action.
+
+Does require jQuery to be loaded before this script.
+Does not require any particular server side infrastructure on your part, pulls item info from CCP's own CREST which should (theoretically) always be up to date.
+
+https://quiescens.github.io/eve-ui/examples.html to see it in action.
 
 With the impending removal of the in game browser, ship fittings will have to be viewable out of game (unless you plan to make all your visitors log in and send fits via CREST).
 
@@ -12,6 +15,6 @@ At present, the script will work with almost any element that has a data-dna att
 * \<div data-dna="fitting:670::">Pod\</div>
 * \<a href="fitting:670::">Pod\</a>
 
-Getting the DNA string for a fit is left as an exercise for the reader, Pyfa and https://o.smium.org/ are both capable of exporting DNA strings, copying ingame text from a notepad or chat will also work.
+Getting the DNA string for a fit is left as an exercise for the reader, Pyfa and https://o.smium.org/ are both capable of importing various formats and exporting DNA strings, copying ingame text from a notepad or chat will also work.
 
 The data-dna format is more flexible, but the href format can be useful for supporting forums where users might only be allowed to post URLs, or where you already have links to fits and only need to change the href.
