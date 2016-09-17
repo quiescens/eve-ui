@@ -73,7 +73,7 @@ $( document ).ready( function() {
         eveui_mark( "fit window created" );
 
         // load required items and set callback to display
-        eveui_cache_items( dna ).done( function() {
+        eveui_cache_fit( dna ).done( function() {
             eveui_fit_show( dna, eveui_name );
             eveui_mark( "fit window populated" );
         }).fail( function() {
@@ -108,7 +108,7 @@ $( document ).ready( function() {
         eveui_mark( "item window created" );
 
         // load required items and set callback to display
-        eveui_cache_items( item_id ).done( function() {
+        eveui_cache_fit( item_id ).done( function() {
             var html = "";
             var item = eveui_item_cache[ item_id ];
             for ( var i in item.dogma.attributes ) {
@@ -321,7 +321,7 @@ function eveui_lazy_preload() {
             action_taken = true;
 
             eveui_fit_preload--;
-            eveui_cache_items( dna ).always( function() {
+            eveui_cache_fit( dna ).always( function() {
                 clearTimeout( eveui_preload_timer );
                 eveui_preload_timer = setTimeout( eveui_lazy_preload, eveui_preload_interval );
             });
@@ -335,7 +335,7 @@ function eveui_lazy_preload() {
     }
 }
 
-function eveui_cache_items( dna ) {
+function eveui_cache_fit( dna ) {
     // caches all items required to process the specified fit
     if( typeof ( eveui_fit_cache[ dna ] ) === "object" ) {
         return eveui_fit_cache[ dna ];
@@ -359,6 +359,7 @@ function eveui_cache_items( dna ) {
 
 function eveui_cache_item( item_id ) {
     if ( eveui_item_cache.hasOwnProperty( item_id ) ) {
+        // if item is already cached, we can return a resolved promise
         return $.when(true);
     }
 
