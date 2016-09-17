@@ -3,7 +3,8 @@
 // config stuff ( can be overridden in a script block placed immediately after the script tag for this script )
 var eveui_preload_initial = 50;
 var eveui_preload_interval = 10;
-var eveui_selector = "[href^=fitting],[data-dna]";
+var eveui_fit_selector = "[href^=fitting],[data-dna]";
+var eveui_item_selector = "[href^=item],[data-itemid]";
 function eveui_urlify(dna) { return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); }
 var eveui_style = `
     <style>
@@ -39,8 +40,12 @@ $( document ).ready( function() {
     // insert required DOM elements / styles
     $( "head" ).append( eveui_style );
 
-    // click handlers to create/close fit windows
-    $( document ).on( "click", eveui_selector, function(e) {
+    // click handlers to create/close windows
+    $( document ).on( "click", ".eveui_window .close_button", function(e) {
+        $(this).parent().remove();
+    });
+
+    $( document ).on( "click", eveui_fit_selector, function(e) {
         // this handler does not handle clicks inside its own windows
         if ( $( this ).hasClass( "eveui_window") ) {
             return;
@@ -54,7 +59,7 @@ $( document ).ready( function() {
             return;
         }
 
-        var dna = $(this).data("dna") || this.href.substring(8);
+        var dna = $(this).data("dna") || this.href.substring(this.href.indexOf(":") + 1);
         var eveui_name = $(this).text();
 
         // create loading placeholder
@@ -69,15 +74,64 @@ $( document ).ready( function() {
 
         // load required items and set callback to display
         eveui_cache_items( dna ).done( function() {
-            eveui_overlay_show( dna, eveui_name );
+            eveui_fit_show( dna, eveui_name );
             eveui_mark( "fit window populated" );
         }).fail( function() {
             delete eveui_fit_cache[ dna ];
         });
     });
 
-    $( document ).on( "click", ".close_button", function(e) {
-        $(this).parent().remove();
+    $( document ).on( "click", eveui_item_selector, function(e) {
+        // this handler does not handle clicks inside its own windows
+        if ( $( this ).hasClass( "eveui_window") ) {
+            return;
+        }
+
+        e.preventDefault();
+
+        // hide window if it already exists
+        if ( this.eveui_window && document.contains( this.eveui_window[0] ) ) {
+            this.eveui_window.remove();
+            return;
+        }
+
+        var item_id = $(this).data("itemid") || this.href.substring(this.href.indexOf(":") + 1);
+
+        // create loading placeholder
+        eveui_window = $( '<span class="eveui_window" data-itemid="'+ item_id +'"><div class="eveui_title">&nbsp;</div><span class="close_button"></span><span class="eveui_scrollable"><span class="eveui_content">Loading...</span></span></span>' );
+        this.eveui_window = eveui_window;
+        eveui_window.css( "z-index", eveui_zindex++ );
+        eveui_window.css( "left", eveui_x + 10 );
+        eveui_window.css( "top", eveui_y - 10 );
+        eveui_window.insertAfter( this );
+
+        eveui_mark( "item window created" );
+
+        // load required items and set callback to display
+        eveui_cache_items( item_id ).done( function() {
+            var html = "";
+            var item = eveui_item_cache[ item_id ];
+            for ( var i in item.dogma.attributes ) {
+                var attr = item.dogma.attributes[i];
+                html += '<tr>';
+                html += '<td>' + attr.attribute.name;
+                html += '<td>' + attr.value;
+            }
+
+            eveui_window.find(".eveui_content").html(html);
+            eveui_window.find(".eveui_title").html(item.name);
+
+            if ( eveui_window.height() > window.innerHeight - 50 ) {
+                eveui_window.css("height", window.innerHeight - 50 + 'px');
+            }
+            if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
+                eveui_window.css("top", window.innerHeight - eveui_window.height() - 25 );
+            }
+
+            eveui_mark( "item window populated" );
+        }).fail( function() {
+            eveui_window.remove();
+        });
     });
 
     // custom window drag handlers
@@ -128,7 +182,7 @@ function eveui_mark( mark ) {
     }
 }
 
-function eveui_overlay_show( dna, eveui_name ) {
+function eveui_fit_show( dna, eveui_name ) {
     // generates and displays a fit
     var high_slots = {};
     var med_slots = {};
@@ -189,7 +243,7 @@ function eveui_overlay_show( dna, eveui_name ) {
         var total_slots = 0;
         for ( var item_id in slots ) {
             total_slots += slots[ item_id ];
-            html += '<a target="_blank" href="https://o.smium.org/db/type/' + item_id + '"><span class="eveui_info_icon" /></a>';
+            html += '<a href="item:' + item_id + '"><span class="eveui_info_icon" /></a>';
             html += '<span style="background-image: url(https://image.eveonline.com/Type/' + item_id + '_32.png)" class="eveui_item_icon" />';
             if ( expand ) {
                 html += '<span class="copy_only">' + ( eveui_item_cache[ item_id ].name + '<br />').repeat(slots[ item_id ] - 1) + "</span>";
@@ -207,7 +261,7 @@ function eveui_overlay_show( dna, eveui_name ) {
     html += '<span class="close_button"></span>';
     html += '<span class="eveui_scrollable"><span class="eveui_content">';
 
-    html += '<a target="_blank" href="https://o.smium.org/db/type/' + ship_id + '"><span class="eveui_info_icon" /></a>';
+    html += '<a target="_blank" href="item:' + ship_id + '"><span class="eveui_info_icon" /></a>';
     html += '<span style="background-image: url(https://image.eveonline.com/Type/' + ship_id + '_32.png)" class="eveui_ship_icon" />';
     html += '[' + eveui_item_cache[ ship_id ].name + ', <a target="_blank" href="' + eveui_urlify( dna ) + '">' + ( eveui_name || eveui_item_cache[ ship_id ].name ) + '</a>]';
 
@@ -253,19 +307,11 @@ function eveui_overlay_show( dna, eveui_name ) {
     }
 }
 
-function eveui_overlay_hide() {
-    // hides the fit overlay
-    $( 'body' ).css( "overflow", "" );
-    $( 'body' ).css( "margin-right", "" );
-    $( '#eveui_overlay' ).hide();
-    $( '#eveui_overlay_bg' ).hide();
-}
-
 function eveui_lazy_preload() {
     // preload timer function
     var action_taken = false;
     if ( eveui_fit_preload > 0 ) {
-        $( eveui_selector ).each( function( i ) {
+        $( eveui_fit_selector ).each( function( i ) {
             var dna = $(this).data("dna") || this.href.substring(8);
 
             // skip if already pending or cached
@@ -306,25 +352,27 @@ function eveui_cache_items( dna ) {
             continue;
         }
         
-        if ( eveui_item_cache.hasOwnProperty( item_id ) ) {
-            continue;
-        }
-        eveui_item_cache[ item_id ] = -1;
-
-        pending.push(
-            $.ajax( {
-                item_id: item_id,
-                url: 'https://crest-tq.eveonline.com/inventory/types/' + item_id +'/',
-                dataType: "json",
-                cache: true,
-            }).done( function(data) {
-                eveui_item_cache[ this.item_id ] = data;
-            }).fail( function() {
-                delete eveui_item_cache[ this.item_id ];
-            })
-        );
+        pending.push( eveui_cache_item( item_id ) );
     }
     return eveui_fit_cache[ dna ] = $.when.apply( null, pending );
+}
+
+function eveui_cache_item( item_id ) {
+    if ( eveui_item_cache.hasOwnProperty( item_id ) ) {
+        return $.when(true);
+    }
+
+    eveui_item_cache[ item_id ] = -1;
+    return $.ajax( {
+        item_id: item_id,
+        url: 'https://crest-tq.eveonline.com/inventory/types/' + item_id +'/',
+        dataType: "json",
+        cache: true,
+    }).done( function(data) {
+        eveui_item_cache[ this.item_id ] = data;
+    }).fail( function() {
+        delete eveui_item_cache[ this.item_id ];
+    });
 }
 
 
