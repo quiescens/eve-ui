@@ -15,7 +15,6 @@ var eveui_style = `
         .eveui_window td { padding: 0; }
         .eveui_window th { line-height: 0.5; }
         .eveui_window .eveui_title { position: absolute; top: 0; left: 0; width: 100%; background: #ccc; cursor: move; }
-        .eveui_window .close_button { position: absolute; top: 0; right: 5px; cursor: pointer; height: 1em; width: 1em; background-size: 1em 1em; background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHg9IjciIHk9Ii0xIiB0cmFuc2Zvcm09Im1hdHJpeCgwLjcwNzEgLTAuNzA3MSAwLjcwNzEgMC43MDcxIC0zLjMxMzUgNy45OTk1KSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+CjxyZWN0IHg9IjciIHk9Ii0wLjk5OSIgdHJhbnNmb3JtPSJtYXRyaXgoLTAuNzA3MSAtMC43MDcxIDAuNzA3MSAtMC43MDcxIDcuOTk4OCAxOS4zMTQyKSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+PC9zdmc+Cg==); }
         .eveui_window .eveui_scrollable { padding-right: 17px; text-align: left; overflow: auto; display: inline-block; max-width: 100%; max-height: 100%; }
         .eveui_window .eveui_content { display: table; margin-top: 15px; padding: 5px; white-space: nowrap; }
         .eveui_window .eveui_item_icon { display: inline-block; vertical-align: middle; margin: 1px 2px; background-size: 20px 20px; height: 20px; width: 20px; }
@@ -24,6 +23,8 @@ var eveui_style = `
         .eveui_window .eveui_plus_icon { display: inline-block; margin: 0 1px; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI2NDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTM4NCA0NDhWMTkySDI1NnYyNTZIMHYxMjhoMjU2djI1NmgxMjhWNTc2aDI1NlY0NDhIMzg0eiIgLz4KPC9zdmc+Cg==); }
         .eveui_window .eveui_minus_icon { display: inline-block; margin: 0 1px; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNDQ4djEyOGg1MTJWNDQ4SDB6IiAvPgo8L3N2Zz4K); }
         .eveui_window .eveui_more_icon { display: inline-block; margin: 0 1px; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI3NjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNTc2aDEyOHYtMTI4aC0xMjh2MTI4eiBtMC0yNTZoMTI4di0xMjhoLTEyOHYxMjh6IG0wIDUxMmgxMjh2LTEyOGgtMTI4djEyOHogbTI1Ni0yNTZoNTEydi0xMjhoLTUxMnYxMjh6IG0wLTI1Nmg1MTJ2LTEyOGgtNTEydjEyOHogbTAgNTEyaDUxMnYtMTI4aC01MTJ2MTI4eiIgLz4KPC9zdmc+Cg==); }
+        .eveui_window .eveui_edit_icon { display: inline-block; margin: 0 1px; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTcwNCA2NEw1NzYgMTkybDE5MiAxOTIgMTI4LTEyOEw3MDQgNjR6TTAgNzY4bDAuNjg4IDE5Mi41NjJMMTkyIDk2MGw1MTItNTEyTDUxMiAyNTYgMCA3Njh6TTE5MiA4OTZINjRWNzY4aDY0djY0aDY0Vjg5NnoiIC8+Cjwvc3ZnPgo=); }
+        .eveui_window .close_button { position: absolute; top: 0; right: 5px; cursor: pointer; height: 1em; width: 1em; background-size: 1em 1em; background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHg9IjciIHk9Ii0xIiB0cmFuc2Zvcm09Im1hdHJpeCgwLjcwNzEgLTAuNzA3MSAwLjcwNzEgMC43MDcxIC0zLjMxMzUgNy45OTk1KSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+CjxyZWN0IHg9IjciIHk9Ii0wLjk5OSIgdHJhbnNmb3JtPSJtYXRyaXgoLTAuNzA3MSAtMC43MDcxIDAuNzA3MSAtMC43MDcxIDcuOTk4OCAxOS4zMTQyKSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+PC9zdmc+Cg==); }
         .eveui_window .copy_only { position: absolute; display:inline-block; line-height: 0; font-size: 0; }
         .eveui_window .nocopy::after { content: attr(data-content); }
     </style>
@@ -215,7 +216,7 @@ $( document ).ready( function() {
 });
 
 function eveui_newwindow() {
-    var eveui_window = $( '<span class="eveui_window" style="position: fixed"><div class="eveui_title">&nbsp;</div><span class="close_button"></span><span class="eveui_content">Loading...</span></span>' );
+    var eveui_window = $( '<span class="eveui_window" style="position: fixed"><div class="eveui_title">&nbsp;</div><span class="close_button"></span><span class="eveui_scrollable"><span class="eveui_content">Loading...</span></span></span>' );
     eveui_window.css( "z-index", eveui_zindex++ );
     eveui_window.css( "left", eveui_x + 10 );
     eveui_window.css( "top", eveui_y - 10 );
@@ -291,7 +292,7 @@ function eveui_fit_show( dna, eveui_name ) {
         for ( var item_id in slots ) {
             total_slots += slots[ item_id ];
             html += '<tr data-eveui-itemid=' + item_id + '>';
-            html += '<td><span style="background-image: url(https://image.eveonline.com/Type/' + item_id + '_32.png)" class="eveui_item_icon" />';
+            html += '<td><span style="background-image: url(https://imageserver.eveonline.com/Type/' + item_id + '_32.png)" class="eveui_item_icon" />';
             if ( expand ) {
                 html += '<span class="copy_only">' + ( eveui_item_cache[ item_id ].name + '<br />').repeat(slots[ item_id ] - 1) + "</span>";
                 html += eveui_item_cache[ item_id ].name + '<span class="nocopy" data-content=" x' + slots[ item_id ] + '"></span>';
@@ -311,7 +312,7 @@ function eveui_fit_show( dna, eveui_name ) {
     var html = '';
     html += '<table>';
     html += '<tr data-eveui-itemid=' + ship_id + '>';
-    html += '<td><span style="background-image: url(https://image.eveonline.com/Type/' + ship_id + '_32.png)" class="eveui_ship_icon" />';
+    html += '<td><span style="background-image: url(https://imageserver.eveonline.com/Type/' + ship_id + '_32.png)" class="eveui_ship_icon" />';
     html += '[' + eveui_item_cache[ ship_id ].name + ', <a target="_blank" href="' + eveui_urlify( dna ) + '">' + ( eveui_name || eveui_item_cache[ ship_id ].name ) + '</a>]';
     html += '<td><a target="_blank" href="item:' + ship_id + '"><span class="eveui_info_icon" /></a>';
     if ( eveui_allow_edit ) {
@@ -332,7 +333,7 @@ function eveui_fit_show( dna, eveui_name ) {
             }
         }
         if ( slot_count < 0 ) {
-            html += 'Excess x' + empty_slots + '"></span>';
+            html += 'Excess x' + empty_slots  * -1 + '"></span>';
         }
         return html;
     }
