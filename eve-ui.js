@@ -7,9 +7,10 @@ var eveui_allow_edit = false;
 var eveui_fit_selector = "[href^=fitting],[data-dna]";
 var eveui_item_selector = "[href^=item],[data-itemid]";
 function eveui_urlify(dna) { return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); }
+function eveui_autocomplete_endpoint(str) { return 'https://zkillboard.com/autocomplete/typeID/' + encodeURI( str ) + '/'; }
 var eveui_style = `
     <style>
-        .eveui_window { font-family: sans-serif; line-height: 1; background: #eee; border: 1px solid; position:fixed; opacity: 0.95; min-width: 150px; min-height: 100px; }
+        .eveui_window { font-family: sans-serif; line-height: 1; background: #eee; border: 1px solid; opacity: 0.95; min-width: 150px; min-height: 100px; }
         .eveui_window table { border-spacing: 0; }
         .eveui_window td { padding: 0; }
         .eveui_window th { line-height: 0.5; }
@@ -22,7 +23,7 @@ var eveui_style = `
         .eveui_window .eveui_info_icon { display: inline-block; margin: 0 1px; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTQ0OCAzODRjMzUgMCA2NC0yOSA2NC02NHMtMjktNjQtNjQtNjQtNjQgMjktNjQgNjQgMjkgNjQgNjQgNjR6IG0wLTMyMGMtMjQ3IDAtNDQ4IDIwMS00NDggNDQ4czIwMSA0NDggNDQ4IDQ0OCA0NDgtMjAxIDQ0OC00NDgtMjAxLTQ0OC00NDgtNDQ4eiBtMCA3NjhjLTE3NyAwLTMyMC0xNDMtMzIwLTMyMHMxNDMtMzIwIDMyMC0zMjAgMzIwIDE0MyAzMjAgMzIwLTE0MyAzMjAtMzIwIDMyMHogbTY0LTMyMGMwLTMyLTMyLTY0LTY0LTY0cy0zMiAwLTY0IDAtNjQgMzItNjQgNjRoNjRzMCAxNjAgMCAxOTIgMzIgNjQgNjQgNjQgMzIgMCA2NCAwIDY0LTMyIDY0LTY0aC02NHMwLTE2MCAwLTE5MnoiIC8+Cjwvc3ZnPgo=); }
         .eveui_window .eveui_plus_icon { display: inline-block; margin: 0 1px; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI2NDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTM4NCA0NDhWMTkySDI1NnYyNTZIMHYxMjhoMjU2djI1NmgxMjhWNTc2aDI1NlY0NDhIMzg0eiIgLz4KPC9zdmc+Cg==); }
         .eveui_window .eveui_minus_icon { display: inline-block; margin: 0 1px; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNDQ4djEyOGg1MTJWNDQ4SDB6IiAvPgo8L3N2Zz4K); }
-        .eveui_window .eveui_elipsis_icon { display: inline-block; margin: 0 1px; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI3NjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNTc2aDEyOHYtMTI4aC0xMjh2MTI4eiBtMC0yNTZoMTI4di0xMjhoLTEyOHYxMjh6IG0wIDUxMmgxMjh2LTEyOGgtMTI4djEyOHogbTI1Ni0yNTZoNTEydi0xMjhoLTUxMnYxMjh6IG0wLTI1Nmg1MTJ2LTEyOGgtNTEydjEyOHogbTAgNTEyaDUxMnYtMTI4aC01MTJ2MTI4eiIgLz4KPC9zdmc+Cg==); }
+        .eveui_window .eveui_more_icon { display: inline-block; margin: 0 1px; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI3NjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNTc2aDEyOHYtMTI4aC0xMjh2MTI4eiBtMC0yNTZoMTI4di0xMjhoLTEyOHYxMjh6IG0wIDUxMmgxMjh2LTEyOGgtMTI4djEyOHogbTI1Ni0yNTZoNTEydi0xMjhoLTUxMnYxMjh6IG0wLTI1Nmg1MTJ2LTEyOGgtNTEydjEyOHogbTAgNTEyaDUxMnYtMTI4aC01MTJ2MTI4eiIgLz4KPC9zdmc+Cg==); }
         .eveui_window .copy_only { position: absolute; display:inline-block; line-height: 0; font-size: 0; }
         .eveui_window .nocopy::after { content: attr(data-content); }
     </style>
@@ -53,11 +54,6 @@ $( document ).ready( function() {
     });
 
     $( document ).on( "click", eveui_fit_selector, function(e) {
-        // this handler does not handle clicks inside its own windows
-        if ( $( this ).hasClass( "eveui_window") ) {
-            return;
-        }
-
         e.preventDefault();
 
         // hide window if it already exists
@@ -66,16 +62,13 @@ $( document ).ready( function() {
             return;
         }
 
-        var dna = $(this).data("dna") || this.href.substring(this.href.indexOf(":") + 1);
+        var dna = $(this).attr("data-dna") || this.href.substring(this.href.indexOf(":") + 1);
         var eveui_name = $(this).text();
 
         // create loading placeholder
-        eveui_window = $( '<span class="eveui_window" data-dna="'+ dna +'"><div class="eveui_title">&nbsp;</div><span class="close_button"></span><span class="eveui_content">Loading...</span></span>' );
-        this.eveui_window = eveui_window;
-        eveui_window.css( "z-index", eveui_zindex++ );
-        eveui_window.css( "left", eveui_x + 10 );
-        eveui_window.css( "top", eveui_y - 10 );
-        eveui_window.appendTo( "body" );
+        this.eveui_window = eveui_newwindow();
+        this.eveui_window.attr( "data-eveui-dna", dna );
+        $( "body" ).append( this.eveui_window );
         
         eveui_mark( "fit window created" );
 
@@ -89,11 +82,6 @@ $( document ).ready( function() {
     });
 
     $( document ).on( "click", eveui_item_selector, function(e) {
-        // this handler does not handle clicks inside its own windows
-        if ( $( this ).hasClass( "eveui_window") ) {
-            return;
-        }
-
         e.preventDefault();
 
         // hide window if it already exists
@@ -102,20 +90,18 @@ $( document ).ready( function() {
             return;
         }
 
-        var item_id = $(this).data("itemid") || this.href.substring(this.href.indexOf(":") + 1);
+        var item_id = $(this).attr("data-itemid") || this.href.substring(this.href.indexOf(":") + 1);
 
         // create loading placeholder
-        eveui_window = $( '<span class="eveui_window" data-itemid="'+ item_id +'"><div class="eveui_title">&nbsp;</div><span class="close_button"></span><span class="eveui_scrollable"><span class="eveui_content">Loading...</span></span></span>' );
-        this.eveui_window = eveui_window;
-        eveui_window.css( "z-index", eveui_zindex++ );
-        eveui_window.css( "left", eveui_x + 10 );
-        eveui_window.css( "top", eveui_y - 10 );
-        eveui_window.appendTo( "body" );
+        this.eveui_window = eveui_newwindow();
+        this.eveui_window.attr( "data-eveui-itemid", item_id );
+        $( "body" ).append( this.eveui_window );
 
         eveui_mark( "item window created" );
 
         // load required items and set callback to display
         eveui_cache_fit( item_id ).done( function() {
+            var eveui_window = $( '.eveui_window[data-eveui-itemid="' + item_id + '"]' );
             var html = "";
             var item = eveui_item_cache[ item_id ];
             for ( var i in item.dogma.attributes ) {
@@ -132,8 +118,54 @@ $( document ).ready( function() {
 
             eveui_mark( "item window populated" );
         }).fail( function() {
+            var eveui_window = $( '.eveui_window[data-eveui-itemid="' + item_id + '"]' );
             eveui_window.remove();
         });
+    });
+
+    $( document ).on( "click", ".eveui_minus_icon", function(e) {
+        e.preventDefault();
+        var item_id = $( this ).closest( "[data-eveui-itemid]" ).attr( "data-eveui-itemid" );
+        var dna = $( this ).closest( "[data-eveui-dna]" ).attr( "data-eveui-dna" );
+    
+        var re = new RegExp( ":" + item_id + ";(\\d+)" );
+        var new_quantity = parseInt( dna.match( re )[1] ) - 1;
+        if ( new_quantity > 0 ) { 
+            dna = dna.replace( re, ":" + item_id + ";" + new_quantity );
+        } else {
+            dna = dna.replace( re, "" );
+        }
+
+        $( this ).closest( "[data-eveui-dna]" ).attr( "data-eveui-dna", dna );
+        eveui_fit_show( dna );
+    });
+
+    $( document ).on( "click", ".eveui_plus_icon", function(e) {
+        e.preventDefault();
+        var item_id = $( this ).closest( "[data-eveui-itemid]" ).attr( "data-eveui-itemid" );
+        var dna = $( this ).closest( "[data-eveui-dna]" ).attr( "data-eveui-dna" );
+
+        var re = new RegExp( ":" + item_id + ";(\\d+)" );
+        var new_quantity = parseInt( dna.match( re )[1] ) + 1;
+        if ( new_quantity > 0 ) { 
+            dna = dna.replace( re, ":" + item_id + ";" + new_quantity );
+        } else {
+            dna = dna.replace( re, "" );
+        }
+
+        $( this ).closest( "[data-eveui-dna]" ).attr( "data-eveui-dna", dna );
+        eveui_fit_show( dna );
+    });
+
+    $( document ).on( "click", ".eveui_more_icon", function(e) {
+        e.preventDefault();
+        var item_id = $( this ).closest( "[data-eveui-itemid]" ).attr( "data-eveui-itemid" );
+        var dna = $( this ).closest( "[data-eveui-dna]" ).attr( "data-eveui-dna" );
+
+        var eveui_window = $( '<span class="eveui_window" style="position:absolute"><span class="close_button"></span><span class="eveui_content">Autocomplete goes here</span></span>' );
+        eveui_window.css( "z-index", eveui_zindex++ );
+        $( this ).parent().after( eveui_window );
+
     });
 
     // custom window drag handlers
@@ -181,6 +213,14 @@ $( document ).ready( function() {
 
     eveui_mark( "document ready end" );
 });
+
+function eveui_newwindow() {
+    var eveui_window = $( '<span class="eveui_window" style="position: fixed"><div class="eveui_title">&nbsp;</div><span class="close_button"></span><span class="eveui_content">Loading...</span></span>' );
+    eveui_window.css( "z-index", eveui_zindex++ );
+    eveui_window.css( "left", eveui_x + 10 );
+    eveui_window.css( "top", eveui_y - 10 );
+    return eveui_window;
+}
 
 function eveui_mark( mark ) {
     // log script time with annotation for performance metric
@@ -250,7 +290,7 @@ function eveui_fit_show( dna, eveui_name ) {
         var total_slots = 0;
         for ( var item_id in slots ) {
             total_slots += slots[ item_id ];
-            html += '<tr>';
+            html += '<tr data-eveui-itemid=' + item_id + '>';
             html += '<td><span style="background-image: url(https://image.eveonline.com/Type/' + item_id + '_32.png)" class="eveui_item_icon" />';
             if ( expand ) {
                 html += '<span class="copy_only">' + ( eveui_item_cache[ item_id ].name + '<br />').repeat(slots[ item_id ] - 1) + "</span>";
@@ -260,9 +300,9 @@ function eveui_fit_show( dna, eveui_name ) {
             }
             html += '<td><a href="item:' + item_id + '"><span class="eveui_info_icon" /></a>';
             if ( eveui_allow_edit ) {
-                html += '<td><a href="item:' + item_id + '"><span class="eveui_plus_icon" /></a>';
-                html += '<td><a href="item:' + item_id + '"><span class="eveui_minus_icon" /></a>';
-                html += '<td><a href="item:' + item_id + '"><span class="eveui_elipsis_icon" /></a>';
+                html += '<td><a href="#' + item_id + '"><span class="eveui_plus_icon" /></a>';
+                html += '<td><a href="#' + item_id + '"><span class="eveui_minus_icon" /></a>';
+                html += '<td><a href="#' + item_id + '"><span class="eveui_more_icon" /></a>';
             }
         }
         return total_slots;
@@ -270,20 +310,31 @@ function eveui_fit_show( dna, eveui_name ) {
 
     var html = '';
     html += '<table>';
-    html += '<tr>';
+    html += '<tr data-eveui-itemid=' + ship_id + '>';
     html += '<td><span style="background-image: url(https://image.eveonline.com/Type/' + ship_id + '_32.png)" class="eveui_ship_icon" />';
     html += '[' + eveui_item_cache[ ship_id ].name + ', <a target="_blank" href="' + eveui_urlify( dna ) + '">' + ( eveui_name || eveui_item_cache[ ship_id ].name ) + '</a>]';
     html += '<td><a target="_blank" href="item:' + ship_id + '"><span class="eveui_info_icon" /></a>';
+    if ( eveui_allow_edit ) {
+        html += '<td>';
+        html += '<td>';
+        html += '<td><a href="item:' + item_id + '"><span class="eveui_more_icon" /></a>';
+    }
 
     var empty_slots;
 
     function slot_discrepancy( slot_count ) {
+        var html = '';
+        html += '<tr><td><span class="eveui_item_icon" /><span class="nocopy" data-content="'
         if ( slot_count > 0 ) {
-            return '<tr><td><span class="eveui_item_icon" /><span class="nocopy" data-content="Empty x' + empty_slots + '"></span><br />';
+            html += 'Empty x' + empty_slots + '"></span>';
+            if ( eveui_allow_edit ) {
+                html += '<td><td><td><td><a href="#' + item_id + '"><span class="eveui_more_icon" /></a>';
+            }
         }
         if ( slot_count < 0 ) {
-            return '<tr><td><span class="eveui_item_icon" /><span class="nocopy" data-content="Excess x' + empty_slots + '"></span><br />';
+            html += 'Excess x' + empty_slots + '"></span>';
         }
+        return html;
     }
     empty_slots = ship.hiSlots - item_rows( high_slots );
     if ( empty_slots ) {
@@ -313,7 +364,7 @@ function eveui_fit_show( dna, eveui_name ) {
 
     html += '</table>';
 
-    var eveui_window = $( '.eveui_window[data-dna="' + dna + '"]' );
+    var eveui_window = $( '.eveui_window[data-eveui-dna="' + dna + '"]' );
     eveui_window.find(".eveui_content").html( html );
 
     $( window ).trigger( "resize" );
