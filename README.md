@@ -3,8 +3,8 @@ A nearly standalone (EVE Online) fit display script for inclusion in arbitrary w
 
 https://quiescens.github.io/eve-ui/examples.html to see it in action.
 
-With the impending removal of the in game browser, ship fittings will have to be viewable out of game (unless you plan to make all your visitors log in and send fits via CREST).
-This script can be loaded in an arbitrary HTML document to generate viewable, copy-pasteable fit windows for any element that it detects as a fit.
+With the impending removal of the in game browser, the old shortcut of using IGB links to display ship fittings will no longer be available. 
+This script can be loaded in an arbitrary HTML document to automatically generate viewable, copy-pasteable fit windows for any element that it detects as a fit.
 
 * Does not require any particular server side infrastructure on your part.
 * Requires jQuery to be loaded before this script.
