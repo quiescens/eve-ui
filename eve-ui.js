@@ -69,11 +69,12 @@ $( document ).ready( function() {
 
         // create loading placeholder
         this.eveui_window = eveui_newwindow();
+        eveui_mark( "fit window created" );
+
         this.eveui_window.attr( "data-eveui-dna", dna );
         $( "body" ).append( this.eveui_window );
         
         eveui_fit_window( dna, eveui_name );
-
     });
 
     $( document ).on( "click", eveui_item_selector, function(e) {
@@ -354,7 +355,6 @@ function eveui_fit_window( dna, eveui_name ) {
     eveui_cache_fit( dna ).done( function() {
         var eveui_window = $( '.eveui_window[data-eveui-dna="' + dna + '"]' );
         eveui_window.find(".eveui_content").html( eveui_generate_fit( dna, eveui_name) );
-
         $( window ).trigger( "resize" );
         eveui_mark( "fit window populated" );
     }).fail( function() {
@@ -371,9 +371,9 @@ function eveui_expand_fits() {
         var dna = $(this).attr("data-dna") || this.href.substring(this.href.indexOf(":") + 1);
         var selected_element = $( this );
         eveui_cache_fit( dna ).done( function() {
-            eveui_mark( "fit window populated" );
             var eveui_name = $(this).text();
             selected_element.replaceWith( eveui_generate_fit( dna ) );
+            eveui_mark( "fit window populated" );
         }).fail( function() {
             delete eveui_fit_cache[ dna ];
         });
