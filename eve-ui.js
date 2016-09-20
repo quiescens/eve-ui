@@ -283,21 +283,20 @@ function eveui_fit_show( dna, eveui_name ) {
         other_slots[ item_id ] = quantity;
     }
 
-    function item_rows( slots, expand ) {
-        if ( typeof expand == "undefined" ) {
-            expand = true;
-        }
+    function item_rows( fittings, slots_available ) {
         // generates table rows for listed slots
-        var total_slots = 0;
-        for ( var item_id in slots ) {
-            total_slots += slots[ item_id ];
+        var html = '';
+        var slots_used = 0;
+
+        for ( var item_id in fittings ) {
+            slots_used += fittings[ item_id ];
             html += '<tr data-eveui-itemid=' + item_id + '>';
             html += '<td><span style="background-image: url(https://imageserver.eveonline.com/Type/' + item_id + '_32.png)" class="eveui_item_icon" />';
-            if ( expand ) {
-                html += '<span class="copy_only">' + ( eveui_item_cache[ item_id ].name + '<br />').repeat(slots[ item_id ] - 1) + "</span>";
-                html += eveui_item_cache[ item_id ].name + '<span class="nocopy" data-content=" x' + slots[ item_id ] + '"></span>';
+            if ( slots_available ) {
+                html += '<span class="copy_only">' + ( eveui_item_cache[ item_id ].name + '<br />').repeat(fittings[ item_id ] - 1) + "</span>";
+                html += eveui_item_cache[ item_id ].name + '<span class="nocopy" data-content=" x' + fittings[ item_id ] + '"></span>';
             } else {
-                html += eveui_item_cache[ item_id ].name + ' x' + slots[ item_id ];
+                html += eveui_item_cache[ item_id ].name + ' x' + fittings[ item_id ];
             }
             html += '<td><a href="item:' + item_id + '"><span class="eveui_info_icon" /></a>';
             if ( eveui_allow_edit ) {
@@ -306,7 +305,24 @@ function eveui_fit_show( dna, eveui_name ) {
                 html += '<td><a href="#' + item_id + '"><span class="eveui_more_icon" /></a>';
             }
         }
-        return total_slots;
+
+        if ( typeof slots_available != "undefined" ) {
+            if ( slots_available > slots_used ) {
+                html += '<tr><td><span class="eveui_item_icon" /><span class="nocopy" data-content="';
+                html += 'Empty x' + ( slots_available - slots_used );
+                html += '"></span>';
+                if ( eveui_allow_edit ) {
+                    html += '<td><td><td><td><a href="#' + item_id + '"><span class="eveui_more_icon" /></a>';
+                }
+            }
+            if ( slots_used > slots_available ) {
+                html += '<tr><td><span class="eveui_item_icon" /><span class="nocopy" data-content="';
+                html += 'Excess x' + ( slots_used - slots_available );
+                html += '"></span>';
+            }
+        }
+
+        return html;
     }
 
     var html = '';
@@ -320,49 +336,15 @@ function eveui_fit_show( dna, eveui_name ) {
         html += '<td>';
         html += '<td><a href="item:' + item_id + '"><span class="eveui_more_icon" /></a>';
     }
-
-    var empty_slots;
-
-    function slot_discrepancy( slot_count ) {
-        var html = '';
-        html += '<tr><td><span class="eveui_item_icon" /><span class="nocopy" data-content="'
-        if ( slot_count > 0 ) {
-            html += 'Empty x' + empty_slots + '"></span>';
-            if ( eveui_allow_edit ) {
-                html += '<td><td><td><td><a href="#' + item_id + '"><span class="eveui_more_icon" /></a>';
-            }
-        }
-        if ( slot_count < 0 ) {
-            html += 'Excess x' + empty_slots  * -1 + '"></span>';
-        }
-        return html;
-    }
-    empty_slots = ship.hiSlots - item_rows( high_slots );
-    if ( empty_slots ) {
-        html += slot_discrepancy( empty_slots );
-    }
-
+    html += item_rows( high_slots, ship.hiSlots );
     html += '<tr /><th>&nbsp;';
-    empty_slots = ship.medSlots - item_rows( med_slots );
-    if ( empty_slots ) {
-        html += slot_discrepancy( empty_slots );
-    }
-
+    html += item_rows( med_slots, ship.medSlots );
     html += '<tr /><th>&nbsp;';
-    empty_slots = ship.lowSlots - item_rows( low_slots );
-    if ( empty_slots ) {
-        html += slot_discrepancy( empty_slots );
-    }
-
+    html += item_rows( low_slots, ship.lowSlots );
     html += '<tr /><th>&nbsp;';
-    empty_slots = ship.rigSlots - item_rows( rig_slots );
-    if ( empty_slots ) {
-        html += slot_discrepancy( empty_slots );
-    }
-
+    html += item_rows( rig_slots, ship.rigSlots );
     html += '<tr /><th>&nbsp;';
-    item_rows( other_slots, false );
-
+    html += item_rows( other_slots );
     html += '</table>';
 
     var eveui_window = $( '.eveui_window[data-eveui-dna="' + dna + '"]' );
