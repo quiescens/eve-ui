@@ -11,13 +11,13 @@ function eveui_urlify(dna) { return 'https://o.smium.org/loadout/dna/' + encodeU
 function eveui_autocomplete_endpoint(str) { return 'https://zkillboard.com/autocomplete/typeID/' + encodeURI( str ) + '/'; }
 var eveui_style = `
     <style>
-        .eveui_window { line-height: 1; background: #eee; border: 1px solid; opacity: 0.95; min-width: 150px; min-height: 100px; }
+        .eveui_window { line-height: 1; background: #eee; border: 1px solid; opacity: 0.95; min-width: 150px; min-height: 100px; display: flex; flex-direction: column; }
         .eveui_fit_table { border-spacing: 0; }
         .eveui_fit_table td { padding: 0; }
         .eveui_fit_table th { line-height: 0.5; }
-        .eveui_title { position: absolute; top: 0; left: 0; width: 100%; background: #ccc; cursor: move; }
-        .eveui_scrollable { padding-right: 17px; text-align: left; overflow: auto; display: inline-block; max-width: 100%; max-height: 100%; }
-        .eveui_content { display: table; margin-top: 15px; padding: 5px; white-space: nowrap; }
+        .eveui_title { width: 100%; background: #ccc; cursor: move; white-space: nowrap; margin-right: 2em; }
+        .eveui_scrollable { padding-right: 17px; text-align: left; overflow: auto; }
+        .eveui_content { white-space: nowrap; }
         .eveui_item_icon { display: inline-block; vertical-align: middle; margin: 1px 2px; background-size: 20px 20px; height: 20px; width: 20px; }
         .eveui_ship_icon { display: inline-block; vertical-align: middle; margin: 1px 2px; background-size: 32px 32px; height: 32px; width: 32px; }
         .eveui_info_icon { display: inline-block; margin: 0 1px; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTQ0OCAzODRjMzUgMCA2NC0yOSA2NC02NHMtMjktNjQtNjQtNjQtNjQgMjktNjQgNjQgMjkgNjQgNjQgNjR6IG0wLTMyMGMtMjQ3IDAtNDQ4IDIwMS00NDggNDQ4czIwMSA0NDggNDQ4IDQ0OCA0NDgtMjAxIDQ0OC00NDgtMjAxLTQ0OC00NDgtNDQ4eiBtMCA3NjhjLTE3NyAwLTMyMC0xNDMtMzIwLTMyMHMxNDMtMzIwIDMyMC0zMjAgMzIwIDE0MyAzMjAgMzIwLTE0MyAzMjAtMzIwIDMyMHogbTY0LTMyMGMwLTMyLTMyLTY0LTY0LTY0cy0zMiAwLTY0IDAtNjQgMzItNjQgNjRoNjRzMCAxNjAgMCAxOTIgMzIgNjQgNjQgNjQgMzIgMCA2NCAwIDY0LTMyIDY0LTY0aC02NHMwLTE2MCAwLTE5MnoiIC8+Cjwvc3ZnPgo=); }
