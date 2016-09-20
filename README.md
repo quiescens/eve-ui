@@ -15,6 +15,7 @@ At present, the script should work with almost any element that has a data-dna o
 * \<img src="blah" data-dna="fitting:670::" />
 * \<div data-dna="fitting:670::">Pod\</div>
 * \<a href="fitting:670::">Pod\</a>
+
 The data- format is more flexible, but the href format can be useful for supporting forums or CMS's where users might only be allowed to post URLs, or where you already have links on a site and only need to change the href.
 
 Getting the DNA string for a fit is left as an exercise for the reader, see:
