@@ -98,6 +98,7 @@ $( document ).ready( function() {
         eveui_cache_fit( item_id ).done( function() {
             var eveui_window = $( '.eveui_window[data-eveui-itemid="' + item_id + '"]' );
             var html = "";
+            html += '<table>';
             var item = eveui_item_cache[ item_id ];
             for ( var i in item.dogma.attributes ) {
                 var attr = item.dogma.attributes[i];
@@ -105,6 +106,7 @@ $( document ).ready( function() {
                 html += '<td>' + attr.attribute.name;
                 html += '<td>' + attr.value;
             }
+            html += '</table>';
 
             eveui_window.find(".eveui_content").html(html);
             eveui_window.find(".eveui_title").html(item.name);
