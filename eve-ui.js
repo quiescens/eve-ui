@@ -11,7 +11,7 @@ function eveui_urlify(dna) { return 'https://o.smium.org/loadout/dna/' + encodeU
 function eveui_autocomplete_endpoint(str) { return 'https://zkillboard.com/autocomplete/typeID/' + encodeURI( str ) + '/'; }
 var eveui_style = `
     <style>
-        .eveui_window { font-family: sans-serif; line-height: 1; background: #eee; border: 1px solid; opacity: 0.95; min-width: 150px; min-height: 100px; }
+        .eveui_window { line-height: 1; background: #eee; border: 1px solid; opacity: 0.95; min-width: 150px; min-height: 100px; }
         .eveui_fit_table { border-spacing: 0; }
         .eveui_fit_table td { padding: 0; }
         .eveui_fit_table th { line-height: 0.5; }
