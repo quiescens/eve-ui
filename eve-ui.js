@@ -29,7 +29,7 @@ var eveui_style = `
         .eveui_minus_icon { display: inline-block; margin: 0 1px; cursor: pointer; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNDQ4djEyOGg1MTJWNDQ4SDB6IiAvPgo8L3N2Zz4K); }
         .eveui_more_icon { display: inline-block; margin: 0 1px; cursor: pointer; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI3NjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNTc2aDEyOHYtMTI4aC0xMjh2MTI4eiBtMC0yNTZoMTI4di0xMjhoLTEyOHYxMjh6IG0wIDUxMmgxMjh2LTEyOGgtMTI4djEyOHogbTI1Ni0yNTZoNTEydi0xMjhoLTUxMnYxMjh6IG0wLTI1Nmg1MTJ2LTEyOGgtNTEydjEyOHogbTAgNTEyaDUxMnYtMTI4aC01MTJ2MTI4eiIgLz4KPC9zdmc+Cg==); }
         .eveui_edit_icon { display: inline-block; margin: 0 1px; cursor: pointer; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTcwNCA2NEw1NzYgMTkybDE5MiAxOTIgMTI4LTEyOEw3MDQgNjR6TTAgNzY4bDAuNjg4IDE5Mi41NjJMMTkyIDk2MGw1MTItNTEyTDUxMiAyNTYgMCA3Njh6TTE5MiA4OTZINjRWNzY4aDY0djY0aDY0Vjg5NnoiIC8+Cjwvc3ZnPgo=); }
-        .eveui_copy_icon { position: absolute; top: 0; right: 1em; cursor: pointer; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTcwNCA4OTZoLTY0MHYtNTc2aDY0MHYxOTJoNjR2LTMyMGMwLTM1LTI5LTY0LTY0LTY0aC0xOTJjMC03MS01Ny0xMjgtMTI4LTEyOHMtMTI4IDU3LTEyOCAxMjhoLTE5MmMtMzUgMC02NCAyOS02NCA2NHY3MDRjMCAzNSAyOSA2NCA2NCA2NGg2NDBjMzUgMCA2NC0yOSA2NC02NHYtMTI4aC02NHYxMjh6IG0tNTEyLTcwNGMyOSAwIDI5IDAgNjQgMHM2NC0yOSA2NC02NCAyOS02NCA2NC02NCA2NCAyOSA2NCA2NCAzMiA2NCA2NCA2NCAzMyAwIDY0IDAgNjQgMjkgNjQgNjRoLTUxMmMwLTM5IDI4LTY0IDY0LTY0eiBtLTY0IDUxMmgxMjh2LTY0aC0xMjh2NjR6IG00NDgtMTI4di0xMjhsLTI1NiAxOTIgMjU2IDE5MnYtMTI4aDMyMHYtMTI4aC0zMjB6IG0tNDQ4IDI1NmgxOTJ2LTY0aC0xOTJ2NjR6IG0zMjAtNDQ4aC0zMjB2NjRoMzIwdi02NHogbS0xOTIgMTI4aC0xMjh2NjRoMTI4di02NHoiIC8+Cjwvc3ZnPgo=); }
+        .eveui_copy_icon { cursor: pointer; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTcwNCA4OTZoLTY0MHYtNTc2aDY0MHYxOTJoNjR2LTMyMGMwLTM1LTI5LTY0LTY0LTY0aC0xOTJjMC03MS01Ny0xMjgtMTI4LTEyOHMtMTI4IDU3LTEyOCAxMjhoLTE5MmMtMzUgMC02NCAyOS02NCA2NHY3MDRjMCAzNSAyOSA2NCA2NCA2NGg2NDBjMzUgMCA2NC0yOSA2NC02NHYtMTI4aC02NHYxMjh6IG0tNTEyLTcwNGMyOSAwIDI5IDAgNjQgMHM2NC0yOSA2NC02NCAyOS02NCA2NC02NCA2NCAyOSA2NCA2NCAzMiA2NCA2NCA2NCAzMyAwIDY0IDAgNjQgMjkgNjQgNjRoLTUxMmMwLTM5IDI4LTY0IDY0LTY0eiBtLTY0IDUxMmgxMjh2LTY0aC0xMjh2NjR6IG00NDgtMTI4di0xMjhsLTI1NiAxOTIgMjU2IDE5MnYtMTI4aDMyMHYtMTI4aC0zMjB6IG0tNDQ4IDI1NmgxOTJ2LTY0aC0xOTJ2NjR6IG0zMjAtNDQ4aC0zMjB2NjRoMzIwdi02NHogbS0xOTIgMTI4aC0xMjh2NjRoMTI4di02NHoiIC8+Cjwvc3ZnPgo=); }
         .eveui_close_icon { position: absolute; top: 0; right: 0; cursor: pointer; height: 1em; width: 1em; background-size: 1em 1em; background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHg9IjciIHk9Ii0xIiB0cmFuc2Zvcm09Im1hdHJpeCgwLjcwNzEgLTAuNzA3MSAwLjcwNzEgMC43MDcxIC0zLjMxMzUgNy45OTk1KSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+CjxyZWN0IHg9IjciIHk9Ii0wLjk5OSIgdHJhbnNmb3JtPSJtYXRyaXgoLTAuNzA3MSAtMC43MDcxIDAuNzA3MSAtMC43MDcxIDcuOTk4OCAxOS4zMTQyKSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+PC9zdmc+Cg==); }
         .copy_only { position: absolute; display:inline-block; line-height: 0; font-size: 0; }
         .nocopy::after { content: attr(data-content); }
@@ -209,9 +209,12 @@ $( document ).ready( function() {
     $( window ).on( 'resize', function(e) {
         $( '.eveui_window' ).each( function() {
             eveui_window = $( this );
-            eveui_window.css( 'height', '' );
-            if ( eveui_window.height() > window.innerHeight - 50 ) {
+            eveui_content = eveui_window.find( '.eveui_content' );
+            eveui_scrollable = eveui_window.find( '.eveui_scrollable' );
+            if ( eveui_window.find( '.eveui_content' ).height() > window.innerHeight - 50 ) {
                 eveui_window.css( 'height', window.innerHeight - 50 );
+            } else {
+                eveui_window.css( 'height', '' );
             }
             if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
                 eveui_window.css( 'top', window.innerHeight - eveui_window.height() - 25 );
@@ -234,7 +237,6 @@ function eveui_new_window() {
     var eveui_window = $( `
             <span class="eveui_window" style="position: fixed">
                 <div class="eveui_title">&nbsp;</div>
-                <span class="eveui_copy_icon" />
                 <span class="eveui_close_icon" />
                 <span class="eveui_scrollable">
                     <span class="eveui_content">
@@ -262,6 +264,7 @@ function eveui_generate_fit( dna, eveui_name ) {
     var med_slots = {};
     var low_slots = {};
     var rig_slots = {};
+    var subsystem_slots = {};
     var other_slots = {};
 
     var items = dna.split( ':' );
@@ -278,6 +281,8 @@ function eveui_generate_fit( dna, eveui_name ) {
         } else if ( attr.attribute.name == 'lowSlots' ) {
             ship[attr.attribute.name] = attr.value;
         } else if ( attr.attribute.name == 'rigSlots' ) {
+            ship[attr.attribute.name] = attr.value;
+        } else if ( attr.attribute.name == 'maxSubSystems' ) {
             ship[attr.attribute.name] = attr.value;
         }
     }
@@ -303,6 +308,9 @@ function eveui_generate_fit( dna, eveui_name ) {
                 continue outer;
             } else if ( eveui_item_cache[ item_id ].dogma.effects[i].effect.name == 'rigSlot') {
                 rig_slots[ item_id ] = quantity;
+                continue outer;
+            } else if ( eveui_item_cache[ item_id ].dogma.effects[i].effect.name == 'subSystem') {
+                subsystem_slots[ item_id ] = quantity;
                 continue outer;
             }
         }
@@ -378,10 +386,9 @@ function eveui_generate_fit( dna, eveui_name ) {
             <span style="background-image: url(https://imageserver.eveonline.com/Type/${ ship_id }_32.png)" class="eveui_ship_icon" />
             <span class="eveui_flexgrow">
                 [${ eveui_item_cache[ ship_id ].name },
-                <a target="_blank" href="${ eveui_urlify( dna ) }">
-                    ${ eveui_name || eveui_item_cache[ ship_id ].name }
-                </a>]
+                <a target="_blank" href="${ eveui_urlify( dna ) }">${ eveui_name || eveui_item_cache[ ship_id ].name }</a>]
             </span>
+            <span class="eveui_copy_icon" />
             <span data-itemid="${ ship_id }" class="eveui_info_icon" />
         `;
     if ( eveui_allow_edit ) {
@@ -400,6 +407,8 @@ function eveui_generate_fit( dna, eveui_name ) {
         ${ item_rows( low_slots, ship.lowSlots ) }
         <br />
         ${ item_rows( rig_slots, ship.rigSlots ) }
+        <br />
+        ${ item_rows( subsystem_slots, ship.maxSubsystems ) }
         <br />
         ${ item_rows( other_slots ) }
         <span class="eveui_endcopy" />
