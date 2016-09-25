@@ -9,7 +9,6 @@ This script can be loaded in an arbitrary HTML document to automatically generat
 * Does not require any particular server side infrastructure on your part.
 * Requires jQuery to be loaded before this script.
 * Pulls item info from CCP's own CREST which should (theoretically) always be up to date.
-* (Will eventually) pull autocomplete for item search from zkillboard.com ?
 
 At present, the script should work with almost any element that has a data-dna or data-itemid attribute containing the appropriate values (dna string or itemid), or links with a href starting with "fitting:" or "item:", such as:
 * \<img src="blah" data-dna="fitting:670::" />
