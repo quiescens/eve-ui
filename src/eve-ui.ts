@@ -7,7 +7,7 @@
 // config stuff ( can be overridden in a script block placed immediately after the script tag for this script )
 var eveui_preload_initial = 50;
 var eveui_preload_interval = 10;
-var eveui_expand_all = false;
+var eveui_mode = 'multi_window'; // expand_all, expand, multi_window, modal
 var eveui_allow_edit = false;
 var eveui_fit_selector = '[href^=fitting],[data-dna]';
 var eveui_item_selector = '[href^=item],[data-itemid]';
@@ -16,27 +16,161 @@ function eveui_autocomplete_endpoint( str ) { return 'https://zkillboard.com/aut
 /* icons from https://github.com/primer/octicons */
 var eveui_style = `
 	<style>
-		.eveui_window { line-height: 1; background: #eee; border: 1px solid; opacity: 0.95; min-width: 150px; min-height: 100px; display: flex; flex-direction: column; }
-		.eveui_title { width: 100%; background: #ccc; cursor: move; white-space: nowrap; margin-right: 2em; }
-		.eveui_scrollable { padding-right: 17px; text-align: left; overflow: auto; }
-		.eveui_content { white-space: nowrap; display: inline-block; }
-		.eveui_content div { display: flex; }
-		.eveui_flexgrow { flex-grow: 1; }
-		.eveui_fit_header { align-items: center; }
-		.eveui_line_spacer { line-height: 0.5em; }
-		.eveui_item_icon { display: inline-block; vertical-align: middle; margin: 1px 2px; background-size: 20px 20px; height: 20px; width: 20px; }
-		.eveui_ship_icon { display: inline-block; vertical-align: middle; margin: 1px 2px; background-size: 32px 32px; height: 32px; width: 32px; }
-		.eveui_empty_icon { display: inline-block; margin: 0 1px; height: 1em; width: 1em; }
-		.eveui_info_icon { display: inline-block; margin: 0 1px; cursor: pointer; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTQ0OCAzODRjMzUgMCA2NC0yOSA2NC02NHMtMjktNjQtNjQtNjQtNjQgMjktNjQgNjQgMjkgNjQgNjQgNjR6IG0wLTMyMGMtMjQ3IDAtNDQ4IDIwMS00NDggNDQ4czIwMSA0NDggNDQ4IDQ0OCA0NDgtMjAxIDQ0OC00NDgtMjAxLTQ0OC00NDgtNDQ4eiBtMCA3NjhjLTE3NyAwLTMyMC0xNDMtMzIwLTMyMHMxNDMtMzIwIDMyMC0zMjAgMzIwIDE0MyAzMjAgMzIwLTE0MyAzMjAtMzIwIDMyMHogbTY0LTMyMGMwLTMyLTMyLTY0LTY0LTY0cy0zMiAwLTY0IDAtNjQgMzItNjQgNjRoNjRzMCAxNjAgMCAxOTIgMzIgNjQgNjQgNjQgMzIgMCA2NCAwIDY0LTMyIDY0LTY0aC02NHMwLTE2MCAwLTE5MnoiIC8+Cjwvc3ZnPgo=); }
-		.eveui_plus_icon { display: inline-block; margin: 0 1px; cursor: pointer; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI2NDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTM4NCA0NDhWMTkySDI1NnYyNTZIMHYxMjhoMjU2djI1NmgxMjhWNTc2aDI1NlY0NDhIMzg0eiIgLz4KPC9zdmc+Cg==); }
-		.eveui_minus_icon { display: inline-block; margin: 0 1px; cursor: pointer; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNDQ4djEyOGg1MTJWNDQ4SDB6IiAvPgo8L3N2Zz4K); }
-		.eveui_more_icon { display: inline-block; margin: 0 1px; cursor: pointer; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI3NjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNTc2aDEyOHYtMTI4aC0xMjh2MTI4eiBtMC0yNTZoMTI4di0xMjhoLTEyOHYxMjh6IG0wIDUxMmgxMjh2LTEyOGgtMTI4djEyOHogbTI1Ni0yNTZoNTEydi0xMjhoLTUxMnYxMjh6IG0wLTI1Nmg1MTJ2LTEyOGgtNTEydjEyOHogbTAgNTEyaDUxMnYtMTI4aC01MTJ2MTI4eiIgLz4KPC9zdmc+Cg==); }
-		.eveui_edit_icon { display: inline-block; margin: 0 1px; cursor: pointer; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTcwNCA2NEw1NzYgMTkybDE5MiAxOTIgMTI4LTEyOEw3MDQgNjR6TTAgNzY4bDAuNjg4IDE5Mi41NjJMMTkyIDk2MGw1MTItNTEyTDUxMiAyNTYgMCA3Njh6TTE5MiA4OTZINjRWNzY4aDY0djY0aDY0Vjg5NnoiIC8+Cjwvc3ZnPgo=); }
-		.eveui_copy_icon { cursor: pointer; height: 1em; width: 1em; background-position: center; background-repeat: no-repeat; background-size: contain; background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTcwNCA4OTZoLTY0MHYtNTc2aDY0MHYxOTJoNjR2LTMyMGMwLTM1LTI5LTY0LTY0LTY0aC0xOTJjMC03MS01Ny0xMjgtMTI4LTEyOHMtMTI4IDU3LTEyOCAxMjhoLTE5MmMtMzUgMC02NCAyOS02NCA2NHY3MDRjMCAzNSAyOSA2NCA2NCA2NGg2NDBjMzUgMCA2NC0yOSA2NC02NHYtMTI4aC02NHYxMjh6IG0tNTEyLTcwNGMyOSAwIDI5IDAgNjQgMHM2NC0yOSA2NC02NCAyOS02NCA2NC02NCA2NCAyOSA2NCA2NCAzMiA2NCA2NCA2NCAzMyAwIDY0IDAgNjQgMjkgNjQgNjRoLTUxMmMwLTM5IDI4LTY0IDY0LTY0eiBtLTY0IDUxMmgxMjh2LTY0aC0xMjh2NjR6IG00NDgtMTI4di0xMjhsLTI1NiAxOTIgMjU2IDE5MnYtMTI4aDMyMHYtMTI4aC0zMjB6IG0tNDQ4IDI1NmgxOTJ2LTY0aC0xOTJ2NjR6IG0zMjAtNDQ4aC0zMjB2NjRoMzIwdi02NHogbS0xOTIgMTI4aC0xMjh2NjRoMTI4di02NHoiIC8+Cjwvc3ZnPgo=); }
-		.eveui_close_icon { position: absolute; top: 0; right: 0; cursor: pointer; height: 1em; width: 1em; background-size: 1em 1em; background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHg9IjciIHk9Ii0xIiB0cmFuc2Zvcm09Im1hdHJpeCgwLjcwNzEgLTAuNzA3MSAwLjcwNzEgMC43MDcxIC0zLjMxMzUgNy45OTk1KSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+CjxyZWN0IHg9IjciIHk9Ii0wLjk5OSIgdHJhbnNmb3JtPSJtYXRyaXgoLTAuNzA3MSAtMC43MDcxIDAuNzA3MSAtMC43MDcxIDcuOTk4OCAxOS4zMTQyKSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+PC9zdmc+Cg==); }
-		.copy_only { position: absolute; display:inline-block; line-height: 0; font-size: 0; }
-		.nocopy::after { content: attr(data-content); }
-	</style>
+		.eveui_window {
+			line-height: 1;
+			background: #eee;
+			border: 1px solid;
+			opacity: 0.95;
+			min-width: 150px;
+			min-height: 100px;
+			display: flex;
+			flex-direction: column;
+		}
+		.eveui_modal_overlay {
+			cursor: pointer;
+			position: fixed;
+			background: #000;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 10;
+			opacity: 0.5;
+		}
+		.eveui_title {
+			width: 100%;
+			background: #ccc;
+			cursor: move;
+			white-space: nowrap;
+			margin-right: 2em;
+		}
+		.eveui_scrollable {
+			padding-right: 17px;
+			text-align: left;
+			overflow: auto;
+		}
+		.eveui_content {
+			white-space: nowrap;
+			display: inline-block;
+		}
+		.eveui_content div {
+			display: flex;
+		}
+		.eveui_flexgrow {
+			flex-grow: 1;
+		}
+		.eveui_fit_header {
+			align-items: center;
+		}
+		.eveui_line_spacer {
+			line-height: 0.5em;
+		}
+		.eveui_item_icon {
+			display: inline-block;
+			vertical-align: middle;
+			margin: 1px 2px;
+			background-size: 20px 20px;
+			height: 20px;
+			width: 20px;
+		}
+		.eveui_ship_icon {
+			display: inline-block;
+			vertical-align: middle;
+			margin: 1px 2px;
+			background-size: 32px 32px;
+			height: 32px;
+			width: 32px;
+		}
+		.eveui_empty_icon {
+			display: inline-block;
+			margin: 0 1px;
+			height: 1em;
+			width: 1em;
+		}
+		.eveui_info_icon {
+			display: inline-block;
+			margin: 0 1px;
+			cursor: pointer;
+			height: 1em;
+			width: 1em;
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: contain;
+			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTQ0OCAzODRjMzUgMCA2NC0yOSA2NC02NHMtMjktNjQtNjQtNjQtNjQgMjktNjQgNjQgMjkgNjQgNjQgNjR6IG0wLTMyMGMtMjQ3IDAtNDQ4IDIwMS00NDggNDQ4czIwMSA0NDggNDQ4IDQ0OCA0NDgtMjAxIDQ0OC00NDgtMjAxLTQ0OC00NDgtNDQ4eiBtMCA3NjhjLTE3NyAwLTMyMC0xNDMtMzIwLTMyMHMxNDMtMzIwIDMyMC0zMjAgMzIwIDE0MyAzMjAgMzIwLTE0MyAzMjAtMzIwIDMyMHogbTY0LTMyMGMwLTMyLTMyLTY0LTY0LTY0cy0zMiAwLTY0IDAtNjQgMzItNjQgNjRoNjRzMCAxNjAgMCAxOTIgMzIgNjQgNjQgNjQgMzIgMCA2NCAwIDY0LTMyIDY0LTY0aC02NHMwLTE2MCAwLTE5MnoiIC8+Cjwvc3ZnPgo=);
+		}
+		.eveui_plus_icon {
+			display: inline-block;
+			margin: 0 1px;
+			cursor: pointer;
+			height: 1em;
+			width: 1em;
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: contain;
+			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI2NDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTM4NCA0NDhWMTkySDI1NnYyNTZIMHYxMjhoMjU2djI1NmgxMjhWNTc2aDI1NlY0NDhIMzg0eiIgLz4KPC9zdmc+Cg==);
+		}
+		.eveui_minus_icon {
+			display: inline-block;
+			margin: 0 1px;
+			cursor: pointer;
+			height: 1em;
+			width: 1em;
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: contain;
+			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNDQ4djEyOGg1MTJWNDQ4SDB6IiAvPgo8L3N2Zz4K);
+		}
+		.eveui_more_icon {
+			display: inline-block;
+			margin: 0 1px;
+			cursor: pointer;
+			height: 1em;
+			width: 1em;
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: contain;
+			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI3NjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNTc2aDEyOHYtMTI4aC0xMjh2MTI4eiBtMC0yNTZoMTI4di0xMjhoLTEyOHYxMjh6IG0wIDUxMmgxMjh2LTEyOGgtMTI4djEyOHogbTI1Ni0yNTZoNTEydi0xMjhoLTUxMnYxMjh6IG0wLTI1Nmg1MTJ2LTEyOGgtNTEydjEyOHogbTAgNTEyaDUxMnYtMTI4aC01MTJ2MTI4eiIgLz4KPC9zdmc+Cg==);
+		}
+		.eveui_edit_icon {
+			display: inline-block;
+			margin: 0 1px;
+			cursor: pointer;
+			height: 1em;
+			width: 1em;
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: contain;
+			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTcwNCA2NEw1NzYgMTkybDE5MiAxOTIgMTI4LTEyOEw3MDQgNjR6TTAgNzY4bDAuNjg4IDE5Mi41NjJMMTkyIDk2MGw1MTItNTEyTDUxMiAyNTYgMCA3Njh6TTE5MiA4OTZINjRWNzY4aDY0djY0aDY0Vjg5NnoiIC8+Cjwvc3ZnPgo=);
+		}
+		.eveui_copy_icon {
+			cursor: pointer;
+			height: 1em;
+			width: 1em;
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: contain;
+			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTcwNCA4OTZoLTY0MHYtNTc2aDY0MHYxOTJoNjR2LTMyMGMwLTM1LTI5LTY0LTY0LTY0aC0xOTJjMC03MS01Ny0xMjgtMTI4LTEyOHMtMTI4IDU3LTEyOCAxMjhoLTE5MmMtMzUgMC02NCAyOS02NCA2NHY3MDRjMCAzNSAyOSA2NCA2NCA2NGg2NDBjMzUgMCA2NC0yOSA2NC02NHYtMTI4aC02NHYxMjh6IG0tNTEyLTcwNGMyOSAwIDI5IDAgNjQgMHM2NC0yOSA2NC02NCAyOS02NCA2NC02NCA2NCAyOSA2NCA2NCAzMiA2NCA2NCA2NCAzMyAwIDY0IDAgNjQgMjkgNjQgNjRoLTUxMmMwLTM5IDI4LTY0IDY0LTY0eiBtLTY0IDUxMmgxMjh2LTY0aC0xMjh2NjR6IG00NDgtMTI4di0xMjhsLTI1NiAxOTIgMjU2IDE5MnYtMTI4aDMyMHYtMTI4aC0zMjB6IG0tNDQ4IDI1NmgxOTJ2LTY0aC0xOTJ2NjR6IG0zMjAtNDQ4aC0zMjB2NjRoMzIwdi02NHogbS0xOTIgMTI4aC0xMjh2NjRoMTI4di02NHoiIC8+Cjwvc3ZnPgo=);
+		}
+		.eveui_close_icon {
+			position: absolute;
+			top: 0;
+			right: 0;
+			cursor: pointer;
+			height: 1em;
+			width: 1em;
+			background-size: 1em 1em;
+			background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHg9IjciIHk9Ii0xIiB0cmFuc2Zvcm09Im1hdHJpeCgwLjcwNzEgLTAuNzA3MSAwLjcwNzEgMC43MDcxIC0zLjMxMzUgNy45OTk1KSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+CjxyZWN0IHg9IjciIHk9Ii0wLjk5OSIgdHJhbnNmb3JtPSJtYXRyaXgoLTAuNzA3MSAtMC43MDcxIDAuNzA3MSAtMC43MDcxIDcuOTk4OCAxOS4zMTQyKSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+PC9zdmc+Cg==);
+		}
+		.copy_only {
+			position: absolute;
+			display:inline-block;
+			line-height: 0;
+			font-size: 0;
+		}
+		.nocopy::after {
+			content: attr(data-content);
+		}
+</style>
 	`;
 
 // variables
@@ -61,6 +195,13 @@ $( document ).ready( function() {
 	// click handlers to create/close windows
 	$( document ).on( 'click', '.eveui_window .eveui_close_icon', function(e) {
 		$( this ).parent().remove();
+		if ( $( '.eveui_window' ).length == 0 ) {
+			$( '.eveui_modal_overlay' ).remove();
+		}
+	});
+	$( document ).on( 'click', '.eveui_modal_overlay', function(e) {
+		$( '.eveui_window' ).remove();
+		$( this ).remove();
 	});
 
 	$( document ).on( 'click', eveui_fit_selector, function(e) {
@@ -75,12 +216,23 @@ $( document ).ready( function() {
 		var dna = $( this ).attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 		var eveui_name = $( this ).text();
 
-		// create loading placeholder
-		this.eveui_window = eveui_new_window();
-		eveui_mark( 'fit window created' );
+		var parent = $( 'body' );
+		switch ( eveui_mode ) {
+			case 'modal':
+				parent.append( `<div class="eveui_modal_overlay" data-eveui-dna="${ dna }" />` );
+			case 'multi_window':
+				// create loading placeholder
+				this.eveui_window = eveui_new_window();
+				eveui_mark( 'fit window created' );
 
-		this.eveui_window.attr( 'data-eveui-dna', dna );
-		$( 'body' ).append( this.eveui_window );
+				this.eveui_window.attr( 'data-eveui-dna', dna );
+				parent.append( this.eveui_window );
+				break;
+			case 'expand':
+				$( this ).attr( 'data-eveui-expand', 1 );
+				eveui_expand_fits();
+				break;
+		}
 
 		eveui_fit_window( dna, eveui_name );
 	});
@@ -99,7 +251,14 @@ $( document ).ready( function() {
 		// create loading placeholder
 		this.eveui_window = eveui_new_window();
 		this.eveui_window.attr( 'data-eveui-itemid', item_id );
-		$( 'body' ).append( this.eveui_window );
+		switch ( eveui_mode ) {
+			case 'modal':
+				$( this.closest( '.eveui_window' ) ).append( this.eveui_window );
+				break;
+			default:
+				$( 'body' ).append( this.eveui_window );
+				break;
+		}
 
 		eveui_mark( 'item window created' );
 
@@ -224,6 +383,11 @@ $( document ).ready( function() {
 				eveui_window.css( 'left', window.innerWidth - eveui_window.width() - 25 );
 			}
 		});
+		if ( eveui_mode == 'modal' ) {
+			var eveui_window = $( 'body' ).children( '.eveui_window' );
+			eveui_window.css( 'top', 25 );
+			eveui_window.css( 'left', 25 );
+		}
 	});
 
 	// lazy preload timer
@@ -433,7 +597,7 @@ function eveui_fit_window( dna: string, eveui_name?: string ) {
 
 function eveui_expand_fits() {
 	var expand_filter = '[data-eveui-expand]';
-	if ( eveui_expand_all ) {
+	if ( eveui_mode == "expand_all" ) {
 		expand_filter = '*';
 	}
 	$( eveui_fit_selector ).filter( expand_filter ).each( function() {
