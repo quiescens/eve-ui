@@ -391,7 +391,7 @@ $( document ).ready( function() {
 	});
 
 	// lazy preload timer
-	eveui_preload_timer = setTimeout( eveui_lazy_preload, 1000 );
+	eveui_preload_timer = setTimeout( eveui_lazy_preload, eveui_preload_interval );
 
 	eveui_mark( 'document ready end' );
 
