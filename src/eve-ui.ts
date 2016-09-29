@@ -214,7 +214,7 @@ $( document ).ready( function() {
 		}
 
 		var dna = $( this ).attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-		var eveui_name = $( this ).text();
+		var eveui_name = $( this ).attr( 'data-title' ) || $( this ).text();
 
 		var parent = $( 'body' );
 		switch ( eveui_mode ) {
