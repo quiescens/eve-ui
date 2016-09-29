@@ -1,7 +1,7 @@
 # eve-ui
 A nearly standalone (EVE Online) fit display script for inclusion in arbitrary websites.
 
-https://quiescens.github.io/eve-ui/examples.html to see it in action.
+https://quiescens.github.io/eve-ui/examples.html to see what it looks like by default, view source to see how it works.
 
 With the impending removal of the in game browser, the old shortcut of using IGB links to display ship fittings will no longer be available. 
 This script can be loaded in an arbitrary HTML document to automatically generate viewable, copy-pasteable fit windows for any element that it detects as a fit.

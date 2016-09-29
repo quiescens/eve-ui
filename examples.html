@@ -9,14 +9,18 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
         <script src="eve-ui.min.js"></script>
         <script>
-            // this variable defines how many fits to try to load data for automatically, any further fits will be loaded only when clicked
+            //// this variable defines how many fits to try to load data for automatically, any further fits will be loaded only when clicked
             // eveui_preload_initial = 0;
 
-            // if you want to define your own css styles for the relevant classes, you should remove the default styles as below
-            // eveui_style = ""; 
+            //// if you want to define your own css styles for the relevant classes, you should remove the default styles as below
+            // eveui_style = ''; 
 
-            // if you want fits to be expanded without needing to be clicked
-            // eveui_expand_all = true;
+            //// available modes
+            //// expand_all: expands all fits into the existing DOM as they are loaded
+            //// expand: expands fit into existing DOM when clicked
+            //// modal: opens one fit in a window that has to be closed before continuing
+            //// multi_window: opens each fit in a new window which can be closed individually
+            // eveui_mode = 'multi_window';
         </script>
     </head>
     <body>
