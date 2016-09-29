@@ -358,9 +358,9 @@ function eveui_new_window() {
 			<div class="eveui_title">&nbsp;</div>
 			<span class="eveui_icon eveui_close_icon" />
 			<span class="eveui_scrollable">
-			<span class="eveui_content">
-				Loading...
-			</span>
+				<span class="eveui_content">
+					Loading...
+				</span>
 			</span>
 		</span>
 		` );
@@ -544,8 +544,6 @@ function eveui_fit_window( dna: string, eveui_name?: string ) {
 		eveui_window.find( '.eveui_content ').html( eveui_generate_fit( dna, eveui_name) );
 		$( window ).trigger( 'resize' );
 		eveui_mark( 'fit window populated' );
-	}).fail( function() {
-		delete eveui_fit_cache[ dna ];
 	});
 }
 
@@ -561,8 +559,6 @@ function eveui_expand_fits() {
 			var eveui_name = $( this ).text();
 			selected_element.replaceWith( `<span class="eveui_content">${ eveui_generate_fit( dna, eveui_name ) }</span>` );
 			eveui_mark( 'fit window populated' );
-		}).fail( function() {
-			delete eveui_fit_cache[ dna ];
 		});
 	});
 }
@@ -613,7 +609,10 @@ function eveui_cache_fit( dna: string ) {
 
 		pending.push( eveui_cache_item( item_id ) );
 	}
-	return eveui_fit_cache[ dna ] = $.when.apply( null, pending );
+	eveui_fit_cache[ dna ] = $.when.apply( null, pending ).fail( function() {
+		delete eveui_fit_cache[ dna ];
+	});
+	return eveui_fit_cache[ dna ];
 }
 
 function eveui_cache_item( item_id: string ) {
@@ -623,7 +622,7 @@ function eveui_cache_item( item_id: string ) {
 			return eveui_item_cache[ item_id ];
 		} else {
 			// if item is already cached, we can return a resolved promise
-			return $.when( true );
+			return $.Deferred().resolve();
 		}
 	}
 
