@@ -21,8 +21,6 @@ var eveui_style = `
 			background: #eee;
 			border: 1px solid;
 			opacity: 0.95;
-			min-width: 150px;
-			min-height: 100px;
 			display: flex;
 			flex-direction: column;
 		}
@@ -189,6 +187,7 @@ $( document ).ready( function() {
 		}
 
 		eveui_fit_window( dna, eveui_name );
+		$( window ).trigger( 'resize' );
 	});
 
 	$( document ).on( 'click', eveui_item_selector, function(e) {
@@ -240,6 +239,7 @@ $( document ).ready( function() {
 			var eveui_window = $( `.eveui_window[data-eveui-itemid="${ item_id }"]` );
 			eveui_window.remove();
 		});
+		$( window ).trigger( 'resize' );
 	});
 
 	$( document ).on( 'click', '.eveui_minus_icon', function(e) {
