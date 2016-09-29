@@ -52,6 +52,7 @@ var eveui_style = `
 		.eveui_content {
 			white-space: nowrap;
 			display: inline-block;
+			margin: 2px;
 		}
 		.eveui_content div {
 			display: flex;
@@ -65,101 +66,54 @@ var eveui_style = `
 		.eveui_line_spacer {
 			line-height: 0.5em;
 		}
-		.eveui_item_icon {
+		.eveui_icon {
 			display: inline-block;
+			margin: 1px;
 			vertical-align: middle;
-			margin: 1px 2px;
-			background-size: 20px 20px;
+			height: 1em;
+			width: 1em;
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: contain;
+		}
+		.eveui_item_icon {
 			height: 20px;
 			width: 20px;
 		}
 		.eveui_ship_icon {
-			display: inline-block;
-			vertical-align: middle;
-			margin: 1px 2px;
-			background-size: 32px 32px;
 			height: 32px;
 			width: 32px;
 		}
-		.eveui_empty_icon {
-			display: inline-block;
-			margin: 0 1px;
-			height: 1em;
-			width: 1em;
+		.eveui_close_icon {
+			cursor: pointer;
+			position: absolute;
+			top: 0;
+			right: 0;
+			background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHg9IjciIHk9Ii0xIiB0cmFuc2Zvcm09Im1hdHJpeCgwLjcwNzEgLTAuNzA3MSAwLjcwNzEgMC43MDcxIC0zLjMxMzUgNy45OTk1KSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+CjxyZWN0IHg9IjciIHk9Ii0wLjk5OSIgdHJhbnNmb3JtPSJtYXRyaXgoLTAuNzA3MSAtMC43MDcxIDAuNzA3MSAtMC43MDcxIDcuOTk4OCAxOS4zMTQyKSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+PC9zdmc+Cg==);
 		}
 		.eveui_info_icon {
-			display: inline-block;
-			margin: 0 1px;
 			cursor: pointer;
-			height: 1em;
-			width: 1em;
-			background-position: center;
-			background-repeat: no-repeat;
-			background-size: contain;
 			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTQ0OCAzODRjMzUgMCA2NC0yOSA2NC02NHMtMjktNjQtNjQtNjQtNjQgMjktNjQgNjQgMjkgNjQgNjQgNjR6IG0wLTMyMGMtMjQ3IDAtNDQ4IDIwMS00NDggNDQ4czIwMSA0NDggNDQ4IDQ0OCA0NDgtMjAxIDQ0OC00NDgtMjAxLTQ0OC00NDgtNDQ4eiBtMCA3NjhjLTE3NyAwLTMyMC0xNDMtMzIwLTMyMHMxNDMtMzIwIDMyMC0zMjAgMzIwIDE0MyAzMjAgMzIwLTE0MyAzMjAtMzIwIDMyMHogbTY0LTMyMGMwLTMyLTMyLTY0LTY0LTY0cy0zMiAwLTY0IDAtNjQgMzItNjQgNjRoNjRzMCAxNjAgMCAxOTIgMzIgNjQgNjQgNjQgMzIgMCA2NCAwIDY0LTMyIDY0LTY0aC02NHMwLTE2MCAwLTE5MnoiIC8+Cjwvc3ZnPgo=);
 		}
 		.eveui_plus_icon {
-			display: inline-block;
-			margin: 0 1px;
 			cursor: pointer;
-			height: 1em;
-			width: 1em;
-			background-position: center;
-			background-repeat: no-repeat;
-			background-size: contain;
 			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI2NDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTM4NCA0NDhWMTkySDI1NnYyNTZIMHYxMjhoMjU2djI1NmgxMjhWNTc2aDI1NlY0NDhIMzg0eiIgLz4KPC9zdmc+Cg==);
 		}
 		.eveui_minus_icon {
-			display: inline-block;
-			margin: 0 1px;
 			cursor: pointer;
-			height: 1em;
-			width: 1em;
-			background-position: center;
-			background-repeat: no-repeat;
-			background-size: contain;
 			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNDQ4djEyOGg1MTJWNDQ4SDB6IiAvPgo8L3N2Zz4K);
 		}
 		.eveui_more_icon {
-			display: inline-block;
-			margin: 0 1px;
 			cursor: pointer;
-			height: 1em;
-			width: 1em;
-			background-position: center;
-			background-repeat: no-repeat;
-			background-size: contain;
 			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI3NjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTAgNTc2aDEyOHYtMTI4aC0xMjh2MTI4eiBtMC0yNTZoMTI4di0xMjhoLTEyOHYxMjh6IG0wIDUxMmgxMjh2LTEyOGgtMTI4djEyOHogbTI1Ni0yNTZoNTEydi0xMjhoLTUxMnYxMjh6IG0wLTI1Nmg1MTJ2LTEyOGgtNTEydjEyOHogbTAgNTEyaDUxMnYtMTI4aC01MTJ2MTI4eiIgLz4KPC9zdmc+Cg==);
 		}
 		.eveui_edit_icon {
-			display: inline-block;
-			margin: 0 1px;
 			cursor: pointer;
-			height: 1em;
-			width: 1em;
-			background-position: center;
-			background-repeat: no-repeat;
-			background-size: contain;
 			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTcwNCA2NEw1NzYgMTkybDE5MiAxOTIgMTI4LTEyOEw3MDQgNjR6TTAgNzY4bDAuNjg4IDE5Mi41NjJMMTkyIDk2MGw1MTItNTEyTDUxMiAyNTYgMCA3Njh6TTE5MiA4OTZINjRWNzY4aDY0djY0aDY0Vjg5NnoiIC8+Cjwvc3ZnPgo=);
 		}
 		.eveui_copy_icon {
 			cursor: pointer;
-			height: 1em;
-			width: 1em;
-			background-position: center;
-			background-repeat: no-repeat;
-			background-size: contain;
 			background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjEwMjQiIHdpZHRoPSI4OTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTcwNCA4OTZoLTY0MHYtNTc2aDY0MHYxOTJoNjR2LTMyMGMwLTM1LTI5LTY0LTY0LTY0aC0xOTJjMC03MS01Ny0xMjgtMTI4LTEyOHMtMTI4IDU3LTEyOCAxMjhoLTE5MmMtMzUgMC02NCAyOS02NCA2NHY3MDRjMCAzNSAyOSA2NCA2NCA2NGg2NDBjMzUgMCA2NC0yOSA2NC02NHYtMTI4aC02NHYxMjh6IG0tNTEyLTcwNGMyOSAwIDI5IDAgNjQgMHM2NC0yOSA2NC02NCAyOS02NCA2NC02NCA2NCAyOSA2NCA2NCAzMiA2NCA2NCA2NCAzMyAwIDY0IDAgNjQgMjkgNjQgNjRoLTUxMmMwLTM5IDI4LTY0IDY0LTY0eiBtLTY0IDUxMmgxMjh2LTY0aC0xMjh2NjR6IG00NDgtMTI4di0xMjhsLTI1NiAxOTIgMjU2IDE5MnYtMTI4aDMyMHYtMTI4aC0zMjB6IG0tNDQ4IDI1NmgxOTJ2LTY0aC0xOTJ2NjR6IG0zMjAtNDQ4aC0zMjB2NjRoMzIwdi02NHogbS0xOTIgMTI4aC0xMjh2NjRoMTI4di02NHoiIC8+Cjwvc3ZnPgo=);
-		}
-		.eveui_close_icon {
-			position: absolute;
-			top: 0;
-			right: 0;
-			cursor: pointer;
-			height: 1em;
-			width: 1em;
-			background-size: 1em 1em;
-			background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHg9IjciIHk9Ii0xIiB0cmFuc2Zvcm09Im1hdHJpeCgwLjcwNzEgLTAuNzA3MSAwLjcwNzEgMC43MDcxIC0zLjMxMzUgNy45OTk1KSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+CjxyZWN0IHg9IjciIHk9Ii0wLjk5OSIgdHJhbnNmb3JtPSJtYXRyaXgoLTAuNzA3MSAtMC43MDcxIDAuNzA3MSAtMC43MDcxIDcuOTk4OCAxOS4zMTQyKSIgd2lkdGg9IjIiIGhlaWdodD0iMTcuOTk5Ii8+PC9zdmc+Cg==);
 		}
 		.copy_only {
 			position: absolute;
@@ -170,7 +124,7 @@ var eveui_style = `
 		.nocopy::after {
 			content: attr(data-content);
 		}
-</style>
+	</style>
 	`;
 
 // variables
@@ -402,7 +356,7 @@ function eveui_new_window() {
 	var eveui_window = $( `
 		<span class="eveui_window" style="position: fixed">
 			<div class="eveui_title">&nbsp;</div>
-			<span class="eveui_close_icon" />
+			<span class="eveui_icon eveui_close_icon" />
 			<span class="eveui_scrollable">
 			<span class="eveui_content">
 				Loading...
@@ -489,7 +443,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 			slots_used += fittings[ item_id ];
 			html += `
 				<div data-eveui-itemid="${ item_id }">
-				<span style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_item_icon" />
+				<span style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
 				<span class="eveui_flexgrow">
 				`;
 			if ( slots_available ) {
@@ -505,14 +459,14 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 			}
 			html += `
 				</span>
-				<span class="eveui_empty_icon" />
-				<span data-itemid="${ item_id }" class="eveui_info_icon" />
+				<span class="eveui_icon" />
+				<span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
 				`;
 			if ( eveui_allow_edit ) {
 				html += `
-					<span class="eveui_plus_icon" />
-					<span class="eveui_minus_icon" />
-					<span class="eveui_more_icon" />
+					<span class="eveui_icon eveui_plus_icon" />
+					<span class="eveui_icon eveui_minus_icon" />
+					<span class="eveui_icon eveui_more_icon" />
 					`;
 			}
 			html += '</div>';
@@ -522,7 +476,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 			if ( slots_available > slots_used ) {
 				html += `
 					<div>
-						<span class="eveui_item_icon" />
+						<span class="eveui_icon eveui_item_icon" />
 						<span class="nocopy eveui_flexgrow" data-content="Empty x${ slots_available - slots_used }" />
 					`;
 				if ( eveui_allow_edit ) {
@@ -533,7 +487,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 			if ( slots_used > slots_available ) {
 				html += `
 					<div>
-						<span class="eveui_item_icon" />
+						<span class="eveui_icon eveui_item_icon" />
 						<span class="nocopy" data-content="Excess x${ slots_used - slots_available }" />
 					</div>
 					`;
@@ -547,20 +501,20 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 	html += `
 		<div class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
 		<span class="eveui_startcopy" />
-		<span style="background-image: url(https://imageserver.eveonline.com/Type/${ ship_id }_32.png)" class="eveui_ship_icon" />
+		<span style="background-image: url(https://imageserver.eveonline.com/Type/${ ship_id }_32.png)" class="eveui_icon eveui_ship_icon" />
 		<span class="eveui_flexgrow">
 			[${ eveui_item_cache[ ship_id ].name },
 			<a target="_blank" href="${ eveui_urlify( dna ) }">${ eveui_name || eveui_item_cache[ ship_id ].name }</a>]
 		</span>
-		<span class="eveui_empty_icon" />
-		<span class="eveui_copy_icon" />
+		<span class="eveui_icon eveui_icon" />
+		<span class="eveui_icon eveui_copy_icon" />
 		<span data-itemid="${ ship_id }" class="eveui_info_icon" />
 		`;
 	if ( eveui_allow_edit ) {
 		html += `
-			<span class="eveui_empty_icon" />
-			<span class="eveui_empty_icon" />
-			<span class="eveui_more_icon" />
+			<span class="eveui_icon" />
+			<span class="eveui_icon" />
+			<span class="eveui_icon eveui_more_icon" />
 			`;
 	}
 	html += `
@@ -663,13 +617,17 @@ function eveui_cache_fit( dna: string ) {
 }
 
 function eveui_cache_item( item_id: string ) {
-	if ( eveui_item_cache.hasOwnProperty( item_id ) ) {
-		// if item is already cached, we can return a resolved promise
-		return $.when( true );
+	if ( typeof ( eveui_item_cache[ item_id ] ) === 'object' ) {
+		if ( typeof ( eveui_item_cache[ item_id ].promise ) === 'function' ) {
+			// item is pending, return the existing deferred object
+			return eveui_item_cache[ item_id ];
+		} else {
+			// if item is already cached, we can return a resolved promise
+			return $.when( true );
+		}
 	}
 
-	eveui_item_cache[ item_id ] = -1;
-	return $.ajax( 
+	return eveui_item_cache[ item_id ] = $.ajax(
 		`https://crest-tq.eveonline.com/inventory/types/${ item_id }/`,
 		{
 			dataType: 'json',
