@@ -677,8 +677,13 @@ function eveui_cache_item( item_id: string ) {
 		}
 		).done( function(data) {
 			eveui_item_cache[ item_id ] = data;
-		}).fail( function() {
-			delete eveui_item_cache[ item_id ];
+		}).fail( function( xhr ) {
+			if ( xhr.status == 404 ) {
+				// 404 will usually be a "permanent" error
+			} else {
+				// otherwise, assume temporary error and try again when possible
+				delete eveui_item_cache[ item_id ];
+			}
 		});
 }
 
