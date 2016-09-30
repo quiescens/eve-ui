@@ -140,8 +140,7 @@ var eveui_drag_y = 0;
 var eveui_zindex = 100;
 var eveui_preload_timer;
 var eveui_fit_preload = eveui_preload_initial;
-var eveui_fit_cache = {};
-var eveui_item_cache = {};
+var eveui_cache = {};
 
 $( document ).ready( function() {
 	// initialize script
@@ -226,7 +225,7 @@ $( document ).ready( function() {
 			var eveui_window = $( `.eveui_window[data-eveui-itemid="${ item_id }"]` );
 			var html = '';
 			html += '<table>';
-			var item = eveui_item_cache[ item_id ];
+			var item = eveui_cache[ 'types/' + item_id ];
 			for ( var i in item.dogma.attributes ) {
 				var attr = item.dogma.attributes[i];
 				html += '<tr>';
@@ -399,9 +398,9 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 
 	// ship name and number of slots
 	var ship_id = parseInt( items.shift() );
-	var ship = eveui_item_cache[ ship_id ];
+	var ship = eveui_cache[ 'types/' + ship_id ];
 	for ( var i in ship.dogma.attributes ) {
-		var attr = eveui_item_cache[ ship_id ].dogma.attributes[i];
+		var attr = eveui_cache[ 'types/' + ship_id ].dogma.attributes[i];
 		if ( attr.attribute.name == 'hiSlots' ) {
 			ship[attr.attribute.name] = attr.value;
 		} else if ( attr.attribute.name == 'medSlots' ) {
@@ -424,20 +423,20 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 		var item_id = match[0];
 		var quantity = parseInt( match[1] );
 
-		for ( var i in eveui_item_cache[ item_id ].dogma.effects ) {
-			if ( eveui_item_cache[ item_id ].dogma.effects[i].effect.name == 'hiPower') {
+		for ( var i in eveui_cache[ 'types/' + item_id ].dogma.effects ) {
+			if ( eveui_cache[ 'types/' + item_id ].dogma.effects[i].effect.name == 'hiPower') {
 				high_slots[ item_id ] = quantity;
 				continue outer;
-			} else if ( eveui_item_cache[ item_id ].dogma.effects[i].effect.name == 'medPower') {
+			} else if ( eveui_cache[ 'types/' + item_id ].dogma.effects[i].effect.name == 'medPower') {
 				med_slots[ item_id ] = quantity;
 				continue outer;
-			} else if ( eveui_item_cache[ item_id ].dogma.effects[i].effect.name == 'loPower') {
+			} else if ( eveui_cache[ 'types/' + item_id ].dogma.effects[i].effect.name == 'loPower') {
 				low_slots[ item_id ] = quantity;
 				continue outer;
-			} else if ( eveui_item_cache[ item_id ].dogma.effects[i].effect.name == 'rigSlot') {
+			} else if ( eveui_cache[ 'types/' + item_id ].dogma.effects[i].effect.name == 'rigSlot') {
 				rig_slots[ item_id ] = quantity;
 				continue outer;
-			} else if ( eveui_item_cache[ item_id ].dogma.effects[i].effect.name == 'subSystem') {
+			} else if ( eveui_cache[ 'types/' + item_id ].dogma.effects[i].effect.name == 'subSystem') {
 				subsystem_slots[ item_id ] = quantity;
 				continue outer;
 			}
@@ -456,21 +455,21 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 				html += `
 					<tr class="copy_only">
 					<td>
-						${ ( eveui_item_cache[ item_id ].name + '<br />').repeat(fittings[ item_id ] ) }
+						${ ( eveui_cache[ 'types/' + item_id ].name + '<br />').repeat(fittings[ item_id ] ) }
 					<tr class="nocopy" data-eveui-itemid="${ item_id }">
 						<td style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
 						<td class="eveui_numeric">${ fittings[ item_id ] }
-						<td>${ eveui_item_cache[ item_id ].name }
+						<td>${ eveui_cache[ 'types/' + item_id ].name }
 					`;
 			} else {
 				html += `
 					<tr class="copy_only">
 					<td>
-						${ eveui_item_cache[ item_id ].name } x${ fittings[ item_id ] }
+						${ eveui_cache[ 'types/' + item_id ].name } x${ fittings[ item_id ] }
 					<tr class="nocopy" data-eveui-itemid="${ item_id }">
 						<td style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
 						<td class="eveui_numeric">${ fittings[ item_id ] }
-						<td>${ eveui_item_cache[ item_id ].name }
+						<td>${ eveui_cache[ 'types/' + item_id ].name }
 					`;
 			}
 			html += `
@@ -516,8 +515,8 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 		<div class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
 		<span style="background-image: url(https://imageserver.eveonline.com/Type/${ ship_id }_32.png)" class="eveui_icon eveui_ship_icon" />
 		<span class="eveui_flexgrow">
-			<span class="eveui_startcopy" />[${ eveui_item_cache[ ship_id ].name },
-			<a target="_blank" href="${ eveui_urlify( dna ) }">${ eveui_name || eveui_item_cache[ ship_id ].name }</a>]
+			<span class="eveui_startcopy" />[${ eveui_cache[ 'types/' + ship_id ].name },
+			<a target="_blank" href="${ eveui_urlify( dna ) }">${ eveui_name || eveui_cache[ 'types/' + ship_id ].name }</a>]
 		</span>
 		<span class="eveui_icon eveui_icon" />
 		<span class="eveui_icon eveui_copy_icon" />
@@ -586,7 +585,7 @@ function eveui_lazy_preload() {
 			var dna = $( this ).data( 'dna' ) || this.href.substring(8);
 
 			// skip if already pending or cached
-			if ( eveui_fit_cache.hasOwnProperty( dna ) ) {
+			if ( eveui_cache.hasOwnProperty( 'fit/' + dna ) ) {
 				return;
 			}
 			action_taken = true;
@@ -608,8 +607,8 @@ function eveui_lazy_preload() {
 
 function eveui_cache_fit( dna: string ) {
 	// caches all items required to process the specified fit
-	if( typeof ( eveui_fit_cache[ dna ] ) === 'object' ) {
-		return eveui_fit_cache[ dna ];
+	if( typeof ( eveui_cache[ 'fit/' + dna ] ) === 'object' ) {
+		return eveui_cache[ 'fit/' + dna ];
 	}
 
 	var pending = [];
@@ -624,37 +623,37 @@ function eveui_cache_fit( dna: string ) {
 
 		pending.push( eveui_cache_item( item_id ) );
 	}
-	eveui_fit_cache[ dna ] = $.when.apply( null, pending ).fail( function() {
-		delete eveui_fit_cache[ dna ];
+	eveui_cache[ 'fit/' + dna ] = $.when.apply( null, pending ).fail( function() {
+		delete eveui_cache[ 'fit/' + dna ];
 	});
-	return eveui_fit_cache[ dna ];
+	return eveui_cache[ 'fit/' + dna ];
 }
 
 function eveui_cache_item( item_id: string ) {
-	if ( typeof ( eveui_item_cache[ item_id ] ) === 'object' ) {
-		if ( typeof ( eveui_item_cache[ item_id ].promise ) === 'function' ) {
+	if ( typeof ( eveui_cache[ 'types/' + item_id ] ) === 'object' ) {
+		if ( typeof ( eveui_cache[ 'types/' + item_id ].promise ) === 'function' ) {
 			// item is pending, return the existing deferred object
-			return eveui_item_cache[ item_id ];
+			return eveui_cache[ 'types/' + item_id ];
 		} else {
 			// if item is already cached, we can return a resolved promise
 			return $.Deferred().resolve();
 		}
 	}
 
-	return eveui_item_cache[ item_id ] = $.ajax(
+	return eveui_cache[ 'types/' + item_id ] = $.ajax(
 		`https://crest-tq.eveonline.com/inventory/types/${ item_id }/`,
 		{
 			dataType: 'json',
 			cache: true,
 		}
 		).done( function(data) {
-			eveui_item_cache[ item_id ] = data;
+			eveui_cache[ 'types/' + item_id ] = data;
 		}).fail( function( xhr ) {
 			if ( xhr.status == 404 ) {
 				// 404 will usually be a "permanent" error
 			} else {
 				// otherwise, assume temporary error and try again when possible
-				delete eveui_item_cache[ item_id ];
+				delete eveui_cache[ 'types/' + item_id ];
 			}
 		});
 }
