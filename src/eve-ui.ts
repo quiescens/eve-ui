@@ -24,6 +24,9 @@ var eveui_style = `
 			display: flex;
 			flex-direction: column;
 		}
+		.eveui_content td {
+			padding: 0 2px;
+		}
 		.eveui_modal_overlay {
 			cursor: pointer;
 			position: fixed;
@@ -63,6 +66,9 @@ var eveui_style = `
 		}
 		.eveui_line_spacer {
 			line-height: 0.5em;
+		}
+		.eveui_numeric {
+			text-align: right;
 		}
 		.eveui_icon {
 			display: inline-block;
@@ -166,7 +172,7 @@ $( document ).ready( function() {
 		}
 
 		var dna = $( this ).attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-		var eveui_name = $( this ).attr( 'data-title' ) || $( this ).text();
+		var eveui_name = $( this ).attr( 'data-title' ) || $( this ).text().trim();
 
 		var parent = $( 'body' );
 		switch ( eveui_mode ) {
@@ -325,22 +331,27 @@ $( document ).ready( function() {
 		$( '.eveui_window' ).each( function() {
 			var eveui_window = $( this );
 			var eveui_content = eveui_window.find( '.eveui_content' );
-			if ( eveui_content.height() > window.innerHeight - 50 ) {
-				eveui_window.css( 'height', window.innerHeight - 50 );
+			if ( eveui_content.height() > window.innerHeight - 20 ) {
+				eveui_window.css( 'height', window.innerHeight - 20 );
 			} else {
 				eveui_window.css( 'height', '' );
 			}
+			if ( eveui_content.width() > window.innerWidth - 20 ) {
+				eveui_window.css( 'width', window.innerWidth - 20 );
+			} else {
+				eveui_window.css( 'width', '' );
+			}
 			if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
-				eveui_window.css( 'top', window.innerHeight - eveui_window.height() - 25 );
+				eveui_window.css( 'top', window.innerHeight - eveui_window.height() - 10 );
 			}
 			if ( eveui_window[0].getBoundingClientRect().right > window.innerWidth ) {
-				eveui_window.css( 'left', window.innerWidth - eveui_window.width() - 25 );
+				eveui_window.css( 'left', window.innerWidth - eveui_window.width() - 10 );
 			}
 		});
 		if ( eveui_mode == 'modal' ) {
 			var eveui_window = $( 'body' ).children( '.eveui_window' );
-			eveui_window.css( 'top', 25 );
-			eveui_window.css( 'left', 25 );
+			eveui_window.css( 'top', window.innerHeight / 2 - eveui_window.height() / 2 );
+			eveui_window.css( 'left', window.innerWidth / 2 - eveui_window.width() / 2 );
 		}
 	});
 
@@ -441,55 +452,58 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 
 		for ( var item_id in fittings ) {
 			slots_used += fittings[ item_id ];
-			html += `
-				<div data-eveui-itemid="${ item_id }">
-				<span style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
-				<span class="eveui_flexgrow">
-				`;
 			if ( slots_available ) {
 				html += `
-					<span class="copy_only">
-						${ ( eveui_item_cache[ item_id ].name + '<br />').repeat(fittings[ item_id ] - 1) }
-					</span>
-					${ eveui_item_cache[ item_id ].name }
-					<span class="nocopy" data-content=" x${ fittings[ item_id ] }" />
+					<tr class="copy_only">
+					<td>
+						${ ( eveui_item_cache[ item_id ].name + '<br />').repeat(fittings[ item_id ] ) }
+					<tr class="nocopy" data-eveui-itemid="${ item_id }">
+						<td style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
+						<td class="eveui_numeric">${ fittings[ item_id ] }
+						<td>${ eveui_item_cache[ item_id ].name }
 					`;
 			} else {
-				html += eveui_item_cache[ item_id ].name + ' x' + fittings[ item_id ];
+				html += `
+					<tr class="copy_only">
+					<td>
+						${ eveui_item_cache[ item_id ].name } x${ fittings[ item_id ] }
+					<tr class="nocopy" data-eveui-itemid="${ item_id }">
+						<td style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
+						<td class="eveui_numeric">${ fittings[ item_id ] }
+						<td>${ eveui_item_cache[ item_id ].name }
+					`;
 			}
 			html += `
-				</span>
-				<span class="eveui_icon" />
-				<span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
+				<td class="eveui_icon" />
+				<td data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
 				`;
 			if ( eveui_allow_edit ) {
 				html += `
-					<span class="eveui_icon eveui_plus_icon" />
-					<span class="eveui_icon eveui_minus_icon" />
-					<span class="eveui_icon eveui_more_icon" />
+					<td class="eveui_icon eveui_plus_icon" />
+					<td class="eveui_icon eveui_minus_icon" />
+					<td class="eveui_icon eveui_more_icon" />
 					`;
 			}
-			html += '</div>';
 		}
 
 		if ( typeof ( slots_available ) != 'undefined' ) {
 			if ( slots_available > slots_used ) {
 				html += `
-					<div>
-						<span class="eveui_icon eveui_item_icon" />
-						<span class="nocopy eveui_flexgrow" data-content="Empty x${ slots_available - slots_used }" />
+					<tr class="nocopy">
+						<td class="eveui_icon eveui_item_icon" />
+						<td class="eveui_numeric">${ slots_available - slots_used }
+						<td>Empty
 					`;
 				if ( eveui_allow_edit ) {
-					html += '<span class="eveui_more_icon" />';
+					html += '<td class="eveui_more_icon" />';
 				}
-				html += '</div>';
 			}
 			if ( slots_used > slots_available ) {
 				html += `
-					<div>
-						<span class="eveui_icon eveui_item_icon" />
-						<span class="nocopy" data-content="Excess x${ slots_used - slots_available }" />
-					</div>
+					<tr class="nocopy">
+						<td class="eveui_icon eveui_item_icon" />
+						<td class="eveui_numeric">${ slots_available - slots_used }
+						<td>Excess
 					`;
 			}
 		}
@@ -500,15 +514,14 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 	var html = '';
 	html += `
 		<div class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
-		<span class="eveui_startcopy" />
 		<span style="background-image: url(https://imageserver.eveonline.com/Type/${ ship_id }_32.png)" class="eveui_icon eveui_ship_icon" />
 		<span class="eveui_flexgrow">
-			[${ eveui_item_cache[ ship_id ].name },
+			<span class="eveui_startcopy" />[${ eveui_item_cache[ ship_id ].name },
 			<a target="_blank" href="${ eveui_urlify( dna ) }">${ eveui_name || eveui_item_cache[ ship_id ].name }</a>]
 		</span>
 		<span class="eveui_icon eveui_icon" />
 		<span class="eveui_icon eveui_copy_icon" />
-		<span data-itemid="${ ship_id }" class="eveui_info_icon" />
+		<span data-itemid="${ ship_id }" class="eveui_icon eveui_info_icon" />
 		`;
 	if ( eveui_allow_edit ) {
 		html += `
@@ -519,17 +532,19 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 	}
 	html += `
 		</div>
+		<table>
 		${ item_rows( high_slots, ship.hiSlots ) }
-		<div class="eveui_line_spacer">&nbsp;</div>
+		<tr><td class="eveui_line_spacer">&nbsp;
 		${ item_rows( med_slots, ship.medSlots ) }
-		<div class="eveui_line_spacer">&nbsp;</div>
+		<tr><td class="eveui_line_spacer">&nbsp;
 		${ item_rows( low_slots, ship.lowSlots ) }
-		<div class="eveui_line_spacer">&nbsp;</div>
+		<tr><td class="eveui_line_spacer">&nbsp;
 		${ item_rows( rig_slots, ship.rigSlots ) }
-		<div class="eveui_line_spacer">&nbsp;</div>
+		<tr><td class="eveui_line_spacer">&nbsp;
 		${ item_rows( subsystem_slots, ship.maxSubsystems ) }
-		<div class="eveui_line_spacer">&nbsp;</div>
+		<tr><td class="eveui_line_spacer">&nbsp;
 		${ item_rows( other_slots ) }
+		</table>
 		<span class="eveui_endcopy" />
 		`;
 
@@ -556,7 +571,7 @@ function eveui_expand_fits() {
 		var dna = $( this ).attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 		var selected_element = $( this );
 		eveui_cache_fit( dna ).done( function() {
-			var eveui_name = $( this ).text();
+			var eveui_name = $( this ).text().trim();
 			selected_element.replaceWith( `<span class="eveui_content">${ eveui_generate_fit( dna, eveui_name ) }</span>` );
 			eveui_mark( 'fit window populated' );
 		});
@@ -645,6 +660,8 @@ function eveui_cache_item( item_id: string ) {
 }
 
 function eveui_copy( element ) {
+	$( '.nocopy' ).hide();
+	$( '.copyonly' ).show();
 	var selection = window.getSelection();
 	var range = document.createRange();
 	if ( element.find( '.eveui_startcopy' ).length ) {
@@ -657,6 +674,8 @@ function eveui_copy( element ) {
 	selection.addRange( range );
 	document.execCommand( 'copy' );
 	selection.removeAllRanges();
+	$( '.nocopy' ).show();
+	$( '.copyonly' ).hide();
 }
 
 /* from https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/String/repeat */
