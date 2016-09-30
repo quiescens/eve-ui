@@ -24,6 +24,9 @@ var eveui_style = `
 			display: flex;
 			flex-direction: column;
 		}
+		.eveui_content table {
+			border-collapse: collapse;
+		}
 		.eveui_content td {
 			padding: 0 2px;
 		}
@@ -67,7 +70,7 @@ var eveui_style = `
 		.eveui_line_spacer {
 			line-height: 0.5em;
 		}
-		.eveui_numeric {
+		.eveui_right {
 			text-align: right;
 		}
 		.eveui_icon {
@@ -457,8 +460,8 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 					<td>
 						${ ( eveui_cache[ 'types/' + item_id ].name + '<br />').repeat(fittings[ item_id ] ) }
 					<tr class="nocopy" data-eveui-itemid="${ item_id }">
-						<td style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
-						<td class="eveui_numeric">${ fittings[ item_id ] }
+						<td><span style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
+						<td class="eveui_right">${ fittings[ item_id ] }
 						<td>${ eveui_cache[ 'types/' + item_id ].name }
 					`;
 			} else {
@@ -467,20 +470,19 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 					<td>
 						${ eveui_cache[ 'types/' + item_id ].name } x${ fittings[ item_id ] }
 					<tr class="nocopy" data-eveui-itemid="${ item_id }">
-						<td style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
-						<td class="eveui_numeric">${ fittings[ item_id ] }
+						<td><span style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
+						<td class="eveui_right">${ fittings[ item_id ] }
 						<td>${ eveui_cache[ 'types/' + item_id ].name }
 					`;
 			}
 			html += `
-				<td class="eveui_icon" />
-				<td data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
+				<td class="eveui_right"><span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
 				`;
 			if ( eveui_allow_edit ) {
 				html += `
-					<td class="eveui_icon eveui_plus_icon" />
-					<td class="eveui_icon eveui_minus_icon" />
-					<td class="eveui_icon eveui_more_icon" />
+					<span class="eveui_icon eveui_plus_icon" />
+					<span class="eveui_icon eveui_minus_icon" />
+					<span class="eveui_icon eveui_more_icon" />
 					`;
 			}
 		}
@@ -490,18 +492,18 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 				html += `
 					<tr class="nocopy">
 						<td class="eveui_icon eveui_item_icon" />
-						<td class="eveui_numeric">${ slots_available - slots_used }
+						<td class="eveui_right">${ slots_available - slots_used }
 						<td>Empty
 					`;
 				if ( eveui_allow_edit ) {
-					html += '<td class="eveui_more_icon" />';
+					html += '<td class="eveui_right"><span class="eveui_more_icon" />';
 				}
 			}
 			if ( slots_used > slots_available ) {
 				html += `
 					<tr class="nocopy">
 						<td class="eveui_icon eveui_item_icon" />
-						<td class="eveui_numeric">${ slots_available - slots_used }
+						<td class="eveui_right">${ slots_available - slots_used }
 						<td>Excess
 					`;
 			}
@@ -512,13 +514,13 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 
 	var html = '';
 	html += `
-		<div class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
-		<span style="background-image: url(https://imageserver.eveonline.com/Type/${ ship_id }_32.png)" class="eveui_icon eveui_ship_icon" />
-		<span class="eveui_flexgrow">
+		<table>
+		<tr class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
+		<td colspan="2"><span style="background-image: url(https://imageserver.eveonline.com/Type/${ ship_id }_32.png)" class="eveui_icon eveui_ship_icon" />
+		<td>
 			<span class="eveui_startcopy" />[${ eveui_cache[ 'types/' + ship_id ].name },
 			<a target="_blank" href="${ eveui_urlify( dna ) }">${ eveui_name || eveui_cache[ 'types/' + ship_id ].name }</a>]
-		</span>
-		<span class="eveui_icon eveui_icon" />
+		<td class="eveui_right">
 		<span class="eveui_icon eveui_copy_icon" />
 		<span data-itemid="${ ship_id }" class="eveui_icon eveui_info_icon" />
 		`;
@@ -530,8 +532,6 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 			`;
 	}
 	html += `
-		</div>
-		<table>
 		${ item_rows( high_slots, ship.hiSlots ) }
 		<tr><td class="eveui_line_spacer">&nbsp;
 		${ item_rows( med_slots, ship.medSlots ) }
