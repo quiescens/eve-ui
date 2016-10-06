@@ -133,6 +133,9 @@ var eveui_style = `
 		.nocopy::after {
 			content: attr(data-content);
 		}
+		.nowrap {
+			white-space: nowrap;
+		}
 	</style>
 	`;
 
@@ -529,7 +532,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 					`;
 			}
 			html += `
-				<td class="eveui_right"><span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
+				<td class="eveui_right nowrap"><span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
 				`;
 			if ( eveui_allow_edit ) {
 				html += `
@@ -545,7 +548,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 				html += `
 					<tr class="nocopy">
 						<td class="eveui_icon eveui_item_icon" />
-						<td class="eveui_right">${ slots_available - slots_used }
+						<td class="eveui_right nowrap">${ slots_available - slots_used }
 						<td>Empty
 					`;
 				if ( eveui_allow_edit ) {
