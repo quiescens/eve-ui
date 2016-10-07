@@ -287,9 +287,12 @@ $( document ).ready( function() {
 			var html = '';
 			html += '<table>';
 			html += `
-				<tr><td colspan="2"><img src="${ character['portrait']['128x128']['href'] }" />
-				<tr><td>Name:<td>${ character.name }
-				<tr><td>Corp:<td>${ character.corporation.name }
+				<tr><td colspan="2">
+				<img style="float: left" src="${ character['portrait']['128x128']['href'] }" />
+				${ character.name }
+				<hr />
+				Member of ${ character.corporation.name }
+				<img style="float: left" src="${ character['corporation']['logo']['64x64']['href'] }" />
 				<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
 				`;
 			html += '</table>';
