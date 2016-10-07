@@ -287,7 +287,7 @@ $( document ).ready( function() {
 			var html = '';
 			html += '<table>';
 			html += `
-				<tr><td colspan="2">
+				<tr><td colspan="2" class="nowrap">
 				<img style="float: left" src="${ character['portrait']['128x128']['href'] }" />
 				${ character.name }
 				<hr />
