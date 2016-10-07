@@ -282,19 +282,20 @@ $( document ).ready( function() {
 
 		// load required chars and set callback to display
 		eveui_cache_request( 'characters/' + char_id ).done( function() {
-			var char = eveui_cache[ 'characters/' + char_id ];
+			var character = eveui_cache[ 'characters/' + char_id ];
 			var eveui_window = $( `.eveui_window[data-eveui-charid="${ char_id }"]` );
 			var html = '';
 			html += '<table>';
 			html += `
-				<tr><td>Name:<td>${ char.name }
-				<tr><td>Corp:<td>${ char.corporation.name }
-				<tr><td>Bio:<td>${ char.description.replace( /<font[^>]+>/g, '<font>' ) }
+				<tr><td colspan="2"><img src="${ character['portrait']['128x128']['href'] }" />
+				<tr><td>Name:<td>${ character.name }
+				<tr><td>Corp:<td>${ character.corporation.name }
+				<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
 				`;
 			html += '</table>';
 
 			eveui_window.find( '.eveui_content' ).html(html);
-			eveui_window.find( '.eveui_title' ).html(char.name);
+			eveui_window.find( '.eveui_title' ).html(character.name);
 
 			$( window ).trigger( 'resize' );
 
