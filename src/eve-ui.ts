@@ -158,6 +158,7 @@ if( typeof( Storage ) === 'undefined' ) {
 }
 
 function eveui_init() {
+	eveui_mark( 'eve version request' );
 	$.ajax(
 		`https://crest-tq.eveonline.com/`,
 		{
@@ -462,7 +463,9 @@ function eveui_init() {
 			eveui_preload_timer = setTimeout( eveui_lazy_preload, eveui_preload_interval );
 			eveui_mark( 'preload timer set' );
 		}).fail( function( xhr ) {
+			eveui_mark( 'eve version request failed' );
 			setTimeout( eveui_init, 10000 );
+
 	});
 }
 eveui_init();
