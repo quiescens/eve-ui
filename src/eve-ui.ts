@@ -5,7 +5,7 @@
 // ` used whenever interpolation is required
 
 // config stuff ( can be overridden in a script block placed immediately after the script tag for this script )
-var eveui_use_localstorage = true;
+var eveui_use_localstorage = 4000000;
 var eveui_preload_initial = 50;
 var eveui_preload_interval = 10;
 var eveui_mode = 'multi_window'; // expand_all, expand, multi_window, modal
@@ -154,7 +154,7 @@ var eveui_cache = {};
 var eveui_eve_version = undefined;
 
 if( typeof( Storage ) === 'undefined' ) {
-	eveui_use_localstorage = false;
+	eveui_use_localstorage = -1;
 }
 
 function eveui_init() {
@@ -180,7 +180,7 @@ function eveui_init() {
 					}
 					catch( err ) {
 						console.log( err );
-						eveui_use_localstorage = false;
+						eveui_use_localstorage = -1;
 					}
 					eveui_mark( 'eveui_cache reset' );
 				}
@@ -744,9 +744,10 @@ function eveui_cache_request( endpoint: string ) {
 		}
 		).done( function(data) {
 			eveui_cache[ endpoint ] = data;
-			if ( eveui_use_localstorage ) {
+			var eveui_cache_json = JSON.stringify( eveui_cache );
+			if ( eveui_use_localstorage > eveui_cache_json.length ) {
 				try {
-					localStorage.setItem( 'eveui_cache', JSON.stringify( eveui_cache ) );
+					localStorage.setItem( 'eveui_cache', eveui_cache_json );
 				}
 				catch( err ) {
 					// failure to add to long term cache doesn't have any significant effect that would require a catch block
