@@ -764,6 +764,9 @@ function eveui_cache_request( endpoint: string ) {
 				}
 				localstorage_cache[ key ][ endpoint ] = data;
 				var localstorage_cache_json = JSON.stringify( localstorage_cache );
+				if ( localstorage_cache_json.length > eveui_use_localstorage ) {
+					return;
+				}
 				try {
 					localStorage.setItem( 'eveui_cache', localstorage_cache_json );
 				}
