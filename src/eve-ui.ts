@@ -204,6 +204,8 @@ function eveui_init() {
 			$( document ).on( 'click', eveui_fit_selector, function(e) {
 				e.preventDefault();
 
+				eveui_fit_preload = eveui_preload_initial;
+
 				// hide window if it already exists
 				if ( this.eveui_window && document.contains( this.eveui_window[0] ) ) {
 					this.eveui_window.remove();
