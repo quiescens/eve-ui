@@ -168,7 +168,7 @@ function eveui_init() {
 		).done(	function(data) {
 			eveui_eve_version = data.serverVersion;
 			eveui_mark( 'eve version response ' + eveui_eve_version );
-			if( eveui_use_localstorage ) {
+			if( eveui_use_localstorage > 0 ) {
 				var eveui_cache_version = localStorage.getItem( 'eveui_cache_version' );
 				if ( eveui_cache_version === eveui_eve_version ) {
 					eveui_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) );
@@ -705,6 +705,7 @@ function eveui_lazy_preload() {
 	}
 	if ( ! action_taken ) {
 		eveui_mark( 'preloading finished' );
+		eveui_preload_timer = setTimeout( eveui_lazy_preload, 1000 );
 	}
 }
 
