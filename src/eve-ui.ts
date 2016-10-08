@@ -215,17 +215,15 @@ function eveui_init() {
 				var dna = $( this ).attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 				var eveui_name = $( this ).attr( 'data-title' ) || $( this ).text().trim();
 
-				var parent = $( 'body' );
 				switch ( eveui_mode ) {
 					case 'modal':
-						parent.append( `<div class="eveui_modal_overlay" data-eveui-dna="${ dna }" />` );
 					case 'multi_window':
 						// create loading placeholder
 						this.eveui_window = eveui_new_window();
 						eveui_mark( 'fit window created' );
 
 						this.eveui_window.attr( 'data-eveui-dna', dna );
-						parent.append( this.eveui_window );
+						$( 'body' ).append( this.eveui_window );
 						break;
 					case 'expand':
 						$( this ).attr( 'data-eveui-expand', 1 );
@@ -252,9 +250,6 @@ function eveui_init() {
 				this.eveui_window = eveui_new_window();
 				this.eveui_window.attr( 'data-eveui-itemid', item_id );
 				switch ( eveui_mode ) {
-					case 'modal':
-						$( this.closest( '.eveui_window' ) ).append( this.eveui_window );
-						break;
 					default:
 						$( 'body' ).append( this.eveui_window );
 						break;
@@ -304,9 +299,6 @@ function eveui_init() {
 				this.eveui_window = eveui_new_window();
 				this.eveui_window.attr( 'data-eveui-charid', char_id );
 				switch ( eveui_mode ) {
-					case 'modal':
-						$( this.closest( '.eveui_window' ) ).append( this.eveui_window );
-						break;
 					default:
 						$( 'body' ).append( this.eveui_window );
 						break;
@@ -321,12 +313,12 @@ function eveui_init() {
 					var html = '';
 					html += '<table>';
 					html += `
-						<tr><td colspan="2" class="nowrap">
+						<tr><td colspan="2">
 						<img style="float: left" src="${ character['portrait']['128x128']['href'] }" />
 						${ character.name }
 						<hr />
-						Member of ${ character.corporation.name }
 						<img style="float: left" src="${ character['corporation']['logo']['64x64']['href'] }" />
+						Member of ${ character.corporation.name }
 						<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
 						`;
 					html += '</table>';
@@ -430,8 +422,8 @@ function eveui_init() {
 				$( '.eveui_window' ).each( function() {
 					var eveui_window = $( this );
 					var eveui_content = eveui_window.find( '.eveui_content' );
-					if ( eveui_content.height() > window.innerHeight - 20 ) {
-						eveui_window.css( 'height', window.innerHeight - 20 );
+					if ( eveui_content.height() > window.innerHeight - 50 ) {
+						eveui_window.css( 'height', window.innerHeight - 50 );
 					} else {
 						eveui_window.css( 'height', '' );
 					}
@@ -448,7 +440,7 @@ function eveui_init() {
 					}
 				});
 				if ( eveui_mode == 'modal' ) {
-					var eveui_window = $( 'body' ).children( '.eveui_window' );
+					var eveui_window = $( '[data-eveui-modal]' );
 					eveui_window.css( 'top', window.innerHeight / 2 - eveui_window.height() / 2 );
 					eveui_window.css( 'left', window.innerWidth / 2 - eveui_window.width() / 2 );
 				}
@@ -484,6 +476,10 @@ function eveui_new_window() {
 			</span>
 		</span>
 	` );
+	if ( eveui_mode === 'modal' && $( '.eveui_modal_overlay' ).length === 0 ) {
+		$( 'body' ).append( `<div class="eveui_modal_overlay" />` );
+		eveui_window.attr( 'data-eveui-modal', 1 );
+	}
 	eveui_window.css( 'z-index', eveui_zindex++ );
 	eveui_window.css( 'left', eveui_x + 10 );
 	eveui_window.css( 'top', eveui_y - 10 );
