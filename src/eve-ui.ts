@@ -684,28 +684,27 @@ function eveui_lazy_preload() {
 	// preload timer function
 	var action_taken = false;
 	if ( eveui_fit_preload > 0 ) {
-		$( eveui_fit_selector ).each( function( i ) {
-			var dna = $( this ).data( 'dna' ) || this.href.substring(8);
+		$( eveui_fit_selector ).not( '[data-eveui-cached]' ).each( function( i ) {
+			var elem = $( this );
+			var dna = elem.data( 'dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 
-			// skip if already pending or cached
-			if ( eveui_cache.hasOwnProperty( 'fit/' + dna ) ) {
-				return;
+			var cache = eveui_cache_fit( dna );
+
+			// skip if already cached
+			if ( cache.state() === 'resolved' ) {
+				elem.attr( 'data-eveui-cached', 1 );
+			} else {
+				eveui_fit_preload--;
+				action_taken = true;
+				cache.always( function() {
+					clearTimeout( eveui_preload_timer );
+					eveui_preload_timer = setTimeout( eveui_lazy_preload, eveui_preload_interval );
+				});
 			}
-			action_taken = true;
-
-			eveui_fit_preload--;
-			eveui_cache_fit( dna ).always( function() {
-				clearTimeout( eveui_preload_timer );
-				eveui_preload_timer = setTimeout( eveui_lazy_preload, eveui_preload_interval );
-			});
-
-			// one request per interval
-			return false;
 		});
 	}
-	if ( ! action_taken ) {
-		eveui_mark( 'preloading finished' );
-		eveui_preload_timer = setTimeout( eveui_lazy_preload, 1000 );
+	if ( !action_taken ) {
+		eveui_preload_timer = setTimeout( eveui_lazy_preload, 5000 );
 	}
 }
 
