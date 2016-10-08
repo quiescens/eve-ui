@@ -314,10 +314,10 @@ function eveui_init() {
 					html += '<table>';
 					html += `
 						<tr><td colspan="2">
-						<img style="float: left" src="${ character['portrait']['128x128']['href'] }" />
+						<img style="float: left" src="https://imageserver.eveonline.com/Character/${ character.id }_128.jpg" />
 						${ character.name }
 						<hr />
-						<img style="float: left" src="${ character['corporation']['logo']['64x64']['href'] }" />
+						<img style="float: left" src="https://imageserver.eveonline.com/Corporation/${ character.corporation.id_str }_64.png" />
 						Member of ${ character.corporation.name }
 						<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
 						`;
