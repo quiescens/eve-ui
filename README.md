@@ -11,8 +11,8 @@ This script can be loaded in an arbitrary HTML document to automatically generat
 * Pulls item info from CCP's own CREST which should (theoretically) always be up to date.
 
 At present, the script should work with almost any element that has a data-dna / data-itemid / data-charid attribute containing the appropriate values (dna string or itemid), or links with a href starting with "fitting:" / "item:" / "char:", such as:
-* \<img src="blah" data-dna="fitting:670::" />
-* \<div data-dna="fitting:670::">Pod\</div>
+* \<img src="blah" data-dna="670::" />
+* \<div data-dna=":670::">Pod\</div>
 * \<a href="fitting:670::">Pod\</a>
 * \<a href="item:27740">Vindicator\</a>
 * \<a href="char:90788766">CCP Testguy1\</a>
