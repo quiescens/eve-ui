@@ -169,21 +169,26 @@ function eveui_init() {
 			eveui_eve_version = data.serverVersion;
 			eveui_mark( 'eve version response ' + eveui_eve_version );
 			if( eveui_use_localstorage > 0 ) {
-				var eveui_cache_version = localStorage.getItem( 'eveui_cache_version' );
-				if ( eveui_cache_version === eveui_eve_version ) {
-					eveui_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) );
-					eveui_mark( 'eveui_cache loaded' );
-				} else {
-					try {
-						localStorage.setItem( 'eveui_cache_version', eveui_eve_version );
-						localStorage.removeItem( 'eveui_cache' );
+				var localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) );
+				$.each( localstorage_cache, function( k, v ) {
+					if ( k.startsWith( 'EVE' ) ) {
+						// version key
+						if ( k === eveui_eve_version ) {
+							$.extend( eveui_cache, v );
+						} else {
+							delete localstorage_cache[ k ];
+						}
+					} else {
+						// timestamp key
+						if ( Number( k ) > Date.now() ) {
+							$.extend( eveui_cache, v );
+						} else {
+							delete localstorage_cache[ k ];
+						}
 					}
-					catch( err ) {
-						console.log( err );
-						eveui_use_localstorage = -1;
-					}
-					eveui_mark( 'eveui_cache reset' );
-				}
+				});
+				localStorage.setItem( 'eveui_cache', JSON.stringify( localstorage_cache ) );
+				eveui_mark( 'eveui_cache loaded' );
 			}
 
 			// insert required DOM elements / styles
@@ -744,10 +749,23 @@ function eveui_cache_request( endpoint: string ) {
 		}
 		).done( function(data) {
 			eveui_cache[ endpoint ] = data;
-			var eveui_cache_json = JSON.stringify( eveui_cache );
-			if ( eveui_use_localstorage > eveui_cache_json.length ) {
+			if ( eveui_use_localstorage > 0 ) {
+				var localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) ) || {};
+				var key;
+				if ( endpoint.startsWith( 'inventory/types' ) ) {
+					// inventory/types endpoint should be reliably cachable until such time as the version changes
+					key = eveui_eve_version;
+				} else {
+					// default 1hr expire
+					key = Date.now() + ( 60 * 60 * 1000 );
+				}
+				if ( typeof( localstorage_cache[ key ] ) !== 'object' ) {
+					localstorage_cache[ key ] = {};
+				}
+				localstorage_cache[ key ][ endpoint ] = data;
+				var localstorage_cache_json = JSON.stringify( localstorage_cache );
 				try {
-					localStorage.setItem( 'eveui_cache', eveui_cache_json );
+					localStorage.setItem( 'eveui_cache', localstorage_cache_json );
 				}
 				catch( err ) {
 					// failure to add to long term cache doesn't have any significant effect that would require a catch block
@@ -827,5 +845,11 @@ if (!String.prototype.repeat) {
 	return rpt;
 	}
 }
-
+/* https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith */
+if (!String.prototype.startsWith) {
+	String.prototype.startsWith = function(searchString, position){
+		position = position || 0;
+		return this.substr(position, searchString.length) === searchString;
+	};
+}
 eveui_mark( 'script end' );
