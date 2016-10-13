@@ -582,7 +582,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 				html += `
 					<tr class="copy_only">
 					<td>
-						${ eveui_cache[ 'inventory/types/' + item_id ].name } x${ fittings[ item_id ] }
+						${ eveui_cache[ 'inventory/types/' + item_id ].name } x${ fittings[ item_id ] }<br />
 					<tr class="nocopy" data-eveui-itemid="${ item_id }">
 						<td><img src="https://imageserver.eveonline.com/Type/${ item_id }_32.png" class="eveui_icon eveui_item_icon" />
 						<td class="eveui_right">${ fittings[ item_id ] }
