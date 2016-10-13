@@ -18,6 +18,7 @@ function eveui_autocomplete_endpoint( str ) { return 'https://zkillboard.com/aut
 /* icons from https://github.com/primer/octicons */
 var eveui_style = `
 	<style>
+		/* eveui_css_start */
 		.eveui_window {
 			position: fixed;
 			line-height: 1;
@@ -144,6 +145,7 @@ var eveui_style = `
 		.float_right {
 			float: right;
 		}
+		/* eveui_css_end */
 	</style>
 	`;
 

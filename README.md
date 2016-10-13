@@ -1,5 +1,5 @@
 # eve-ui
-A nearly standalone (EVE Online) fit display script for inclusion in arbitrary websites.
+A nearly standalone (EVE Online) fit display script for inclusion in arbitrary websites. (Note: If you are using a strict CSP you will need to link the CSS manually.)
 
 https://quiescens.github.io/eve-ui/examples.html to see what it looks like by default, view source to see how it works.
 
