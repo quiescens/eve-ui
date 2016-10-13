@@ -19,6 +19,7 @@ function eveui_autocomplete_endpoint( str ) { return 'https://zkillboard.com/aut
 var eveui_style = `
 	<style>
 		.eveui_window {
+			position: fixed;
 			line-height: 1;
 			background: #eee;
 			border: 1px solid;
@@ -137,6 +138,12 @@ var eveui_style = `
 		.nowrap {
 			white-space: nowrap;
 		}
+		.float_left {
+			float: left;
+		}
+		.float_right {
+			float: right;
+		}
 	</style>
 	`;
 
@@ -224,7 +231,7 @@ function eveui_init() {
 					case 'modal':
 					case 'multi_window':
 						// create loading placeholder
-						this.eveui_window = eveui_new_window();
+						this.eveui_window = eveui_new_window( 'Fit' );
 						eveui_mark( 'fit window created' );
 
 						this.eveui_window.attr( 'data-eveui-dna', dna );
@@ -252,7 +259,7 @@ function eveui_init() {
 				var item_id = $( this ).attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 
 				// create loading placeholder
-				this.eveui_window = eveui_new_window();
+				this.eveui_window = eveui_new_window( 'Item' );
 				this.eveui_window.attr( 'data-eveui-itemid', item_id );
 				switch ( eveui_mode ) {
 					default:
@@ -266,8 +273,9 @@ function eveui_init() {
 				eveui_cache_request( 'inventory/types/' + item_id ).done( function() {
 					var eveui_window = $( `.eveui_window[data-eveui-itemid="${ item_id }"]` );
 					var html = '';
-					html += '<table>';
+					html += '<table class="nowrap">';
 					var item = eveui_cache[ 'inventory/types/' + item_id ];
+					html += `<tr><td>${ item.name }`;
 					for ( var i in item.dogma.attributes ) {
 						var attr = item.dogma.attributes[i];
 						html += '<tr>';
@@ -277,7 +285,6 @@ function eveui_init() {
 					html += '</table>';
 
 					eveui_window.find( '.eveui_content' ).html(html);
-					eveui_window.find( '.eveui_title' ).html(item.name);
 
 					$( window ).trigger( 'resize' );
 
@@ -301,7 +308,7 @@ function eveui_init() {
 				var char_id = $( this ).attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 
 				// create loading placeholder
-				this.eveui_window = eveui_new_window();
+				this.eveui_window = eveui_new_window( 'Character' );
 				this.eveui_window.attr( 'data-eveui-charid', char_id );
 				switch ( eveui_mode ) {
 					default:
@@ -319,17 +326,16 @@ function eveui_init() {
 					html += '<table>';
 					html += `
 						<tr><td colspan="2">
-						<img style="float: left" src="https://imageserver.eveonline.com/Character/${ character.id }_128.jpg" />
+						<img class="float_left" src="https://imageserver.eveonline.com/Character/${ character.id }_128.jpg" height="128" width="128" />
 						${ character.name }
 						<hr />
-						<img style="float: left" src="https://imageserver.eveonline.com/Corporation/${ character.corporation.id_str }_64.png" />
+						<img class="float_left" src="https://imageserver.eveonline.com/Corporation/${ character.corporation.id_str }_64.png" height="64" width="64" />
 						Member of ${ character.corporation.name }
 						<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
 						`;
 					html += '</table>';
 
 					eveui_window.find( '.eveui_content' ).html(html);
-					eveui_window.find( '.eveui_title' ).html(character.name);
 
 					$( window ).trigger( 'resize' );
 
@@ -469,10 +475,10 @@ function eveui_init() {
 }
 eveui_init();
 
-function eveui_new_window() {
+function eveui_new_window( title = '&nbsp;' ) {
 	var eveui_window = $( `
-		<span class="eveui_window" style="position: fixed">
-			<div class="eveui_title">&nbsp;</div>
+		<span class="eveui_window">
+			<div class="eveui_title">${ title }</div>
 			<span class="eveui_icon eveui_close_icon" />
 			<span class="eveui_scrollable">
 				<span class="eveui_content">
@@ -568,7 +574,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 					<td>
 						${ ( eveui_cache[ 'inventory/types/' + item_id ].name + '<br />').repeat(fittings[ item_id ] ) }
 					<tr class="nocopy" data-eveui-itemid="${ item_id }">
-						<td><span style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
+						<td><img src="https://imageserver.eveonline.com/Type/${ item_id }_32.png" class="eveui_icon eveui_item_icon" />
 						<td class="eveui_right">${ fittings[ item_id ] }
 						<td>${ eveui_cache[ 'inventory/types/' + item_id ].name }
 					`;
@@ -578,7 +584,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 					<td>
 						${ eveui_cache[ 'inventory/types/' + item_id ].name } x${ fittings[ item_id ] }
 					<tr class="nocopy" data-eveui-itemid="${ item_id }">
-						<td><span style="background-image: url(https://imageserver.eveonline.com/Type/${ item_id }_32.png)" class="eveui_icon eveui_item_icon" />
+						<td><img src="https://imageserver.eveonline.com/Type/${ item_id }_32.png" class="eveui_icon eveui_item_icon" />
 						<td class="eveui_right">${ fittings[ item_id ] }
 						<td>${ eveui_cache[ 'inventory/types/' + item_id ].name }
 					`;
@@ -624,7 +630,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 	html += `
 		<table>
 		<tr class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
-		<td colspan="2"><span style="background-image: url(https://imageserver.eveonline.com/Type/${ ship_id }_32.png)" class="eveui_icon eveui_ship_icon" />
+		<td colspan="2"><img src="https://imageserver.eveonline.com/Type/${ ship_id }_32.png" class="eveui_icon eveui_ship_icon" />
 		<td>
 			<span class="eveui_startcopy" />[${ eveui_cache[ 'inventory/types/' + ship_id ].name },
 			<a target="_blank" href="${ eveui_urlify( dna ) }">${ eveui_name || eveui_cache[ 'inventory/types/' + ship_id ].name }</a>]
@@ -640,6 +646,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 			`;
 	}
 	html += `
+		<tbody>
 		${ item_rows( high_slots, ship.hiSlots ) }
 		<tr><td class="eveui_line_spacer">&nbsp;
 		${ item_rows( med_slots, ship.medSlots ) }
@@ -651,6 +658,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 		${ item_rows( subsystem_slots, ship.maxSubsystems ) }
 		<tr><td class="eveui_line_spacer">&nbsp;
 		${ item_rows( other_slots ) }
+		</tbody>
 		</table>
 		<span class="eveui_endcopy" />
 		`;
