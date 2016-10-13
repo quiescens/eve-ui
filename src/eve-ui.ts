@@ -10,9 +10,9 @@ var eveui_preload_initial = 50;
 var eveui_preload_interval = 10;
 var eveui_mode = 'multi_window'; // expand_all, expand, multi_window, modal
 var eveui_allow_edit = false;
-var eveui_fit_selector = '[href^=fitting],[data-dna]';
-var eveui_item_selector = '[href^=item],[data-itemid]';
-var eveui_char_selector = '[href^=char],[data-charid]';
+var eveui_fit_selector = '[href^="fitting:"],[data-dna]';
+var eveui_item_selector = '[href^="item:"],[data-itemid]';
+var eveui_char_selector = '[href^="char:"],[data-charid]';
 function eveui_urlify( dna ) { return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); }
 function eveui_autocomplete_endpoint( str ) { return 'https://zkillboard.com/autocomplete/typeID/' + encodeURI( str ) + '/'; }
 /* icons from https://github.com/primer/octicons */
