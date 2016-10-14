@@ -693,6 +693,7 @@ function eveui_format_char( char_id: string ) {
 function eveui_char_window( char_id: string ) {
 	var eveui_window = eveui_new_window( 'Character' );
 	eveui_window.attr( 'data-eveui-charid', char_id );
+	eveui_window.addClass( 'eveui_char_window' );
 	switch ( eveui_mode ) {
 		default:
 			$( 'body' ).append( eveui_window );
@@ -733,7 +734,7 @@ function eveui_expand() {
 		var dna = selected_element.attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 		eveui_cache_fit( dna ).done( function() {
 			var eveui_name = $( this ).text().trim();
-			selected_element.replaceWith( `<span class="eveui_content">${ eveui_format_fit( dna, eveui_name ) }</span>` );
+			selected_element.replaceWith( `<span class="eveui_content eveui_fit">${ eveui_format_fit( dna, eveui_name ) }</span>` );
 			eveui_mark( 'fit window expanded' );
 		});
 	});
@@ -745,7 +746,7 @@ function eveui_expand() {
 		}
 		var item_id = selected_element.attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 		eveui_cache_request( 'inventory/types/' + item_id ).done( function() {
-			selected_element.replaceWith( `<span class="eveui_content">${ eveui_format_item( item_id ) }</span>` );
+			selected_element.replaceWith( `<span class="eveui_content eveui_item">${ eveui_format_item( item_id ) }</span>` );
 			eveui_mark( 'item window expanded' );
 		});
 	});
@@ -757,7 +758,7 @@ function eveui_expand() {
 		}
 		var char_id = selected_element.attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 		eveui_cache_request( 'characters/' + char_id ).done( function() {
-			selected_element.replaceWith( `<span class="eveui_content">${ eveui_format_char( char_id ) }</span>` );
+			selected_element.replaceWith( `<span class="eveui_content eveui_char">${ eveui_format_char( char_id ) }</span>` );
 			eveui_mark( 'char window expanded' );
 		});
 	});
