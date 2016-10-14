@@ -43,7 +43,7 @@ var eveui_style = `
 			width: 100%;
 			background: #ccc;
 			cursor: move;
-			white-space: nowrap;
+			white-space: whitespace_nowrap;
 			margin-right: 2em;
 		}
 		.eveui_scrollable {
@@ -136,7 +136,7 @@ var eveui_style = `
 		.nocopy::after {
 			content: attr(data-content);
 		}
-		.nowrap {
+		.whitespace_nowrap {
 			white-space: nowrap;
 		}
 		.float_left {
@@ -230,23 +230,15 @@ function eveui_init() {
 				var eveui_name = $( this ).attr( 'data-title' ) || $( this ).text().trim();
 
 				switch ( eveui_mode ) {
-					case 'modal':
-					case 'multi_window':
-						// create loading placeholder
-						this.eveui_window = eveui_new_window( 'Fit' );
-						eveui_mark( 'fit window created' );
-
-						this.eveui_window.attr( 'data-eveui-dna', dna );
-						$( 'body' ).append( this.eveui_window );
-						break;
 					case 'expand':
+					case 'expand_all':
 						$( this ).attr( 'data-eveui-expand', 1 );
-						eveui_expand_fits();
+						eveui_expand();
+						break;
+					default:
+						this.eveui_window = eveui_fit_window( dna, eveui_name );
 						break;
 				}
-
-				eveui_fit_window( dna, eveui_name );
-				$( window ).trigger( 'resize' );
 			});
 
 			$( document ).on( 'click', eveui_item_selector, function(e) {
@@ -261,41 +253,16 @@ function eveui_init() {
 				var item_id = $( this ).attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 
 				// create loading placeholder
-				this.eveui_window = eveui_new_window( 'Item' );
-				this.eveui_window.attr( 'data-eveui-itemid', item_id );
 				switch ( eveui_mode ) {
+					case 'expand':
+					case 'expand_all':
+						$( this ).attr( 'data-eveui-expand', 1 );
+						eveui_expand();
+						break;
 					default:
-						$( 'body' ).append( this.eveui_window );
+						this.eveui_window = eveui_item_window( item_id );
 						break;
 				}
-
-				eveui_mark( 'item window created' );
-
-				// load required items and set callback to display
-				eveui_cache_request( 'inventory/types/' + item_id ).done( function() {
-					var eveui_window = $( `.eveui_window[data-eveui-itemid="${ item_id }"]` );
-					var html = '';
-					html += '<table class="nowrap">';
-					var item = eveui_cache[ 'inventory/types/' + item_id ];
-					html += `<tr><td>${ item.name }`;
-					for ( var i in item.dogma.attributes ) {
-						var attr = item.dogma.attributes[i];
-						html += '<tr>';
-						html += '<td>' + attr.attribute.name;
-						html += '<td>' + attr.value;
-					}
-					html += '</table>';
-
-					eveui_window.find( '.eveui_content' ).html(html);
-
-					$( window ).trigger( 'resize' );
-
-					eveui_mark( 'item window populated' );
-				}).fail( function() {
-					var eveui_window = $( `.eveui_window[data-eveui-itemid="${ item_id }"]` );
-					eveui_window.remove();
-				});
-				$( window ).trigger( 'resize' );
 			});
 
 			$( document ).on( 'click', eveui_char_selector, function(e) {
@@ -310,43 +277,16 @@ function eveui_init() {
 				var char_id = $( this ).attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 
 				// create loading placeholder
-				this.eveui_window = eveui_new_window( 'Character' );
-				this.eveui_window.attr( 'data-eveui-charid', char_id );
 				switch ( eveui_mode ) {
+					case 'expand':
+					case 'expand_all':
+						$( this ).attr( 'data-eveui-expand', 1 );
+						eveui_expand();
+						break;
 					default:
-						$( 'body' ).append( this.eveui_window );
+						this.eveui_window = eveui_char_window( char_id );
 						break;
 				}
-
-				eveui_mark( 'char window created' );
-
-				// load required chars and set callback to display
-				eveui_cache_request( 'characters/' + char_id ).done( function() {
-					var character = eveui_cache[ 'characters/' + char_id ];
-					var eveui_window = $( `.eveui_window[data-eveui-charid="${ char_id }"]` );
-					var html = '';
-					html += '<table>';
-					html += `
-						<tr><td colspan="2">
-						<img class="float_left" src="https://imageserver.eveonline.com/Character/${ character.id }_128.jpg" height="128" width="128" />
-						${ character.name }
-						<hr />
-						<img class="float_left" src="https://imageserver.eveonline.com/Corporation/${ character.corporation.id_str }_64.png" height="64" width="64" />
-						Member of ${ character.corporation.name }
-						<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
-						`;
-					html += '</table>';
-
-					eveui_window.find( '.eveui_content' ).html(html);
-
-					$( window ).trigger( 'resize' );
-
-					eveui_mark( 'char window populated' );
-				}).fail( function() {
-					var eveui_window = $( `.eveui_window[data-eveui-charid="${ char_id }"]` );
-					eveui_window.remove();
-				});
-				$( window ).trigger( 'resize' );
 			});
 
 			$( document ).on( 'click', '.eveui_minus_icon', function(e) {
@@ -461,7 +401,7 @@ function eveui_init() {
 
 			$( document ).ready( function() {
 				eveui_mark( 'expanding fits' );
-				eveui_expand_fits();
+				eveui_expand();
 			});
 
 			eveui_mark( 'event handlers set' );
@@ -504,8 +444,8 @@ function eveui_mark( mark: string ) {
 	console.log( 'eveui: ' + performance.now().toFixed(3) + ' ' + mark);
 }
 
-function eveui_generate_fit( dna: string, eveui_name?: string ) {
-	// generates and displays a fit
+function eveui_format_fit( dna: string, eveui_name?: string ) {
+	// generates html for a fit display
 	var high_slots = {};
 	var med_slots = {};
 	var low_slots = {};
@@ -592,7 +532,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 					`;
 			}
 			html += `
-				<td class="eveui_right nowrap"><span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
+				<td class="eveui_right whitespace_nowrap"><span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
 				`;
 			if ( eveui_allow_edit ) {
 				html += `
@@ -608,7 +548,7 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 				html += `
 					<tr class="nocopy">
 						<td class="eveui_icon eveui_item_icon" />
-						<td class="eveui_right nowrap">${ slots_available - slots_used }
+						<td class="eveui_right whitespace_nowrap">${ slots_available - slots_used }
 						<td>Empty
 					`;
 				if ( eveui_allow_edit ) {
@@ -631,12 +571,13 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 	var html = '';
 	html += `
 		<table>
+		<thead>
 		<tr class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
 		<td colspan="2"><img src="https://imageserver.eveonline.com/Type/${ ship_id }_32.png" class="eveui_icon eveui_ship_icon" />
 		<td>
 			<span class="eveui_startcopy" />[${ eveui_cache[ 'inventory/types/' + ship_id ].name },
 			<a target="_blank" href="${ eveui_urlify( dna ) }">${ eveui_name || eveui_cache[ 'inventory/types/' + ship_id ].name }</a>]
-		<td class="eveui_right">
+		<td class="eveui_right whitespace_nowrap">
 		<span class="eveui_icon eveui_copy_icon" />
 		<span data-itemid="${ ship_id }" class="eveui_icon eveui_info_icon" />
 		`;
@@ -648,7 +589,8 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 			`;
 	}
 	html += `
-		<tbody>
+		</thead>
+		<tbody class="whitespace_nowrap">
 		${ item_rows( high_slots, ship.hiSlots ) }
 		<tr><td class="eveui_line_spacer">&nbsp;
 		${ item_rows( med_slots, ship.medSlots ) }
@@ -669,28 +611,154 @@ function eveui_generate_fit( dna: string, eveui_name?: string ) {
 }
 
 function eveui_fit_window( dna: string, eveui_name?: string ) {
+	// creates and populates a fit window
+	var eveui_window = eveui_new_window( 'Fit' );
+	eveui_window.addClass( 'eveui_fit_window' );
+	eveui_window.attr( 'data-eveui-dna', dna );
+	$( 'body' ).append( eveui_window );
+	$( window ).trigger( 'resize' );
 	// load required items and set callback to display
 	eveui_mark( 'fit window created' );
 	eveui_cache_fit( dna ).done( function() {
 		var eveui_window = $( `.eveui_window[data-eveui-dna="${ dna }"]` );
-		eveui_window.find( '.eveui_content ').html( eveui_generate_fit( dna, eveui_name) );
+		eveui_window.find( '.eveui_content ').html( eveui_format_fit( dna, eveui_name) );
 		$( window ).trigger( 'resize' );
 		eveui_mark( 'fit window populated' );
 	});
+	return eveui_window;
 }
 
-function eveui_expand_fits() {
+function eveui_format_item( item_id: string ) {
+	var item = eveui_cache[ 'inventory/types/' + item_id ];
+	var html = '';
+	html += '<table class="whitespace_nowrap">';
+	html += `<tr><td>${ item.name }`;
+	for ( var i in item.dogma.attributes ) {
+		var attr = item.dogma.attributes[i];
+		html += '<tr>';
+		html += '<td>' + attr.attribute.name;
+		html += '<td>' + attr.value;
+	}
+	html += '</table>';
+	return html;
+}
+
+function eveui_item_window( item_id: string ) {
+	// creates and populates an item window
+	var eveui_window = eveui_new_window( 'Item' );
+	eveui_window.attr( 'data-eveui-itemid', item_id );
+	eveui_window.addClass( 'eveui_item_window' );
+	switch ( eveui_mode ) {
+		default:
+			$( 'body' ).append( eveui_window );
+			break;
+	}
+
+	eveui_mark( 'item window created' );
+
+	// load required items and set callback to display
+	eveui_cache_request( 'inventory/types/' + item_id ).done( function() {
+		var eveui_window = $( `.eveui_window[data-eveui-itemid="${ item_id }"]` );
+
+		eveui_window.find( '.eveui_content' ).html( eveui_format_item( item_id ) );
+
+		$( window ).trigger( 'resize' );
+
+		eveui_mark( 'item window populated' );
+	}).fail( function() {
+		var eveui_window = $( `.eveui_window[data-eveui-itemid="${ item_id }"]` );
+		eveui_window.remove();
+	});
+	$( window ).trigger( 'resize' );
+	return eveui_window;
+}
+
+function eveui_format_char( char_id: string ) {
+	var character = eveui_cache[ 'characters/' + char_id ];
+	var html = '';
+	html += '<table>';
+	html += `
+		<tr><td colspan="2">
+		<img class="float_left" src="https://imageserver.eveonline.com/Character/${ character.id }_128.jpg" height="128" width="128" />
+		${ character.name }
+		<hr />
+		<img class="float_left" src="https://imageserver.eveonline.com/Corporation/${ character.corporation.id_str }_64.png" height="64" width="64" />
+		Member of ${ character.corporation.name }
+		<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
+		`;
+	html += '</table>';
+	return html;
+}
+
+function eveui_char_window( char_id: string ) {
+	var eveui_window = eveui_new_window( 'Character' );
+	eveui_window.attr( 'data-eveui-charid', char_id );
+	switch ( eveui_mode ) {
+		default:
+			$( 'body' ).append( eveui_window );
+			break;
+	}
+
+	eveui_mark( 'char window created' );
+
+	// load required chars and set callback to display
+	eveui_cache_request( 'characters/' + char_id ).done( function() {
+		var eveui_window = $( `.eveui_window[data-eveui-charid="${ char_id }"]` );
+
+		eveui_window.find( '.eveui_content' ).html( eveui_format_char( char_id ) );
+
+		$( window ).trigger( 'resize' );
+
+		eveui_mark( 'char window populated' );
+	}).fail( function() {
+		var eveui_window = $( `.eveui_window[data-eveui-charid="${ char_id }"]` );
+		eveui_window.remove();
+	});
+	$( window ).trigger( 'resize' );
+	return eveui_window;
+}
+
+function eveui_expand() {
 	var expand_filter = '[data-eveui-expand]';
 	if ( eveui_mode == "expand_all" ) {
 		expand_filter = '*';
 	}
+
 	$( eveui_fit_selector ).filter( expand_filter ).each( function() {
-		var dna = $( this ).attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 		var selected_element = $( this );
+		if ( selected_element.closest( '.eveui_content' ).length > 0 ) {
+			// if element is part of eveui content already, don't expand, otherwise we might get a really fun infinite loop
+			return;
+		}
+		var dna = selected_element.attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 		eveui_cache_fit( dna ).done( function() {
 			var eveui_name = $( this ).text().trim();
-			selected_element.replaceWith( `<span class="eveui_content">${ eveui_generate_fit( dna, eveui_name ) }</span>` );
-			eveui_mark( 'fit window populated' );
+			selected_element.replaceWith( `<span class="eveui_content">${ eveui_format_fit( dna, eveui_name ) }</span>` );
+			eveui_mark( 'fit window expanded' );
+		});
+	});
+	$( eveui_item_selector ).filter( expand_filter ).each( function() {
+		var selected_element = $( this );
+		if ( selected_element.closest( '.eveui_content' ).length > 0 ) {
+			// if element is part of eveui content already, don't expand, otherwise we might get a really fun infinite loop
+			return;
+		}
+		var item_id = selected_element.attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
+		eveui_cache_request( 'inventory/types/' + item_id ).done( function() {
+			selected_element.replaceWith( `<span class="eveui_content">${ eveui_format_item( item_id ) }</span>` );
+			eveui_mark( 'item window expanded' );
+		});
+	});
+	$( eveui_char_selector ).filter( expand_filter ).each( function() {
+		var selected_element = $( this );
+		if ( selected_element.closest( '.eveui_content' ).length > 0 ) {
+			// if element is part of eveui content already, don't expand, otherwise we might get a really fun infinite loop
+			return;
+		}
+		var char_id = selected_element.attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
+		eveui_cache_request( 'characters/' + char_id ).done( function() {
+			selected_element.replaceWith( `<span class="eveui_content">${ eveui_format_char( char_id ) }</span>` );
+			eveui_mark( 'char window expanded' );
 		});
 	});
 }
