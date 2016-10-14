@@ -4,19 +4,19 @@
 // ' are used for javascript values
 // ` used whenever interpolation is required
 
-// config stuff ( can be overridden in a script block placed immediately after the script tag for this script )
-var eveui_use_localstorage = 4000000;
-var eveui_preload_initial = 50;
-var eveui_preload_interval = 10;
-var eveui_mode = 'multi_window'; // expand_all, expand, multi_window, modal
-var eveui_allow_edit = false;
-var eveui_fit_selector = '[href^="fitting:"],[data-dna]';
-var eveui_item_selector = '[href^="item:"],[data-itemid]';
-var eveui_char_selector = '[href^="char:"],[data-charid]';
-function eveui_urlify( dna ) { return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); }
-function eveui_autocomplete_endpoint( str ) { return 'https://zkillboard.com/autocomplete/typeID/' + encodeURI( str ) + '/'; }
+// config stuff ( can be overridden in a script block or js file of your choice
+var eveui_use_localstorage = eveui_use_localstorage || 4000000;
+var eveui_preload_initial = eveui_preload_initial || 50;
+var eveui_preload_interval = eveui_preload_interval || 10;
+var eveui_mode = eveui_mode || 'multi_window'; // expand_all, expand, multi_window, modal
+var eveui_allow_edit = eveui_allow_edit || false;
+var eveui_fit_selector = eveui_fit_selector || '[href^="fitting:"],[data-dna]';
+var eveui_item_selector = eveui_item_selector || '[href^="item:"],[data-itemid]';
+var eveui_char_selector = eveui_char_selector || '[href^="char:"],[data-charid]';
+var eveui_urlify = eveui_urlify || function( dna ) { return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); }
+var eveui_autocomplete_endpoint = eveui_autocomplete_endpoint || function( str ) { return 'https://zkillboard.com/autocomplete/typeID/' + encodeURI( str ) + '/'; }
 /* icons from https://github.com/primer/octicons */
-var eveui_style = `
+var eveui_style = eveui_style || `
 	<style>
 		/* eveui_css_start */
 		.eveui_window {
