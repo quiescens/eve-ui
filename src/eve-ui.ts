@@ -385,9 +385,9 @@ namespace eveui {
 				cache: true,
 			}
 			).done(	function(data) {
-				mark( 'eve version response ' + eve_version );
-
 				eve_version = data.serverVersion;
+
+				mark( 'eve version response ' + eve_version );
 
 				if( eveui_use_localstorage > 0 ) {
 					// load localstorage cache if applicable
