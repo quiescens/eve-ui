@@ -147,11 +147,13 @@ var eveui_style = eveui_style || `
 		}
 		/* eveui_css_end */
 	</style>
-	`;
+`;
 
 namespace eveui {
 	mark( 'script start' );
+
 	// variables
+	var $ = jQuery;
 	var mouse_x = 0;
 	var mouse_y = 0;
 	var drag_element = null;
@@ -166,10 +168,215 @@ namespace eveui {
 	var localstorage_pending = {};
 
 	if( typeof( Storage ) === 'undefined' ) {
+		// disable localstorage if unsupported/blocked/whatever
 		eveui_use_localstorage = -1;
 	}
 
-	function init() {
+	// insert required DOM elements / styles
+	$( 'head' ).append( eveui_style );
+
+	// click handlers to create/close windows
+	$( document ).on( 'click', '.eveui_window .eveui_close_icon', function(e) {
+		$( this ).parent().remove();
+		if ( $( '.eveui_window' ).length == 0 ) {
+			$( '.eveui_modal_overlay' ).remove();
+		}
+	});
+
+	$( document ).on( 'click', '.eveui_modal_overlay', function(e) {
+		$( '.eveui_window' ).remove();
+		$( this ).remove();
+	});
+
+	$( document ).on( 'click', eveui_fit_selector, function(e) {
+		e.preventDefault();
+
+		preload_quota = eveui_preload_initial;
+
+		// hide window if it already exists
+		if ( this.eveui_window && document.contains( this.eveui_window[0] ) ) {
+			this.eveui_window.remove();
+			return;
+		}
+
+		var dna = $( this ).attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
+		var eveui_name = $( this ).attr( 'data-title' ) || $( this ).text().trim();
+
+		switch ( eveui_mode ) {
+			case 'expand':
+			case 'expand_all':
+				$( this ).attr( 'data-eveui-expand', 1 );
+				expand();
+				break;
+			default:
+				this.eveui_window = fit_window( dna, eveui_name );
+				break;
+		}
+	});
+
+	$( document ).on( 'click', eveui_item_selector, function(e) {
+		e.preventDefault();
+
+		// hide window if it already exists
+		if ( this.eveui_window && document.contains( this.eveui_window[0] ) ) {
+			this.eveui_window.remove();
+			return;
+		}
+
+		var item_id = $( this ).attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
+
+		// create loading placeholder
+		switch ( eveui_mode ) {
+			case 'expand':
+			case 'expand_all':
+				$( this ).attr( 'data-eveui-expand', 1 );
+				expand();
+				break;
+			default:
+				this.eveui_window = item_window( item_id );
+				break;
+		}
+	});
+
+	$( document ).on( 'click', eveui_char_selector, function(e) {
+		e.preventDefault();
+
+		// hide window if it already exists
+		if ( this.eveui_window && document.contains( this.eveui_window[0] ) ) {
+			this.eveui_window.remove();
+			return;
+		}
+
+		var char_id = $( this ).attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
+
+		// create loading placeholder
+		switch ( eveui_mode ) {
+			case 'expand':
+			case 'expand_all':
+				$( this ).attr( 'data-eveui-expand', 1 );
+				expand();
+				break;
+			default:
+				this.eveui_window = char_window( char_id );
+				break;
+		}
+	});
+
+	// info buttons, copy buttons, etc
+	$( document ).on( 'click', '.eveui_minus_icon', function(e) {
+		e.preventDefault();
+		var item_id = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
+		var dna = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
+
+		var re = new RegExp( ':' + item_id + ';(\\d+)' );
+		var new_quantity = parseInt( dna.match( re )[1] ) - 1;
+		if ( new_quantity > 0 ) { 
+			dna = dna.replace( re, ':' + item_id + ';' + new_quantity );
+		} else {
+			dna = dna.replace( re, '' );
+		}
+
+		$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
+		fit_window( dna );
+	});
+
+	$( document ).on( 'click', '.eveui_plus_icon', function(e) {
+		e.preventDefault();
+		var item_id = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
+		var dna = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
+
+		var re = new RegExp( `:${ item_id };(\\d+)` );
+		var new_quantity = parseInt( dna.match( re )[1] ) + 1;
+		if ( new_quantity > 0 ) { 
+			dna = dna.replace( re, `:${ item_id };${ new_quantity }` );
+		} else {
+			dna = dna.replace( re, '' );
+		}
+
+		$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
+		fit_window( dna );
+	});
+
+	$( document ).on( 'click', '.eveui_more_icon', function(e) {
+		e.preventDefault();
+		var item_id = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
+		var dna = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
+
+		var eveui_window = $( `
+			<span class="eveui_window" style="position:absolute">
+				<span class="eveui_close_icon" />
+				<span class="eveui_content">
+					Autocomplete goes here
+				</span>
+			</span>
+			` );
+		eveui_window.css( 'z-index', current_zindex++ );
+		$( this ).parent().after( eveui_window );
+	});
+
+	$( document ).on( 'click', '.clipboard_copy_icon', function(e) {
+		clipboard_copy( $( this ).closest( '.eveui_window' ) );
+	});
+
+	// custom window drag handlers
+	$( document ).on( 'mousedown', '.eveui_window', function(e) {
+		$( this ).css( 'z-index', current_zindex++ );;
+	});
+
+	$( document ).on( 'mousedown', '.eveui_title', function(e) {
+		e.preventDefault();
+		drag_element = $( this ).parent();
+		drag_element_x = mouse_x - drag_element.position().left;
+		drag_element_y = mouse_y - drag_element.position().top;
+		drag_element.css( 'z-index', current_zindex++ );;
+	});
+
+	$( document ).on( 'mousemove', function(e) {
+		mouse_x = e.clientX;
+		mouse_y = e.clientY;
+		if ( drag_element === null ) {
+			return;
+		}
+		drag_element.css( 'left', mouse_x - drag_element_x );
+		drag_element.css( 'top', mouse_y - drag_element_y );
+	});
+
+	$( document ).on( 'mouseup', function(e) {
+		drag_element = null;
+	});
+
+	$( window ).on( 'resize', function(e) {
+		// resize handler to try to keep windows onscreen
+		$( '.eveui_window' ).each( function() {
+			var eveui_window = $( this );
+			var eveui_content = eveui_window.find( '.eveui_content' );
+			if ( eveui_content.height() > window.innerHeight - 50 ) {
+				eveui_window.css( 'height', window.innerHeight - 50 );
+			} else {
+				eveui_window.css( 'height', '' );
+			}
+			if ( eveui_content.width() > window.innerWidth - 20 ) {
+				eveui_window.css( 'width', window.innerWidth - 20 );
+			} else {
+				eveui_window.css( 'width', '' );
+			}
+			if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
+				eveui_window.css( 'top', window.innerHeight - eveui_window.height() - 10 );
+			}
+			if ( eveui_window[0].getBoundingClientRect().right > window.innerWidth ) {
+				eveui_window.css( 'left', window.innerWidth - eveui_window.width() - 10 );
+			}
+		});
+		if ( eveui_mode == 'modal' ) {
+			var eveui_window = $( '[data-eveui-modal]' );
+			eveui_window.css( 'top', window.innerHeight / 2 - eveui_window.height() / 2 );
+			eveui_window.css( 'left', window.innerWidth / 2 - eveui_window.width() / 2 );
+		}
+	});
+
+	mark( 'event handlers set' );
+
+	function eve_version_query() {
 		mark( 'eve version request' );
 		$.ajax(
 			`https://crest-tq.eveonline.com/`,
@@ -178,9 +385,12 @@ namespace eveui {
 				cache: true,
 			}
 			).done(	function(data) {
-				eve_version = data.serverVersion;
 				mark( 'eve version response ' + eve_version );
+
+				eve_version = data.serverVersion;
+
 				if( eveui_use_localstorage > 0 ) {
+					// load localstorage cache if applicable
 					var localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) );
 					$.each( localstorage_cache, function( k, v ) {
 						if ( k.startsWith( 'EVE' ) ) {
@@ -200,225 +410,23 @@ namespace eveui {
 						}
 					});
 					localStorage.setItem( 'eveui_cache', JSON.stringify( localstorage_cache ) );
-					mark( 'cache loaded' );
+					mark( 'localstorage cache loaded' );
 				}
-
-				// insert required DOM elements / styles
-				$( 'head' ).append( eveui_style );
-
-				// click handlers to create/close windows
-				$( document ).on( 'click', '.eveui_window .eveui_close_icon', function(e) {
-					$( this ).parent().remove();
-					if ( $( '.eveui_window' ).length == 0 ) {
-						$( '.eveui_modal_overlay' ).remove();
-					}
-				});
-				$( document ).on( 'click', '.eveui_modal_overlay', function(e) {
-					$( '.eveui_window' ).remove();
-					$( this ).remove();
-				});
-
-				$( document ).on( 'click', eveui_fit_selector, function(e) {
-					e.preventDefault();
-
-					preload_quota = eveui_preload_initial;
-
-					// hide window if it already exists
-					if ( this.eveui_window && document.contains( this.eveui_window[0] ) ) {
-						this.eveui_window.remove();
-						return;
-					}
-
-					var dna = $( this ).attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-					var eveui_name = $( this ).attr( 'data-title' ) || $( this ).text().trim();
-
-					switch ( eveui_mode ) {
-						case 'expand':
-						case 'expand_all':
-							$( this ).attr( 'data-eveui-expand', 1 );
-							expand();
-							break;
-						default:
-							this.eveui_window = fit_window( dna, eveui_name );
-							break;
-					}
-				});
-
-				$( document ).on( 'click', eveui_item_selector, function(e) {
-					e.preventDefault();
-
-					// hide window if it already exists
-					if ( this.eveui_window && document.contains( this.eveui_window[0] ) ) {
-						this.eveui_window.remove();
-						return;
-					}
-
-					var item_id = $( this ).attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-
-					// create loading placeholder
-					switch ( eveui_mode ) {
-						case 'expand':
-						case 'expand_all':
-							$( this ).attr( 'data-eveui-expand', 1 );
-							expand();
-							break;
-						default:
-							this.eveui_window = item_window( item_id );
-							break;
-					}
-				});
-
-				$( document ).on( 'click', eveui_char_selector, function(e) {
-					e.preventDefault();
-
-					// hide window if it already exists
-					if ( this.eveui_window && document.contains( this.eveui_window[0] ) ) {
-						this.eveui_window.remove();
-						return;
-					}
-
-					var char_id = $( this ).attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-
-					// create loading placeholder
-					switch ( eveui_mode ) {
-						case 'expand':
-						case 'expand_all':
-							$( this ).attr( 'data-eveui-expand', 1 );
-							expand();
-							break;
-						default:
-							this.eveui_window = char_window( char_id );
-							break;
-					}
-				});
-
-				$( document ).on( 'click', '.eveui_minus_icon', function(e) {
-					e.preventDefault();
-					var item_id = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
-					var dna = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
-
-					var re = new RegExp( ':' + item_id + ';(\\d+)' );
-					var new_quantity = parseInt( dna.match( re )[1] ) - 1;
-					if ( new_quantity > 0 ) { 
-						dna = dna.replace( re, ':' + item_id + ';' + new_quantity );
-					} else {
-						dna = dna.replace( re, '' );
-					}
-
-					$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
-					fit_window( dna );
-				});
-
-				$( document ).on( 'click', '.eveui_plus_icon', function(e) {
-					e.preventDefault();
-					var item_id = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
-					var dna = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
-
-					var re = new RegExp( `:${ item_id };(\\d+)` );
-					var new_quantity = parseInt( dna.match( re )[1] ) + 1;
-					if ( new_quantity > 0 ) { 
-						dna = dna.replace( re, `:${ item_id };${ new_quantity }` );
-					} else {
-						dna = dna.replace( re, '' );
-					}
-
-					$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
-					fit_window( dna );
-				});
-
-				$( document ).on( 'click', '.eveui_more_icon', function(e) {
-					e.preventDefault();
-					var item_id = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
-					var dna = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
-
-					var eveui_window = $( `
-						<span class="eveui_window" style="position:absolute">
-							<span class="eveui_close_icon" />
-							<span class="eveui_content">
-								Autocomplete goes here
-							</span>
-						</span>
-						` );
-					eveui_window.css( 'z-index', current_zindex++ );
-					$( this ).parent().after( eveui_window );
-				});
-
-				$( document ).on( 'click', '.clipboard_copy_icon', function(e) {
-					clipboard_copy( $( this ).closest( '.eveui_window' ) );
-				});
-
-				// custom window drag handlers
-				$( document ).on( 'mousedown', '.eveui_window', function(e) {
-					$( this ).css( 'z-index', current_zindex++ );;
-				});
-
-				$( document ).on( 'mousedown', '.eveui_title', function(e) {
-					e.preventDefault();
-					drag_element = $( this ).parent();
-					drag_element_x = mouse_x - drag_element.position().left;
-					drag_element_y = mouse_y - drag_element.position().top;
-					drag_element.css( 'z-index', current_zindex++ );;
-				});
-
-				$( document ).on( 'mousemove', function(e) {
-					mouse_x = e.clientX;
-					mouse_y = e.clientY;
-					if ( drag_element === null ) {
-						return;
-					}
-					drag_element.css( 'left', mouse_x - drag_element_x );
-					drag_element.css( 'top', mouse_y - drag_element_y );
-				});
-
-				$( document ).on( 'mouseup', function(e) {
-					drag_element = null;
-				});
-
-				$( window ).on( 'resize', function(e) {
-					$( '.eveui_window' ).each( function() {
-						var eveui_window = $( this );
-						var eveui_content = eveui_window.find( '.eveui_content' );
-						if ( eveui_content.height() > window.innerHeight - 50 ) {
-							eveui_window.css( 'height', window.innerHeight - 50 );
-						} else {
-							eveui_window.css( 'height', '' );
-						}
-						if ( eveui_content.width() > window.innerWidth - 20 ) {
-							eveui_window.css( 'width', window.innerWidth - 20 );
-						} else {
-							eveui_window.css( 'width', '' );
-						}
-						if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
-							eveui_window.css( 'top', window.innerHeight - eveui_window.height() - 10 );
-						}
-						if ( eveui_window[0].getBoundingClientRect().right > window.innerWidth ) {
-							eveui_window.css( 'left', window.innerWidth - eveui_window.width() - 10 );
-						}
-					});
-					if ( eveui_mode == 'modal' ) {
-						var eveui_window = $( '[data-eveui-modal]' );
-						eveui_window.css( 'top', window.innerHeight / 2 - eveui_window.height() / 2 );
-						eveui_window.css( 'left', window.innerWidth / 2 - eveui_window.width() / 2 );
-					}
-				});
 
 				$( document ).ready( function() {
 					mark( 'expanding fits' );
 					expand();
 				});
 
-				mark( 'event handlers set' );
-
 				// lazy preload timer
 				preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
 				mark( 'preload timer set' );
 			}).fail( function( xhr ) {
 				mark( 'eve version request failed' );
-				setTimeout( init, 10000 );
-
+				setTimeout( eve_version_query, 10000 );
 		});
 	}
-	init();
+	eve_version_query();
 
 	function new_window( title = '&nbsp;' ) {
 		var eveui_window = $( `
@@ -723,6 +731,7 @@ namespace eveui {
 	}
 
 	export function expand() {
+		// expand any fits marked with a data-eveui-expand attribute ( or all, if expand_all mode )
 		var expand_filter = '[data-eveui-expand]';
 		if ( eveui_mode == "expand_all" ) {
 			expand_filter = '*';
@@ -836,7 +845,8 @@ namespace eveui {
 					if ( endpoint.startsWith( 'inventory/types' ) ) {
 						// inventory/types endpoint should be reliably cachable until such time as the version changes
 						key = eve_version;
-					} else {
+					}
+					if ( typeof key === 'undefined' ) {
 						// default is to use the standard browser cache
 						return;
 					}
@@ -876,6 +886,9 @@ namespace eveui {
 	}
 
 	function clipboard_copy( element ) {
+		// copy the contents of selected element to clipboard
+		// while excluding any elements with 'nocopy' class
+		// and including otherwise-invisible elements with 'copyonly' class
 		$( '.nocopy' ).hide();
 		$( '.copyonly' ).show();
 		var selection = window.getSelection();
@@ -894,6 +907,7 @@ namespace eveui {
 		$( '.copyonly' ).hide();
 	}
 
+	// additional shims for older browsers
 	/* from https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/String/repeat */
 	if (!String.prototype.repeat) {
 		String.prototype.repeat = function(count) {
@@ -945,5 +959,6 @@ namespace eveui {
 			return this.substr(position, searchString.length) === searchString;
 		};
 	}
+
 	mark( 'script end' );
 }
