@@ -410,7 +410,7 @@ namespace eveui {
 						}
 					});
 					localStorage.setItem( 'eveui_cache', JSON.stringify( localstorage_cache ) );
-					mark( 'localstorage cache loaded' );
+					mark( `localstorage cache loaded ${ Object.keys( cache ).length } entries`) ;
 				}
 
 				$( document ).ready( function() {
@@ -858,7 +858,7 @@ namespace eveui {
 					clearTimeout( localstorage_timer );
 					localstorage_timer = setTimeout( function() {
 						var localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) ) || {};
-						$.extend( localstorage_cache, localstorage_pending );
+						$.extend( true, localstorage_cache, localstorage_pending );
 						var localstorage_cache_json = JSON.stringify( localstorage_cache );
 						localstorage_pending = {};
 						if ( localstorage_cache_json.length > eveui_use_localstorage ) {
