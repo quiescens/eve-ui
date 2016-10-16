@@ -361,7 +361,7 @@ namespace eveui {
 				eveui_window.css( 'width', '' );
 			}
 			if ( eveui_window[0].getBoundingClientRect().bottom > window.innerHeight ) {
-				eveui_window.css( 'top', window.innerHeight - eveui_window.height() - 10 );
+				eveui_window.css( 'top', window.innerHeight - eveui_window.height() - 25 );
 			}
 			if ( eveui_window[0].getBoundingClientRect().right > window.innerWidth ) {
 				eveui_window.css( 'left', window.innerWidth - eveui_window.width() - 10 );
