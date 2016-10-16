@@ -161,6 +161,8 @@ var eveui_preload_timer;
 var eveui_fit_preload = eveui_preload_initial;
 var eveui_cache = {};
 var eveui_eve_version = undefined;
+var localstorage_timer;
+var localstorage_pending = {};
 
 if( typeof( Storage ) === 'undefined' ) {
 	eveui_use_localstorage = -1;
@@ -829,7 +831,6 @@ function eveui_cache_request( endpoint: string ) {
 		).done( function(data) {
 			eveui_cache[ endpoint ] = data;
 			if ( eveui_use_localstorage > 0 ) {
-				var localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) ) || {};
 				var key;
 				if ( endpoint.startsWith( 'inventory/types' ) ) {
 					// inventory/types endpoint should be reliably cachable until such time as the version changes
@@ -838,20 +839,29 @@ function eveui_cache_request( endpoint: string ) {
 					// default 1hr expire
 					key = Date.now() + ( 60 * 60 * 1000 );
 				}
-				if ( typeof( localstorage_cache[ key ] ) !== 'object' ) {
-					localstorage_cache[ key ] = {};
+				if ( typeof( localstorage_pending[ key ] ) !== 'object' ) {
+					localstorage_pending[ key ] = {};
 				}
-				localstorage_cache[ key ][ endpoint ] = data;
-				var localstorage_cache_json = JSON.stringify( localstorage_cache );
-				if ( localstorage_cache_json.length > eveui_use_localstorage ) {
-					return;
-				}
-				try {
-					localStorage.setItem( 'eveui_cache', localstorage_cache_json );
-				}
-				catch( err ) {
-					// failure to add to long term cache doesn't have any significant effect that would require a catch block
-				}
+				localstorage_pending[ key ][ endpoint ] = data;
+
+				clearTimeout( localstorage_timer );
+				localstorage_timer = setTimeout( function() {
+					eveui_mark( 'localstorage update' );
+					var localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) ) || {};
+					$.extend( localstorage_cache, localstorage_pending );
+					var localstorage_cache_json = JSON.stringify( localstorage_cache );
+					localstorage_pending = {};
+					if ( localstorage_cache_json.length > eveui_use_localstorage ) {
+						return;
+					}
+					try {
+						localStorage.setItem( 'eveui_cache', localstorage_cache_json );
+						eveui_mark( 'localstorage updated' );
+					}
+					catch( err ) {
+						// failure to add to long term cache doesn't have any significant effect that would require a catch block
+					}
+				}, 5000 );
 			}
 		}).fail( function( xhr ) {
 			if ( xhr.status == 404 || xhr.status == 403 ) {
