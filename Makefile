@@ -12,4 +12,4 @@ eve-ui.css: src/eve-ui.ts
 	awk '/eveui_css_start/,/eveui_css_end/' src/eve-ui.ts > eve-ui.css
 
 clean:
-	-rm eve-ui.js eve-ui.min.js
+	-rm  eve-ui.min.js eve-ui.js eve-ui.css
