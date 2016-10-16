@@ -43,7 +43,7 @@ var eveui_style = eveui_style || `
 			width: 100%;
 			background: #ccc;
 			cursor: move;
-			white-space: whitespace_nowrap;
+			white-space: nowrap;
 			margin-right: 2em;
 		}
 		.eveui_scrollable {
