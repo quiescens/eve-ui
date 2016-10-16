@@ -4,7 +4,7 @@
 // ' are used for javascript values
 // ` used whenever interpolation is required
 
-// config stuff ( can be overridden in a script block or js file of your choice
+// config stuff ( can be overridden in a script block or js file of your choice )
 var eveui_use_localstorage = eveui_use_localstorage || 4000000;
 var eveui_preload_initial = eveui_preload_initial || 50;
 var eveui_preload_interval = eveui_preload_interval || 10;
