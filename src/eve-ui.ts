@@ -3,6 +3,7 @@
 // " are only used for html attribute values
 // ' are used for javascript values
 // ` used whenever interpolation is required
+'use strict';
 
 // config stuff ( can be overridden in a script block or js file of your choice )
 var eveui_use_localstorage = eveui_use_localstorage || 4000000;

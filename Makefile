@@ -5,7 +5,7 @@ all: eve-ui.min.js eve-ui.css
 eve-ui.min.js: eve-ui.js
 	uglifyjs eve-ui.js --output eve-ui.min.js --compress
 
-eve-ui.js: src/eve-ui.ts
+eve-ui.js: tsconfig.json src/eve-ui.ts
 	tsc -p tsconfig.json
 
 eve-ui.css: src/eve-ui.ts
