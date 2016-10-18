@@ -587,8 +587,8 @@ namespace eveui {
 			<tr class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
 			<td colspan="2"><img src="https://imageserver.eveonline.com/Type/${ ship_id }_32.png" class="eveui_icon eveui_ship_icon" />
 			<td>
-				<span class="eveui_startcopy" />[${ cache[ 'inventory/types/' + ship_id ].name },
-				<a target="_blank" href="${ eveui_urlify( dna ) }">${ eveui_name || cache[ 'inventory/types/' + ship_id ].name }</a>]
+				<span class="eveui_startcopy" />[<a target="_blank" href="${ eveui_urlify( dna ) }">${ cache[ 'inventory/types/' + ship_id ].name },
+				${ eveui_name || cache[ 'inventory/types/' + ship_id ].name }</a>]
 			<td class="eveui_right whitespace_nowrap">
 			<span class="eveui_icon clipboard_copy_icon" />
 			<span data-itemid="${ ship_id }" class="eveui_icon eveui_info_icon" />
@@ -861,18 +861,18 @@ namespace eveui {
 						var localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) ) || {};
 						$.extend( true, localstorage_cache, localstorage_pending );
 						var localstorage_cache_json = JSON.stringify( localstorage_cache );
-						localstorage_pending = {};
 						if ( localstorage_cache_json.length > eveui_use_localstorage ) {
 							mark( 'localstorage limit exceeded' );
 							return;
 						}
 						try {
 							localStorage.setItem( 'eveui_cache', localstorage_cache_json );
-							mark( 'localstorage updated' );
+							mark( 'localstorage updated ' + Object.keys( localstorage_pending ).length );
 						}
 						catch( err ) {
 							// failure to add to long term cache doesn't have any significant effect that would require a catch block
 						}
+						localstorage_pending = {};
 					}, 5000 );
 				}
 			}).fail( function( xhr ) {
