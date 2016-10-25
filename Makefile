@@ -1,9 +1,12 @@
 .PHONY: clean
 
-all: eve-ui.min.js eve-ui.css
+all: eve-ui.min.js eve-ui.min.css
 
 %.min.js: %.js
 	uglifyjs $< --output $@ --compress --mangle
+
+%.min.css: %.css
+	cssmin < $< > $@
 
 eve-ui.css: src/eve-ui.ts
 	awk '/eveui_css_start/,/eveui_css_end/' src/eve-ui.ts > eve-ui.css
