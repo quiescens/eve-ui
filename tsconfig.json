@@ -5,7 +5,7 @@
         "noEmitOnError": true
     },
     "include" : [
-        "src/*.ts",
+        "eve-ui.p.ts",
         "lib/*.ts"
     ]
 }

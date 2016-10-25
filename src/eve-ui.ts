@@ -17,8 +17,7 @@ var eveui_char_selector = eveui_char_selector || '[href^="char:"],[data-charid]'
 var eveui_urlify = eveui_urlify || function( dna ) { return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); }
 var eveui_autocomplete_endpoint = eveui_autocomplete_endpoint || function( str ) { return 'https://zkillboard.com/autocomplete/typeID/' + encodeURI( str ) + '/'; }
 /* icons from https://github.com/primer/octicons */
-var eveui_style = eveui_style || `
-	<style>
+var eveui_style = eveui_style || '<style>' + css`
 		/* eveui_css_start */
 		.eveui_window {
 			position: fixed;
@@ -147,8 +146,7 @@ var eveui_style = eveui_style || `
 			float: right;
 		}
 		/* eveui_css_end */
-	</style>
-`;
+` + '</style>';
 
 namespace eveui {
 	mark( 'script start' );
@@ -303,7 +301,7 @@ namespace eveui {
 		var item_id = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
 		var dna = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
 
-		var eveui_window = $( `
+		var eveui_window = $( html`
 			<span class="eveui_window" style="position:absolute">
 				<span class="eveui_close_icon" />
 				<span class="eveui_content">
@@ -356,8 +354,8 @@ namespace eveui {
 			} else {
 				eveui_window.css( 'height', '' );
 			}
-			if ( eveui_content.width() > window.innerWidth - 20 ) {
-				eveui_window.css( 'width', window.innerWidth - 20 );
+			if ( eveui_content.width() > window.innerWidth - 40 ) {
+				eveui_window.css( 'width', window.innerWidth - 40 );
 			} else {
 				eveui_window.css( 'width', '' );
 			}
@@ -430,7 +428,7 @@ namespace eveui {
 	eve_version_query();
 
 	function new_window( title = '&nbsp;' ) {
-		var eveui_window = $( `
+		var eveui_window = $( html`
 			<span class="eveui_window">
 				<div class="eveui_title">${ title }</div>
 				<span class="eveui_icon eveui_close_icon" />
@@ -523,7 +521,7 @@ namespace eveui {
 			for ( var item_id in fittings ) {
 				slots_used += fittings[ item_id ];
 				if ( slots_available ) {
-					html += `
+					html += html`
 						<tr class="copy_only">
 						<td>
 							${ ( cache[ 'inventory/types/' + item_id ].name + '<br />').repeat(fittings[ item_id ] ) }
@@ -533,7 +531,7 @@ namespace eveui {
 							<td>${ cache[ 'inventory/types/' + item_id ].name }
 						`;
 				} else {
-					html += `
+					html += html`
 						<tr class="copy_only">
 						<td>
 							${ cache[ 'inventory/types/' + item_id ].name } x${ fittings[ item_id ] }<br />
@@ -543,11 +541,11 @@ namespace eveui {
 							<td>${ cache[ 'inventory/types/' + item_id ].name }
 						`;
 				}
-				html += `
+				html += html`
 					<td class="eveui_right whitespace_nowrap"><span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
 					`;
 				if ( eveui_allow_edit ) {
-					html += `
+					html += html`
 						<span class="eveui_icon eveui_plus_icon" />
 						<span class="eveui_icon eveui_minus_icon" />
 						<span class="eveui_icon eveui_more_icon" />
@@ -557,7 +555,7 @@ namespace eveui {
 
 			if ( typeof ( slots_available ) != 'undefined' ) {
 				if ( slots_available > slots_used ) {
-					html += `
+					html += html`
 						<tr class="nocopy">
 							<td class="eveui_icon eveui_item_icon" />
 							<td class="eveui_right whitespace_nowrap">${ slots_available - slots_used }
@@ -568,7 +566,7 @@ namespace eveui {
 					}
 				}
 				if ( slots_used > slots_available ) {
-					html += `
+					html += html`
 						<tr class="nocopy">
 							<td class="eveui_icon eveui_item_icon" />
 							<td class="eveui_right">${ slots_available - slots_used }
@@ -581,7 +579,7 @@ namespace eveui {
 		}
 
 		var html = '';
-		html += `
+		html += html`
 			<table>
 			<thead>
 			<tr class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
@@ -594,13 +592,13 @@ namespace eveui {
 			<span data-itemid="${ ship_id }" class="eveui_icon eveui_info_icon" />
 			`;
 		if ( eveui_allow_edit ) {
-			html += `
+			html += html`
 				<span class="eveui_icon" />
 				<span class="eveui_icon" />
 				<span class="eveui_icon eveui_more_icon" />
 				`;
 		}
-		html += `
+		html += html`
 			</thead>
 			<tbody class="whitespace_nowrap">
 			${ item_rows( high_slots, ship.hiSlots ) }
@@ -688,8 +686,8 @@ namespace eveui {
 	export function format_char( char_id: string ) {
 		var character = cache[ 'characters/' + char_id ];
 		var html = '';
-		html += '<table>';
-		html += `
+		html += html`
+			<table>
 			<tr><td colspan="2">
 			<img class="float_left" src="https://imageserver.eveonline.com/Character/${ character.id }_128.jpg" height="128" width="128" />
 			${ character.name }
@@ -697,8 +695,8 @@ namespace eveui {
 			<img class="float_left" src="https://imageserver.eveonline.com/Corporation/${ character.corporation.id_str }_64.png" height="64" width="64" />
 			Member of ${ character.corporation.name }
 			<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
+			</table>
 			`;
-		html += '</table>';
 		return html;
 	}
 
