@@ -31,7 +31,7 @@ var eveui;
     var preload_timer;
     var preload_quota = eveui_preload_initial;
     var cache = {};
-    var eve_version = undefined;
+    var eve_version;
     var localstorage_timer;
     var localstorage_pending = {};
     if (typeof (Storage) === 'undefined') {
@@ -43,7 +43,7 @@ var eveui;
     // click handlers to create/close windows
     $(document).on('click', '.eveui_window .eveui_close_icon', function (e) {
         $(this).parent().remove();
-        if ($('.eveui_window').length == 0) {
+        if ($('.eveui_window').length === 0) {
             $('.eveui_modal_overlay').remove();
         }
     });
@@ -151,7 +151,7 @@ var eveui;
         eveui_window.css('z-index', current_zindex++);
         $(this).parent().after(eveui_window);
     });
-    $(document).on('click', '.clipboard_copy_icon', function (e) {
+    $(document).on('click', '.eveui_copy_icon', function (e) {
         clipboard_copy($(this).closest('.eveui_window'));
     });
     // custom window drag handlers
@@ -203,7 +203,7 @@ var eveui;
                 eveui_window.css('left', window.innerWidth - eveui_window.width() - 10);
             }
         });
-        if (eveui_mode == 'modal') {
+        if (eveui_mode === 'modal') {
             var eveui_window = $('[data-eveui-modal]');
             eveui_window.css('top', window.innerHeight / 2 - eveui_window.height() / 2);
             eveui_window.css('left', window.innerWidth / 2 - eveui_window.width() / 2);
@@ -220,15 +220,15 @@ var eveui;
             mark('eve version response ' + eve_version);
             if (eveui_use_localstorage > 0) {
                 // load localstorage cache if applicable
-                var localstorage_cache = JSON.parse(localStorage.getItem('eveui_cache'));
-                $.each(localstorage_cache, function (k, v) {
+                var localstorage_cache_1 = JSON.parse(localStorage.getItem('eveui_cache'));
+                $.each(localstorage_cache_1, function (k, v) {
                     if (k.startsWith('EVE')) {
                         // version key
                         if (k === eve_version) {
                             $.extend(cache, v);
                         }
                         else {
-                            delete localstorage_cache[k];
+                            delete localstorage_cache_1[k];
                         }
                     }
                     else {
@@ -237,11 +237,11 @@ var eveui;
                             $.extend(cache, v);
                         }
                         else {
-                            delete localstorage_cache[k];
+                            delete localstorage_cache_1[k];
                         }
                     }
                 });
-                localStorage.setItem('eveui_cache', JSON.stringify(localstorage_cache));
+                localStorage.setItem('eveui_cache', JSON.stringify(localstorage_cache_1));
                 mark("localstorage cache loaded " + Object.keys(cache).length + " entries");
             }
             $(document).ready(function () {
@@ -287,48 +287,48 @@ var eveui;
         var ship = cache['inventory/types/' + ship_id];
         for (var i in ship.dogma.attributes) {
             var attr = cache['inventory/types/' + ship_id].dogma.attributes[i];
-            if (attr.attribute.name == 'hiSlots') {
+            if (attr.attribute.name === 'hiSlots') {
                 ship[attr.attribute.name] = attr.value;
             }
-            else if (attr.attribute.name == 'medSlots') {
+            else if (attr.attribute.name === 'medSlots') {
                 ship[attr.attribute.name] = attr.value;
             }
-            else if (attr.attribute.name == 'lowSlots') {
+            else if (attr.attribute.name === 'lowSlots') {
                 ship[attr.attribute.name] = attr.value;
             }
-            else if (attr.attribute.name == 'rigSlots') {
+            else if (attr.attribute.name === 'rigSlots') {
                 ship[attr.attribute.name] = attr.value;
             }
-            else if (attr.attribute.name == 'maxSubSystems') {
+            else if (attr.attribute.name === 'maxSubSystems') {
                 ship[attr.attribute.name] = attr.value;
             }
         }
         // categorize items into slots
         outer: for (var item in items) {
-            if (items[item].length == 0) {
+            if (items[item].length === 0) {
                 continue;
             }
             var match = items[item].split(';');
             var item_id = match[0];
             var quantity = parseInt(match[1]);
             for (var i in cache['inventory/types/' + item_id].dogma.effects) {
-                if (cache['inventory/types/' + item_id].dogma.effects[i].effect.name == 'hiPower') {
+                if (cache['inventory/types/' + item_id].dogma.effects[i].effect.name === 'hiPower') {
                     high_slots[item_id] = quantity;
                     continue outer;
                 }
-                else if (cache['inventory/types/' + item_id].dogma.effects[i].effect.name == 'medPower') {
+                else if (cache['inventory/types/' + item_id].dogma.effects[i].effect.name === 'medPower') {
                     med_slots[item_id] = quantity;
                     continue outer;
                 }
-                else if (cache['inventory/types/' + item_id].dogma.effects[i].effect.name == 'loPower') {
+                else if (cache['inventory/types/' + item_id].dogma.effects[i].effect.name === 'loPower') {
                     low_slots[item_id] = quantity;
                     continue outer;
                 }
-                else if (cache['inventory/types/' + item_id].dogma.effects[i].effect.name == 'rigSlot') {
+                else if (cache['inventory/types/' + item_id].dogma.effects[i].effect.name === 'rigSlot') {
                     rig_slots[item_id] = quantity;
                     continue outer;
                 }
-                else if (cache['inventory/types/' + item_id].dogma.effects[i].effect.name == 'subSystem') {
+                else if (cache['inventory/types/' + item_id].dogma.effects[i].effect.name === 'subSystem') {
                     subsystem_slots[item_id] = quantity;
                     continue outer;
                 }
@@ -352,7 +352,7 @@ var eveui;
                     html += "<span class=\"eveui_icon eveui_plus_icon\" /><span class=\"eveui_icon eveui_minus_icon\" /><span class=\"eveui_icon eveui_more_icon\" />";
                 }
             }
-            if (typeof (slots_available) != 'undefined') {
+            if (typeof (slots_available) !== 'undefined') {
                 if (slots_available > slots_used) {
                     html += "<tr class=\"nocopy\"><td class=\"eveui_icon eveui_item_icon\" /><td class=\"eveui_right whitespace_nowrap\">" + (slots_available - slots_used) + "<td>Empty";
                     if (eveui_allow_edit) {
@@ -365,8 +365,7 @@ var eveui;
             }
             return html;
         }
-        var html = '';
-        html += "<table><thead><tr class=\"eveui_fit_header\" data-eveui-itemid=\"" + ship_id + "\"><td colspan=\"2\"><img src=\"https://imageserver.eveonline.com/Type/" + ship_id + "_32.png\" class=\"eveui_icon eveui_ship_icon\" /><td><span class=\"eveui_startcopy\" />[<a target=\"_blank\" href=\"" + eveui_urlify(dna) + "\">" + cache['inventory/types/' + ship_id].name + "," + (eveui_name || cache['inventory/types/' + ship_id].name) + "</a>]<td class=\"eveui_right whitespace_nowrap\"><span class=\"eveui_icon clipboard_copy_icon\" /><span data-itemid=\"" + ship_id + "\" class=\"eveui_icon eveui_info_icon\" />";
+        var html = "<table><thead><tr class=\"eveui_fit_header\" data-eveui-itemid=\"" + ship_id + "\"><td colspan=\"2\"><img src=\"https://imageserver.eveonline.com/Type/" + ship_id + "_32.png\" class=\"eveui_icon eveui_ship_icon\" /><td><span class=\"eveui_startcopy\" />[<a target=\"_blank\" href=\"" + eveui_urlify(dna) + "\">" + cache['inventory/types/' + ship_id].name + ", " + (eveui_name || cache['inventory/types/' + ship_id].name) + "</a>]<td class=\"eveui_right whitespace_nowrap\"><span class=\"eveui_icon eveui_copy_icon\" /><span data-itemid=\"" + ship_id + "\" class=\"eveui_icon eveui_info_icon\" />";
         if (eveui_allow_edit) {
             html += "<span class=\"eveui_icon\" /><span class=\"eveui_icon\" /><span class=\"eveui_icon eveui_more_icon\" />";
         }
@@ -394,9 +393,7 @@ var eveui;
     eveui.fit_window = fit_window;
     function format_item(item_id) {
         var item = cache['inventory/types/' + item_id];
-        var html = '';
-        html += '<table class="whitespace_nowrap">';
-        html += "<tr><td>" + item.name;
+        var html = "<table class=\"whitespace_nowrap\"><tr><td>" + item.name;
         for (var i in item.dogma.attributes) {
             var attr = item.dogma.attributes[i];
             html += '<tr>';
@@ -434,8 +431,7 @@ var eveui;
     eveui.item_window = item_window;
     function format_char(char_id) {
         var character = cache['characters/' + char_id];
-        var html = '';
-        html += "<table><tr><td colspan=\"2\"><img class=\"float_left\" src=\"https://imageserver.eveonline.com/Character/" + character.id + "_128.jpg\" height=\"128\" width=\"128\" />" + character.name + "<hr /><img class=\"float_left\" src=\"https://imageserver.eveonline.com/Corporation/" + character.corporation.id_str + "_64.png\" height=\"64\" width=\"64\" />Member of " + character.corporation.name + "<tr><td>Bio:<td>" + character.description.replace(/<font[^>]+>/g, '<font>') + "</table>";
+        var html = "<table><tr><td colspan=\"2\"><img class=\"float_left\" src=\"https://imageserver.eveonline.com/Character/" + character.id + "_128.jpg\" height=\"128\" width=\"128\" />" + character.name + "<hr /><img class=\"float_left\" src=\"https://imageserver.eveonline.com/Corporation/" + character.corporation.id_str + "_64.png\" height=\"64\" width=\"64\" />Member of " + character.corporation.name + "<tr><td>Bio:<td>" + character.description.replace(/<font[^>]+>/g, '<font>') + "</table>";
         return html;
     }
     eveui.format_char = format_char;
@@ -466,7 +462,7 @@ var eveui;
     function expand() {
         // expand any fits marked with a data-eveui-expand attribute ( or all, if expand_all mode )
         var expand_filter = '[data-eveui-expand]';
-        if (eveui_mode == "expand_all") {
+        if (eveui_mode === "expand_all") {
             expand_filter = '*';
         }
         $(eveui_fit_selector).filter(expand_filter).each(function () {
@@ -539,7 +535,7 @@ var eveui;
         var pending = [];
         var items = dna.split(':');
         for (var item in items) {
-            if (items[item].length == 0) {
+            if (items[item].length === 0) {
                 continue;
             }
             var match = items[item].split(';');
@@ -565,7 +561,7 @@ var eveui;
         }).done(function (data) {
             cache[endpoint] = data;
             if (eveui_use_localstorage > 0) {
-                var key;
+                var key = void 0;
                 if (endpoint.startsWith('inventory/types')) {
                     // inventory/types endpoint should be reliably cachable until such time as the version changes
                     key = eve_version;
@@ -597,7 +593,7 @@ var eveui;
                 }, 5000);
             }
         }).fail(function (xhr) {
-            if (xhr.status == 404 || xhr.status == 403) {
+            if (xhr.status === 404 || xhr.status === 403) {
             }
             else {
                 // otherwise, assume temporary error and try again when possible
