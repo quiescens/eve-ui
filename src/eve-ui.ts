@@ -313,7 +313,7 @@ namespace eveui {
 		$( this ).parent().after( eveui_window );
 	});
 
-	$( document ).on( 'click', '.clipboard_copy_icon', function(e) {
+	$( document ).on( 'click', '.eveui_copy_icon', function(e) {
 		clipboard_copy( $( this ).closest( '.eveui_window' ) );
 	});
 
@@ -589,7 +589,7 @@ namespace eveui {
 						${ cache[ 'inventory/types/' + ship_id ].name }, ${ eveui_name || cache[ 'inventory/types/' + ship_id ].name }
 					</a>]
 			<td class="eveui_right whitespace_nowrap">
-			<span class="eveui_icon clipboard_copy_icon" />
+			<span class="eveui_icon eveui_copy_icon" />
 			<span data-itemid="${ ship_id }" class="eveui_icon eveui_info_icon" />
 			`;
 		if ( eveui_allow_edit ) {
