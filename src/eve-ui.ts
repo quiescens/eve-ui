@@ -587,7 +587,7 @@ namespace eveui {
 				<span class="eveui_startcopy" />
 					[<a target="_blank" href="${ eveui_urlify( dna ) }">
 						${ cache[ 'inventory/types/' + ship_id ].name }, ${ eveui_name || cache[ 'inventory/types/' + ship_id ].name }
-					</a>]
+					</a>]<br/>
 			<td class="eveui_right whitespace_nowrap nocopy">
 			<span class="eveui_icon eveui_copy_icon" />
 			<span data-itemid="${ ship_id }" class="eveui_icon eveui_info_icon" />
