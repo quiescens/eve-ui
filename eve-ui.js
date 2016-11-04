@@ -365,7 +365,7 @@ var eveui;
             }
             return html;
         }
-        var html = "<table><thead><tr class=\"eveui_fit_header\" data-eveui-itemid=\"" + ship_id + "\"><td colspan=\"2\"><img src=\"https://imageserver.eveonline.com/Type/" + ship_id + "_32.png\" class=\"eveui_icon eveui_ship_icon\" /><td><span class=\"eveui_startcopy\" />[<a target=\"_blank\" href=\"" + eveui_urlify(dna) + "\">" + cache['inventory/types/' + ship_id].name + ", " + (eveui_name || cache['inventory/types/' + ship_id].name) + "</a>]<td class=\"eveui_right whitespace_nowrap nocopy\"><span class=\"eveui_icon eveui_copy_icon\" /><span data-itemid=\"" + ship_id + "\" class=\"eveui_icon eveui_info_icon\" />";
+        var html = "<table><thead><tr class=\"eveui_fit_header\" data-eveui-itemid=\"" + ship_id + "\"><td colspan=\"2\"><img src=\"https://imageserver.eveonline.com/Type/" + ship_id + "_32.png\" class=\"eveui_icon eveui_ship_icon\" /><td><span class=\"eveui_startcopy\" />[<a target=\"_blank\" href=\"" + eveui_urlify(dna) + "\">" + cache['inventory/types/' + ship_id].name + ", " + (eveui_name || cache['inventory/types/' + ship_id].name) + "</a>]<br/><td class=\"eveui_right whitespace_nowrap nocopy\"><span class=\"eveui_icon eveui_copy_icon\" /><span data-itemid=\"" + ship_id + "\" class=\"eveui_icon eveui_info_icon\" />";
         if (eveui_allow_edit) {
             html += "<span class=\"eveui_icon\" /><span class=\"eveui_icon\" /><span class=\"eveui_icon eveui_more_icon\" />";
         }
