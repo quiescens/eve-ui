@@ -56,7 +56,7 @@ var eveui_style: string = eveui_style || '<style>' + css`
 			margin: 2px;
 			max-width: 30em;
 		}
-		.eveui_content div {
+		.eveui_content .eveui_title {
 			display: flex;
 		}
 		.eveui_content table {
@@ -74,6 +74,13 @@ var eveui_style: string = eveui_style || '<style>' + css`
 		}
 		.eveui_edit .eveui_edit_icon {
 			display: none;
+		}
+		.eveui_itemselect select {
+			margin-left: 1em;
+			min-width: 100px;
+		}
+		.eveui_itemselect input {
+			width: 100%;
 		}
 		.eveui_flexgrow {
 			flex-grow: 1;
@@ -328,13 +335,90 @@ namespace eveui {
 
 		this.eveui_window = $( html`
 			<span class="eveui_window eveui_itemselect" style="position:absolute">
-				<span class="eveui_content">
-					Autocomplete goes here
+				<span class="eveui_scrollable">
+					<span class="eveui_content">
+						<input type="text" list="types" /><br />
+						<select size="10" />
+					</span>
 				</span>
 			</span>
 			` );
 		this.eveui_window.css( 'z-index', current_zindex++ );
 		$( this ).parent().after( this.eveui_window );
+	  let eveui_content = this.eveui_window.find( '.eveui_content' );
+		cache_request( 'crest/market/types/' + item_id, `https://crest-tq.eveonline.com/market/types/${ item_id }/` ).done( function() {
+			let data = cache[ 'crest/market/types/' + item_id ];
+			let market_group = data.marketGroup.id_str;
+			cache_request( 'crest/market/groups/' + market_group, `https://crest-tq.eveonline.com/market/types/?group=https://crest-tq.eveonline.com/market/groups/${ market_group }/` ).done( function() {
+				let data = cache[ 'crest/market/groups/' + market_group ];
+				let items = data.items.sort( function( a,b ) { return a.type.name.localeCompare( b.type.name ) } );
+				eveui_content.find( 'select' ).empty();
+				for ( let i in data.items ) {
+					let selected = ( data.items[i].type.id_str === item_id );
+					eveui_content.find( 'select' ).append( html`
+						<option value="${ data.items[i].type.id_str }" ${ selected ? 'selected' : '' }>${ data.items[i].type.name }</option>
+						` );
+				}
+			});
+		});
+	});
+
+	$( document ).on( 'input', '.eveui_itemselect input', function(e) {
+		e.preventDefault();
+		let eveui_window = $( this ).closest( '.eveui_window' );
+		let select = eveui_window.closest( '.eveui_content' ).find( 'select' );
+
+		if ( $( this ).val().length <3 ) {
+			return;
+		}
+
+		$.ajax({
+			url: `https://esi.tech.ccp.is/v1/search/`,
+			data: {
+				search: $( this ).val(),
+				categories: 'inventorytype'
+			}
+		}).done( function(data) {
+			if ( data.inventorytype === 'undefined' ) {
+				return;
+			}
+			let arg = {
+				ids: data.inventorytype.slice(0, 50)
+			};
+			$.ajax({
+				url: `https://esi.tech.ccp.is/v1/universe/names/`,
+				method: 'POST',
+				contentType: 'application/json',
+				data: JSON.stringify( arg )
+			}).done( function(data) {
+				let sorted = data.sort( function( a,b ) { return a.name.localeCompare( b.name ) } );
+				select.empty();
+				for ( let i in sorted ) {
+					select.append( html`
+						<option value="${ sorted[i].id }">${ sorted[i].name }</option>
+						` );
+				}
+
+			});
+		});
+	});
+
+	$( document ).on( 'click', '.eveui_itemselect select', function(e) {
+		e.preventDefault();
+		let item_id: string = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
+		let dna: string = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
+
+		let re = new RegExp( `^${ item_id}:` );
+		dna = dna.replace( re, `${ $( this ).val() }:` );
+		re = new RegExp( `:${ item_id};` );
+		dna = dna.replace( re, `:${ $( this ).val() };` );
+
+		$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
+		cache_fit( dna ).done( function() {
+			let eveui_window: JQuery = $( `.eveui_window[data-eveui-dna="${ dna }"]` );
+			eveui_window.find( '.eveui_content ').html( format_fit( dna ) );
+			$( window ).trigger( 'resize' );
+		});
 	});
 
 	$( document ).on( 'click', '.eveui_copy_icon', function(e) {
@@ -938,9 +1022,11 @@ namespace eveui {
 			}
 		).done(
 			function( data ) {
+				cache[ key ] = data;
 			}
 		).fail(
 			function( xhr ) {
+				delete cache[ key ];
 			}
 		);
 	}
