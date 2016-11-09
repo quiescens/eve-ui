@@ -388,7 +388,7 @@ namespace eveui {
 
 				mark( 'eve version response ' + eve_version );
 
-				if( eveui_use_localstorage > 0 ) {
+				if( eveui_use_localstorage > 0 && localStorage.getItem( 'eveui_cache' ) ) {
 					// load localstorage cache if applicable
 					let localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) );
 					$.each( localstorage_cache, function( k, v ) {
