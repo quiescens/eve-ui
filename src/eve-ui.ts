@@ -15,7 +15,6 @@ var eveui_fit_selector: string = eveui_fit_selector || '[href^="fitting:"],[data
 var eveui_item_selector: string = eveui_item_selector || '[href^="item:"],[data-itemid]';
 var eveui_char_selector: string = eveui_char_selector || '[href^="char:"],[data-charid]';
 var eveui_urlify: ( dna: string ) => string = eveui_urlify || function( dna ) { return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); }
-var eveui_autocomplete_endpoint: ( str: string ) => string = eveui_autocomplete_endpoint || function( str ) { return 'https://zkillboard.com/autocomplete/typeID/' + encodeURI( str ) + '/'; }
 /* icons from https://github.com/primer/octicons */
 var eveui_style: string = eveui_style || '<style>' + css`
 		/* eveui_css_start */
@@ -301,16 +300,17 @@ namespace eveui {
 		let item_id: string = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
 		let dna: string = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
 
-		let eveui_window: JQuery = $( html`
-			<span class="eveui_window" style="position:absolute">
-				<span class="eveui_close_icon" />
+		$( '.eveui_itemselect' ).remove();
+
+		this.eveui_window = $( html`
+			<span class="eveui_window eveui_itemselect" style="position:absolute">
 				<span class="eveui_content">
 					Autocomplete goes here
 				</span>
 			</span>
 			` );
-		eveui_window.css( 'z-index', current_zindex++ );
-		$( this ).parent().after( eveui_window );
+		this.eveui_window.css( 'z-index', current_zindex++ );
+		$( this ).parent().after( this.eveui_window );
 	});
 
 	$( document ).on( 'click', '.eveui_copy_icon', function(e) {
@@ -784,15 +784,15 @@ namespace eveui {
 				let elem: JQuery = $( this );
 				let dna: string = elem.data( 'dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 
-				let cache: JQueryPromise<any> = cache_fit( dna );
+				let promise: JQueryPromise<any> = cache_fit( dna );
 
 				// skip if already cached
-				if ( cache.state() === 'resolved' ) {
+				if ( promise.state() === 'resolved' ) {
 					elem.attr( 'data-eveui-cached', 1 );
 				} else {
 					preload_quota--;
 					action_taken = true;
-					cache.always( function() {
+					promise.always( function() {
 						clearTimeout( preload_timer );
 						preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
 					});
