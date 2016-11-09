@@ -22,6 +22,7 @@ var eveui_style: string = eveui_style || '<style>' + css`
 			position: fixed;
 			line-height: 1;
 			background: #eee;
+			color: #000;
 			border: 1px solid;
 			opacity: 0.95;
 			display: flex;
@@ -64,6 +65,15 @@ var eveui_style: string = eveui_style || '<style>' + css`
 		.eveui_content td {
 			vertical-align: top;
 			padding: 0 2px;
+		}
+		.eveui_content .eveui_edit {
+			display: none;
+		}
+		.eveui_content.eveui_edit .eveui_edit {
+			display: inline-block;
+		}
+		.eveui_edit .eveui_edit_icon {
+			display: none;
 		}
 		.eveui_flexgrow {
 			flex-grow: 1;
@@ -275,7 +285,11 @@ namespace eveui {
 		}
 
 		$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
-		fit_window( dna );
+		cache_fit( dna ).done( function() {
+			let eveui_window: JQuery = $( `.eveui_window[data-eveui-dna="${ dna }"]` );
+			eveui_window.find( '.eveui_content ').html( format_fit( dna ) );
+			$( window ).trigger( 'resize' );
+		});
 	});
 
 	$( document ).on( 'click', '.eveui_plus_icon', function(e) {
@@ -292,7 +306,17 @@ namespace eveui {
 		}
 
 		$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
-		fit_window( dna );
+		cache_fit( dna ).done( function() {
+			let eveui_window: JQuery = $( `.eveui_window[data-eveui-dna="${ dna }"]` );
+			eveui_window.find( '.eveui_content ').html( format_fit( dna ) );
+			$( window ).trigger( 'resize' );
+		});
+	});
+
+	$( document ).on( 'click', '.eveui_edit_icon', function(e) {
+		e.preventDefault();
+		$( this ).closest( '.eveui_content' ).addClass( 'eveui_edit' );
+		$( this ).remove();
 	});
 
 	$( document ).on( 'click', '.eveui_more_icon', function(e) {
@@ -314,7 +338,7 @@ namespace eveui {
 	});
 
 	$( document ).on( 'click', '.eveui_copy_icon', function(e) {
-		clipboard_copy( $( this ).closest( '.eveui_window' ) );
+		clipboard_copy( $( this ).closest( '.eveui_content' ) );
 	});
 
 	// custom window drag handlers
@@ -468,6 +492,9 @@ namespace eveui {
 		// ship name and number of slots
 		let ship_id: number = parseInt( items.shift() );
 		let ship = cache[ 'inventory/types/' + ship_id ];
+		ship.hiSlots = 0;
+		ship.medSlots = 0;
+		ship.lowSlots = 0;
 		for ( let i in ship.dogma.attributes ) {
 			let attr = cache[ 'inventory/types/' + ship_id ].dogma.attributes[i];
 			if ( attr.attribute.name === 'hiSlots' ) {
@@ -491,21 +518,34 @@ namespace eveui {
 			let match: Array<string> = items[item].split( ';' );
 			let item_id: string = match[0];
 			let quantity: number = parseInt( match[1] );
+			let itemObj = cache[ 'inventory/types/' + item_id ];
 
-			for ( let i in cache[ 'inventory/types/' + item_id ].dogma.effects ) {
-				if ( cache[ 'inventory/types/' + item_id ].dogma.effects[i].effect.name === 'hiPower') {
+			for ( let i in itemObj.dogma.attributes ) {
+				let attr = itemObj.dogma.attributes[i];
+				if ( attr.attribute.name === 'hiSlotModifier' ) {
+					ship.hiSlots += attr.value;
+				}
+				if ( attr.attribute.name === 'medSlotModifier' ) {
+					ship.medSlots += attr.value;
+				}
+				if ( attr.attribute.name === 'lowSlotModifier' ) {
+					ship.lowSlots += attr.value;
+				}
+			}
+			for ( let i in itemObj.dogma.effects ) {
+				if ( itemObj.dogma.effects[i].effect.name === 'hiPower') {
 					high_slots[ item_id ] = quantity;
 					continue outer;
-				} else if ( cache[ 'inventory/types/' + item_id ].dogma.effects[i].effect.name === 'medPower') {
+				} else if ( itemObj.dogma.effects[i].effect.name === 'medPower') {
 					med_slots[ item_id ] = quantity;
 					continue outer;
-				} else if ( cache[ 'inventory/types/' + item_id ].dogma.effects[i].effect.name === 'loPower') {
+				} else if ( itemObj.dogma.effects[i].effect.name === 'loPower') {
 					low_slots[ item_id ] = quantity;
 					continue outer;
-				} else if ( cache[ 'inventory/types/' + item_id ].dogma.effects[i].effect.name === 'rigSlot') {
+				} else if ( itemObj.dogma.effects[i].effect.name === 'rigSlot') {
 					rig_slots[ item_id ] = quantity;
 					continue outer;
-				} else if ( cache[ 'inventory/types/' + item_id ].dogma.effects[i].effect.name === 'subSystem') {
+				} else if ( itemObj.dogma.effects[i].effect.name === 'subSystem') {
 					subsystem_slots[ item_id ] = quantity;
 					continue outer;
 				}
@@ -525,32 +565,25 @@ namespace eveui {
 						<tr class="copy_only">
 						<td>
 							${ ( cache[ 'inventory/types/' + item_id ].name + '<br />').repeat(fittings[ item_id ] ) }
-						<tr class="nocopy" data-eveui-itemid="${ item_id }">
-							<td><img src="https://imageserver.eveonline.com/Type/${ item_id }_32.png" class="eveui_icon eveui_item_icon" />
-							<td class="eveui_right">${ fittings[ item_id ] }
-							<td>${ cache[ 'inventory/types/' + item_id ].name }
 						`;
 				} else {
 					html += html`
 						<tr class="copy_only">
 						<td>
 							${ cache[ 'inventory/types/' + item_id ].name } x${ fittings[ item_id ] }<br />
-						<tr class="nocopy" data-eveui-itemid="${ item_id }">
-							<td><img src="https://imageserver.eveonline.com/Type/${ item_id }_32.png" class="eveui_icon eveui_item_icon" />
-							<td class="eveui_right">${ fittings[ item_id ] }
-							<td>${ cache[ 'inventory/types/' + item_id ].name }
 						`;
 				}
 				html += html`
-					<td class="eveui_right whitespace_nowrap"><span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
-					`;
-				if ( eveui_allow_edit ) {
-					html += html`
-						<span class="eveui_icon eveui_plus_icon" />
-						<span class="eveui_icon eveui_minus_icon" />
-						<span class="eveui_icon eveui_more_icon" />
+					<tr class="nocopy" data-eveui-itemid="${ item_id }">
+						<td><img src="https://imageserver.eveonline.com/Type/${ item_id }_32.png" class="eveui_icon eveui_item_icon" />
+						<td class="eveui_right">${ fittings[ item_id ] }
+						<td colspan="2">${ cache[ 'inventory/types/' + item_id ].name }
+						<td class="eveui_right whitespace_nowrap">
+							<span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
+							<span class="eveui_icon eveui_plus_icon eveui_edit" />
+							<span class="eveui_icon eveui_minus_icon eveui_edit" />
+							<span class="eveui_icon eveui_more_icon eveui_edit" />
 						`;
-				}
 			}
 
 			if ( typeof ( slots_available ) !== 'undefined' ) {
@@ -559,11 +592,9 @@ namespace eveui {
 						<tr class="nocopy">
 							<td class="eveui_icon eveui_item_icon" />
 							<td class="eveui_right whitespace_nowrap">${ slots_available - slots_used }
-							<td>Empty
-						`;
-					if ( eveui_allow_edit ) {
-						html += '<td class="eveui_right"><span class="eveui_more_icon" />';
-					}
+							<td colspan="2">Empty
+							<td class="eveui_right"><span class="eveui_icon eveui_more_icon eveui_edit" />
+							`;
 				}
 				if ( slots_used > slots_available ) {
 					html += html`
@@ -588,18 +619,13 @@ namespace eveui {
 					[<a target="_blank" href="${ eveui_urlify( dna ) }">
 						${ cache[ 'inventory/types/' + ship_id ].name }, ${ eveui_name || cache[ 'inventory/types/' + ship_id ].name }
 					</a>]<br/>
-			<td class="eveui_right whitespace_nowrap nocopy">
-			<span class="eveui_icon eveui_copy_icon" />
-			<span data-itemid="${ ship_id }" class="eveui_icon eveui_info_icon" />
-			`;
-		if ( eveui_allow_edit ) {
-			html += html`
-				<span class="eveui_icon" />
-				<span class="eveui_icon" />
-				<span class="eveui_icon eveui_more_icon" />
-				`;
-		}
-		html += html`
+				<td class="eveui_right whitespace_nowrap nocopy" colspan="2">
+					${ eveui_allow_edit ? '<span class="eveui_icon eveui_edit_icon" />' : '' }
+					<span class="eveui_icon eveui_copy_icon" />
+					<span data-itemid="${ ship_id }" class="eveui_icon eveui_info_icon" />
+					<span class="eveui_icon eveui_edit" />
+					<span class="eveui_icon eveui_edit" />
+					<span class="eveui_icon eveui_more_icon eveui_edit" />
 			</thead>
 			<tbody class="whitespace_nowrap">
 			${ item_rows( high_slots, ship.hiSlots ) }
@@ -610,14 +636,13 @@ namespace eveui {
 			<tr><td class="eveui_line_spacer">&nbsp;
 			${ item_rows( rig_slots, ship.rigSlots ) }
 			<tr><td class="eveui_line_spacer">&nbsp;
-			${ item_rows( subsystem_slots, ship.maxSubsystems ) }
+			${ item_rows( subsystem_slots, ship.maxSubSystems ) }
 			<tr><td class="eveui_line_spacer">&nbsp;
 			${ item_rows( other_slots ) }
 			</tbody>
 			</table>
 			<span class="eveui_endcopy" />
 			`;
-
 		return html;
 	}
 
@@ -746,7 +771,9 @@ namespace eveui {
 			let dna: string = selected_element.attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 			cache_fit( dna ).done( function() {
 				let eveui_name: string = $( this ).text().trim();
-				selected_element.replaceWith( `<span class="eveui_content eveui_fit">${ format_fit( dna, eveui_name ) }</span>` );
+				let eveui_content = $( `<span class="eveui_content eveui_fit">${ format_fit( dna, eveui_name ) }</span>` );
+				eveui_content.attr( 'data-eveui-dna', dna );
+				selected_element = selected_element.replaceWith( eveui_content )
 				mark( 'fit window expanded' );
 			});
 		});
