@@ -407,7 +407,8 @@ namespace eveui {
 				dataType: 'json',
 				cache: true,
 			}
-			).done(	function(data) {
+		).done(
+			function(data) {
 				eve_version = data.serverVersion;
 
 				mark( 'eve version response ' + eve_version );
@@ -444,10 +445,13 @@ namespace eveui {
 				// lazy preload timer
 				preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
 				mark( 'preload timer set' );
-			}).fail( function( xhr ) {
+			}
+		).fail(
+			function( xhr ) {
 				mark( 'eve version request failed' );
 				setTimeout( eve_version_query, 10000 );
-		});
+			}
+		);
 	}
 	eve_version_query();
 
@@ -865,7 +869,8 @@ namespace eveui {
 				dataType: 'json',
 				cache: true,
 			}
-			).done( function(data) {
+		).done(
+			function(data) {
 				cache[ endpoint ] = data;
 				if ( eveui_use_localstorage > 0 ) {
 					let key: any;
@@ -901,7 +906,9 @@ namespace eveui {
 						localstorage_pending = {};
 					}, 5000 );
 				}
-			}).fail( function( xhr ) {
+			}
+		).fail(
+			function( xhr ) {
 				if ( xhr.status === 404 || xhr.status === 403 ) {
 					// 403 is permanent for our purposes
 					// 404 will usually be a "permanent" error
@@ -909,7 +916,33 @@ namespace eveui {
 					// otherwise, assume temporary error and try again when possible
 					delete cache[ endpoint ];
 				}
-			});
+			}
+		);
+	}
+
+	function cache_request( key: string, url: string ): JQueryPromise<any> {
+		if ( typeof ( cache[ key ] ) === 'object' ) {
+			if ( typeof ( cache[ key ].promise ) === 'function' ) {
+				// item is pending, return the existing deferred object
+				return cache[ key ];
+			} else {
+				// if item is already cached, we can return a resolved promise
+				return $.Deferred().resolve();
+			}
+		}
+		return cache[ key ] = $.ajax(
+			url,
+			{
+				dataType: 'json',
+				cache: true,
+			}
+		).done(
+			function( data ) {
+			}
+		).fail(
+			function( xhr ) {
+			}
+		);
 	}
 
 	function clipboard_copy( element: JQuery ): void {
