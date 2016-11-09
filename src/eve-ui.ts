@@ -694,7 +694,7 @@ namespace eveui {
 		mark( 'item window created' );
 
 		// load required items and set callback to display
-		cache_request( 'inventory/types/' + item_id ).done( function() {
+		cache_crest( 'inventory/types/' + item_id ).done( function() {
 			let eveui_window: JQuery = $( `.eveui_window[data-eveui-itemid="${ item_id }"]` );
 
 			eveui_window.find( '.eveui_content' ).html( format_item( item_id ) );
@@ -739,7 +739,7 @@ namespace eveui {
 		mark( 'char window created' );
 
 		// load required chars and set callback to display
-		cache_request( 'characters/' + char_id ).done( function() {
+		cache_crest( 'characters/' + char_id ).done( function() {
 			let eveui_window: JQuery = $( `.eveui_window[data-eveui-charid="${ char_id }"]` );
 
 			eveui_window.find( '.eveui_content' ).html( format_char( char_id ) );
@@ -784,7 +784,7 @@ namespace eveui {
 				return;
 			}
 			let item_id: string = selected_element.attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_request( 'inventory/types/' + item_id ).done( function() {
+			cache_crest( 'inventory/types/' + item_id ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_item">${ format_item( item_id ) }</span>` );
 				mark( 'item window expanded' );
 			});
@@ -796,7 +796,7 @@ namespace eveui {
 				return;
 			}
 			let char_id: string = selected_element.attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_request( 'characters/' + char_id ).done( function() {
+			cache_crest( 'characters/' + char_id ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_char">${ format_char( char_id ) }</span>` );
 				mark( 'char window expanded' );
 			});
@@ -843,12 +843,12 @@ namespace eveui {
 			let match: Array<string> = items[item].split( ';' );
 			let item_id: string = match[0];
 
-			pending.push( cache_request( 'inventory/types/' + item_id ) );
+			pending.push( cache_crest( 'inventory/types/' + item_id ) );
 		}
 		return $.when.apply( null, pending );
 	}
 
-	function cache_request( endpoint: string ): JQueryPromise<any> {
+	function cache_crest( endpoint: string ): JQueryPromise<any> {
 		if ( typeof ( cache[ endpoint ] ) === 'object' ) {
 			if ( typeof ( cache[ endpoint ].promise ) === 'function' ) {
 				// item is pending, return the existing deferred object
