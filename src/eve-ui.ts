@@ -421,6 +421,7 @@ namespace eveui {
 			// get item ids that match input
 			$.ajax({
 				url: `https://esi.tech.ccp.is/v1/search/`,
+				cache: true,
 				data: {
 					search: $( this ).val(),
 					categories: 'inventorytype'
@@ -436,6 +437,7 @@ namespace eveui {
 				// get names for required item ids
 				$.ajax({
 					url: `https://esi.tech.ccp.is/v1/universe/names/`,
+					cache: true,
 					method: 'POST',
 					contentType: 'application/json',
 					data: JSON.stringify( arg )
@@ -542,7 +544,7 @@ namespace eveui {
 
 				mark( 'eve version response ' + eve_version );
 
-				if( eveui_use_localstorage > 0 && localStorage.getItem( 'eveui_cache' ) ) {
+				if( eveui_use_localstorage > 0 && typeof( localStorage['eveui_cache'] ) !== 'undefined' ) {
 					// load localstorage cache if applicable
 					let localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) );
 					$.each( localstorage_cache, function( k, v ) {
@@ -624,12 +626,12 @@ namespace eveui {
 
 		// ship name and number of slots
 		let ship_id: number = parseInt( items.shift() );
-		let ship = cache[ 'inventory/types/' + ship_id ];
+		let ship = cache[ 'crest/inventory/types/' + ship_id ];
 		ship.hiSlots = 0;
 		ship.medSlots = 0;
 		ship.lowSlots = 0;
 		for ( let i in ship.dogma.attributes ) {
-			let attr = cache[ 'inventory/types/' + ship_id ].dogma.attributes[i];
+			let attr = cache[ 'crest/inventory/types/' + ship_id ].dogma.attributes[i];
 			if ( attr.attribute.name === 'hiSlots' ) {
 				ship[attr.attribute.name] = attr.value;
 			} else if ( attr.attribute.name === 'medSlots' ) {
@@ -644,17 +646,17 @@ namespace eveui {
 		}
 
 		// categorize items into slots
-		outer: for ( let item in items ) {
-			if ( items[item].length === 0 ) {
+		outer: for ( let i in items ) {
+			if ( items[i].length === 0 ) {
 				continue;
 			}
-			let match: Array<string> = items[item].split( ';' );
+			let match: Array<string> = items[i].split( ';' );
 			let item_id: string = match[0];
 			let quantity: number = parseInt( match[1] );
-			let itemObj = cache[ 'inventory/types/' + item_id ];
+			let item = cache[ 'crest/inventory/types/' + item_id ];
 
-			for ( let i in itemObj.dogma.attributes ) {
-				let attr = itemObj.dogma.attributes[i];
+			for ( let j in item.dogma.attributes ) {
+				let attr = item.dogma.attributes[j];
 				if ( attr.attribute.name === 'hiSlotModifier' ) {
 					ship.hiSlots += attr.value;
 				}
@@ -665,20 +667,21 @@ namespace eveui {
 					ship.lowSlots += attr.value;
 				}
 			}
-			for ( let i in itemObj.dogma.effects ) {
-				if ( itemObj.dogma.effects[i].effect.name === 'hiPower') {
+			for ( let j in item.dogma.effects ) {
+				let effect = item.dogma.effects[j].effect;
+				if ( effect.name === 'hiPower') {
 					high_slots[ item_id ] = quantity;
 					continue outer;
-				} else if ( itemObj.dogma.effects[i].effect.name === 'medPower') {
+				} else if ( effect.name === 'medPower') {
 					med_slots[ item_id ] = quantity;
 					continue outer;
-				} else if ( itemObj.dogma.effects[i].effect.name === 'loPower') {
+				} else if ( effect.name === 'loPower') {
 					low_slots[ item_id ] = quantity;
 					continue outer;
-				} else if ( itemObj.dogma.effects[i].effect.name === 'rigSlot') {
+				} else if ( effect.name === 'rigSlot') {
 					rig_slots[ item_id ] = quantity;
 					continue outer;
-				} else if ( itemObj.dogma.effects[i].effect.name === 'subSystem') {
+				} else if ( effect.name === 'subSystem') {
 					subsystem_slots[ item_id ] = quantity;
 					continue outer;
 				}
@@ -692,25 +695,27 @@ namespace eveui {
 			let slots_used: number = 0;
 
 			for ( let item_id in fittings ) {
+				let item = cache[ 'crest/inventory/types/' + item_id ];
+
 				slots_used += fittings[ item_id ];
 				if ( slots_available ) {
 					html += html`
 						<tr class="copy_only">
 						<td>
-							${ ( cache[ 'inventory/types/' + item_id ].name + '<br />').repeat(fittings[ item_id ] ) }
+							${ ( item.name + '<br />' ).repeat(fittings[ item_id ] ) }
 						`;
 				} else {
 					html += html`
 						<tr class="copy_only">
 						<td>
-							${ cache[ 'inventory/types/' + item_id ].name } x${ fittings[ item_id ] }<br />
+							${ item.name } x${ fittings[ item_id ] }<br />
 						`;
 				}
 				html += html`
 					<tr class="nocopy" data-eveui-itemid="${ item_id }">
 						<td><img src="https://imageserver.eveonline.com/Type/${ item_id }_32.png" class="eveui_icon eveui_item_icon" />
 						<td class="eveui_right">${ fittings[ item_id ] }
-						<td colspan="2"><div class="eveui_rowcontent">${ cache[ 'inventory/types/' + item_id ].name }</div>
+						<td colspan="2"><div class="eveui_rowcontent">${ item.name }</div>
 						<td class="eveui_right whitespace_nowrap">
 							<span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
 							<span class="eveui_icon eveui_plus_icon eveui_edit" />
@@ -751,7 +756,7 @@ namespace eveui {
 				<div class="eveui_rowcontent">
 					<span class="eveui_startcopy" />
 						[<a target="_blank" href="${ eveui_urlify( dna ) }">
-							${ cache[ 'inventory/types/' + ship_id ].name }, ${ eveui_name || cache[ 'inventory/types/' + ship_id ].name }
+							${ ship.name }, ${ eveui_name || ship.name }
 						</a>]<br/>
 				</div>
 				<td class="eveui_right whitespace_nowrap nocopy" colspan="2">
@@ -800,7 +805,7 @@ namespace eveui {
 	}
 
 	export function format_item( item_id: string ): string {
-		let item = cache[ 'inventory/types/' + item_id ];
+		let item = cache[ 'crest/inventory/types/' + item_id ];
 		let html: string = html`
 			<table class="whitespace_nowrap">
 			<tr><td>${ item.name }
@@ -829,7 +834,7 @@ namespace eveui {
 		mark( 'item window created' );
 
 		// load required items and set callback to display
-		cache_crest( 'inventory/types/' + item_id ).done( function() {
+		cache_request( 'crest/inventory/types/' + item_id, `https://crest-tq.eveonline.com/inventory/types/${ item_id }/` ).done( function() {
 			let eveui_window: JQuery = $( `.eveui_window[data-eveui-itemid="${ item_id }"]` );
 
 			eveui_window.find( '.eveui_content' ).html( format_item( item_id ) );
@@ -846,7 +851,7 @@ namespace eveui {
 	}
 
 	export function format_char( char_id: string ): string {
-		let character = cache[ 'characters/' + char_id ];
+		let character = cache[ 'crest/characters/' + char_id ];
 		let html: string = html`
 			<table>
 			<tr><td colspan="2">
@@ -874,7 +879,7 @@ namespace eveui {
 		mark( 'char window created' );
 
 		// load required chars and set callback to display
-		cache_crest( 'characters/' + char_id ).done( function() {
+		cache_request( 'crest/characters/' + char_id, `https://crest-tq.eveonline.com/characters/${ char_id }/` ).done( function() {
 			let eveui_window: JQuery = $( `.eveui_window[data-eveui-charid="${ char_id }"]` );
 
 			eveui_window.find( '.eveui_content' ).html( format_char( char_id ) );
@@ -919,7 +924,7 @@ namespace eveui {
 				return;
 			}
 			let item_id: string = selected_element.attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_crest( 'inventory/types/' + item_id ).done( function() {
+			cache_request( 'crest/inventory/types/' + item_id, `https://crest-tq.eveonline.com/inventory/types/${ item_id }/` ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_item">${ format_item( item_id ) }</span>` );
 				mark( 'item window expanded' );
 			});
@@ -931,7 +936,7 @@ namespace eveui {
 				return;
 			}
 			let char_id: string = selected_element.attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_crest( 'characters/' + char_id ).done( function() {
+			cache_request( 'crest/characters/' + char_id, `https://crest-tq.eveonline.com/characters/${ char_id }/` ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_char">${ format_char( char_id ) }</span>` );
 				mark( 'char window expanded' );
 			});
@@ -978,77 +983,9 @@ namespace eveui {
 			let match: Array<string> = items[item].split( ';' );
 			let item_id: string = match[0];
 
-			pending.push( cache_crest( 'inventory/types/' + item_id ) );
+			pending.push( cache_request( 'crest/inventory/types/' + item_id, `https://crest-tq.eveonline.com/inventory/types/${ item_id }/` ) );
 		}
 		return $.when.apply( null, pending );
-	}
-
-	function cache_crest( endpoint: string ): JQueryPromise<any> {
-		if ( typeof ( cache[ endpoint ] ) === 'object' ) {
-			if ( typeof ( cache[ endpoint ].promise ) === 'function' ) {
-				// item is pending, return the existing deferred object
-				return cache[ endpoint ];
-			} else {
-				// if item is already cached, we can return a resolved promise
-				return $.Deferred().resolve();
-			}
-		}
-
-		return cache[ endpoint ] = $.ajax(
-			`https://crest-tq.eveonline.com/${ endpoint }/`,
-			{
-				dataType: 'json',
-				cache: true,
-			}
-		).done(
-			function(data) {
-				cache[ endpoint ] = data;
-				if ( eveui_use_localstorage > 0 ) {
-					let key: any;
-					if ( endpoint.startsWith( 'inventory/types' ) ) {
-						// inventory/types endpoint should be reliably cachable until such time as the version changes
-						key = eve_version;
-					}
-					if ( typeof key === 'undefined' ) {
-						// default is to use the standard browser cache
-						return;
-					}
-					if ( typeof( localstorage_pending[ key ] ) !== 'object' ) {
-						localstorage_pending[ key ] = {};
-					}
-					localstorage_pending[ key ][ endpoint ] = data;
-
-					clearTimeout( localstorage_timer );
-					localstorage_timer = setTimeout( function() {
-						let localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) ) || {};
-						$.extend( true, localstorage_cache, localstorage_pending );
-						let localstorage_cache_json: string = JSON.stringify( localstorage_cache );
-						if ( localstorage_cache_json.length > eveui_use_localstorage ) {
-							mark( 'localstorage limit exceeded' );
-							return;
-						}
-						try {
-							localStorage.setItem( 'eveui_cache', localstorage_cache_json );
-							mark( 'localstorage updated ' + Object.keys( localstorage_pending ).length );
-						}
-						catch( err ) {
-							// failure to add to long term cache doesn't have any significant effect that would require a catch block
-						}
-						localstorage_pending = {};
-					}, 5000 );
-				}
-			}
-		).fail(
-			function( xhr ) {
-				if ( xhr.status === 404 || xhr.status === 403 ) {
-					// 403 is permanent for our purposes
-					// 404 will usually be a "permanent" error
-				} else {
-					// otherwise, assume temporary error and try again when possible
-					delete cache[ endpoint ];
-				}
-			}
-		);
 	}
 
 	function cache_request( key: string, url: string ): JQueryPromise<any> {
@@ -1069,7 +1006,46 @@ namespace eveui {
 			}
 		).done(
 			function( data ) {
+				// store data in session cache
 				cache[ key ] = data;
+
+				// store data in localstorage where applicable
+				if ( eveui_use_localstorage > 0 ) {
+					let version: any;
+					if ( key.startsWith( 'crest/inventory/types' ) ) {
+						// inventory/types key should be reliably cachable until such time as the version changes
+						version = eve_version;
+					}
+					if ( typeof version === 'undefined' ) {
+						// default is to use the standard browser cache
+						return;
+					}
+
+					if ( typeof( localstorage_pending[ version ] ) !== 'object' ) {
+						localstorage_pending[ version ] = {};
+					}
+					localstorage_pending[ version ][ key ] = data;
+
+					// timer to throttle localstorage updates
+					clearTimeout( localstorage_timer );
+					localstorage_timer = setTimeout( function() {
+						let localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) ) || {};
+						$.extend( true, localstorage_cache, localstorage_pending );
+						let localstorage_cache_json: string = JSON.stringify( localstorage_cache );
+						if ( localstorage_cache_json.length > eveui_use_localstorage ) {
+							mark( 'localstorage limit exceeded' );
+							return;
+						}
+						try {
+							localStorage.setItem( 'eveui_cache', localstorage_cache_json );
+							mark( 'localstorage updated ' + Object.keys( localstorage_pending ).length );
+						}
+						catch( err ) {
+							// failure to add to long term cache doesn't have any significant effect that would require a catch block
+						}
+						localstorage_pending = {};
+					}, 5000 );
+				}
 			}
 		).fail(
 			function( xhr ) {
