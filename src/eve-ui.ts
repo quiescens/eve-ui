@@ -75,12 +75,16 @@ var eveui_style: string = eveui_style || '<style>' + css`
 		.eveui_edit .eveui_edit_icon {
 			display: none;
 		}
-		.eveui_itemselect select {
-			margin-left: 1em;
-			min-width: 100px;
+		.eveui_itemselect {
+			width: 100%;
 		}
 		.eveui_itemselect input {
 			width: 100%;
+			min-width: 20em;
+			padding: 0;
+		}
+		.eveui_rowcontent {
+			position: relative;
 		}
 		.eveui_flexgrow {
 			flex-grow: 1;
@@ -181,6 +185,7 @@ namespace eveui {
 	let eve_version: string;
 	let localstorage_timer: number;
 	let localstorage_pending = {};
+	let itemselect_lastupdate = 0;
 
 	if( typeof( Storage ) === 'undefined' ) {
 		// disable localstorage if unsupported/blocked/whatever
@@ -329,34 +334,49 @@ namespace eveui {
 	$( document ).on( 'click', '.eveui_more_icon', function(e) {
 		e.preventDefault();
 		let item_id: string = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
-		let dna: string = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
 
+		// hide window if it already exists
+		if ( this.eveui_itemselect && document.contains( this.eveui_itemselect[0] ) ) {
+			this.eveui_itemselect.remove();
+			return;
+		}
 		$( '.eveui_itemselect' ).remove();
 
-		this.eveui_window = $( html`
-			<span class="eveui_window eveui_itemselect" style="position:absolute">
-				<span class="eveui_scrollable">
-					<span class="eveui_content">
-						<input type="text" list="types" /><br />
-						<select size="10" />
-					</span>
-				</span>
+		let eveui_itemselect = $( html`
+			<span class="eveui_itemselect" style="position:absolute">
+				<input type="text" list="eveui_itemselect" placeholder="${ $( this ).closest( '[data-eveui-itemid]' ).find( '.eveui_rowcontent' ).text() }" />
+				<datalist id="eveui_itemselect" />
 			</span>
 			` );
-		this.eveui_window.css( 'z-index', current_zindex++ );
-		$( this ).parent().after( this.eveui_window );
-	  let eveui_content = this.eveui_window.find( '.eveui_content' );
+		eveui_itemselect.css( 'z-index', current_zindex++ );
+		this.eveui_itemselect = eveui_itemselect;
+		$( this ).closest( 'tr' ).find( '.eveui_rowcontent' ).prepend( this.eveui_itemselect );
+
+		eveui_itemselect.find( 'input' ).focus();
+
+		if ( typeof( item_id ) === 'undefined' ) {
+			return;
+		}
+
+		let request_timestamp = performance.now();
+		// get market group id for selected item
 		cache_request( 'crest/market/types/' + item_id, `https://crest-tq.eveonline.com/market/types/${ item_id }/` ).done( function() {
 			let data = cache[ 'crest/market/types/' + item_id ];
 			let market_group = data.marketGroup.id_str;
+
+			// get items with the same market group
 			cache_request( 'crest/market/groups/' + market_group, `https://crest-tq.eveonline.com/market/types/?group=https://crest-tq.eveonline.com/market/groups/${ market_group }/` ).done( function() {
+				if ( request_timestamp > itemselect_lastupdate ) {
+					itemselect_lastupdate = request_timestamp;
+				} else {
+					return;
+				}
 				let data = cache[ 'crest/market/groups/' + market_group ];
-				let items = data.items.sort( function( a,b ) { return a.type.name.localeCompare( b.type.name ) } );
-				eveui_content.find( 'select' ).empty();
+				let datalist = $( '.eveui_itemselect datalist' );
+				data.items.sort( function( a,b ) { return a.type.name.localeCompare( b.type.name ) } );
 				for ( let i in data.items ) {
-					let selected = ( data.items[i].type.id_str === item_id );
-					eveui_content.find( 'select' ).append( html`
-						<option value="${ data.items[i].type.id_str }" ${ selected ? 'selected' : '' }>${ data.items[i].type.name }</option>
+					datalist.append( html`
+						<option label="${ data.items[i].type.name }">(${ data.items[i].type.id_str })</option>
 						` );
 				}
 			});
@@ -364,61 +384,86 @@ namespace eveui {
 	});
 
 	$( document ).on( 'input', '.eveui_itemselect input', function(e) {
-		e.preventDefault();
-		let eveui_window = $( this ).closest( '.eveui_window' );
-		let select = eveui_window.closest( '.eveui_content' ).find( 'select' );
+		let eveui_itemselect = $( this ).closest( '.eveui_itemselect' );
+		let input_str = $( this ).val();
 
-		if ( $( this ).val().length <3 ) {
-			return;
-		}
+		if ( input_str.slice( 0, 1 ) === '(' && input_str.slice( -1 ) === ')' ) {
+			// numeric input is expected to mean selected item
+			input_str = input_str.slice( 1, -1 );
+			let item_id: string = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
+			let dna: string = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
 
-		$.ajax({
-			url: `https://esi.tech.ccp.is/v1/search/`,
-			data: {
-				search: $( this ).val(),
-				categories: 'inventorytype'
+			if ( typeof( item_id ) === 'undefined' ) {
+				// append new item
+				dna = `${ dna.slice( 0, -2 ) }:${ input_str };1::`;
+			} else {
+				// replace existing item
+				let re = new RegExp( `^${ item_id }:` );
+				dna = dna.replace( re, `${ input_str }:` );
+				re = new RegExp( `:${ item_id};` );
+				dna = dna.replace( re, `:${ input_str };` );
 			}
-		}).done( function(data) {
-			if ( data.inventorytype === 'undefined' ) {
+
+			$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
+			cache_fit( dna ).done( function() {
+				let eveui_window: JQuery = $( `.eveui_window[data-eveui-dna="${ dna }"]` );
+				eveui_window.find( '.eveui_content ').html( format_fit( dna ) );
+				$( window ).trigger( 'resize' );
+			});
+			$( '.eveui_itemselect' ).remove();
+		} else {
+			// search for matching items
+			if ( input_str.length < 3 ) {
 				return;
 			}
-			let arg = {
-				ids: data.inventorytype.slice(0, 50)
-			};
-			$.ajax({
-				url: `https://esi.tech.ccp.is/v1/universe/names/`,
-				method: 'POST',
-				contentType: 'application/json',
-				data: JSON.stringify( arg )
-			}).done( function(data) {
-				let sorted = data.sort( function( a,b ) { return a.name.localeCompare( b.name ) } );
-				select.empty();
-				for ( let i in sorted ) {
-					select.append( html`
-						<option value="${ sorted[i].id }">${ sorted[i].name }</option>
-						` );
-				}
 
+			let request_timestamp = performance.now();
+			// get item ids that match input
+			$.ajax({
+				url: `https://esi.tech.ccp.is/v1/search/`,
+				data: {
+					search: $( this ).val(),
+					categories: 'inventorytype'
+				}
+			}).done( function(data) {
+				if ( typeof( data.inventorytype ) === 'undefined' ) {
+					return;
+				}
+				let arg = {
+					ids: data.inventorytype.slice(0, 50)
+				};
+
+				// get names for required item ids
+				$.ajax({
+					url: `https://esi.tech.ccp.is/v1/universe/names/`,
+					method: 'POST',
+					contentType: 'application/json',
+					data: JSON.stringify( arg )
+				}).done( function(data) {
+					if ( request_timestamp > itemselect_lastupdate ) {
+						itemselect_lastupdate = request_timestamp;
+					} else {
+						return;
+					}
+					let datalist = eveui_itemselect.find( 'datalist' );
+					data.sort( function( a,b ) { return a.name.localeCompare( b.name ) } );
+					datalist.empty();
+					for ( let i in data ) {
+						datalist.append( html`
+							<option label="${ data[i].name }">(${ data[i].id })</option>
+							` );
+					}
+				});
 			});
-		});
+		}
 	});
 
-	$( document ).on( 'click', '.eveui_itemselect select', function(e) {
-		e.preventDefault();
-		let item_id: string = $( this ).closest( '[data-eveui-itemid]' ).attr( 'data-eveui-itemid' );
-		let dna: string = $( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna' );
-
-		let re = new RegExp( `^${ item_id}:` );
-		dna = dna.replace( re, `${ $( this ).val() }:` );
-		re = new RegExp( `:${ item_id};` );
-		dna = dna.replace( re, `:${ $( this ).val() };` );
-
-		$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
-		cache_fit( dna ).done( function() {
-			let eveui_window: JQuery = $( `.eveui_window[data-eveui-dna="${ dna }"]` );
-			eveui_window.find( '.eveui_content ').html( format_fit( dna ) );
-			$( window ).trigger( 'resize' );
-		});
+	// close itemselect window on any outside click
+	$( document ).on( 'click', function(e) {
+		if ( $( e.target ).closest( '.eveui_itemselect,.eveui_more_icon' ).length > 0 ) {
+			return;
+		}
+		$( '.eveui_itemselect' ).remove();
 	});
 
 	$( document ).on( 'click', '.eveui_copy_icon', function(e) {
@@ -665,7 +710,7 @@ namespace eveui {
 					<tr class="nocopy" data-eveui-itemid="${ item_id }">
 						<td><img src="https://imageserver.eveonline.com/Type/${ item_id }_32.png" class="eveui_icon eveui_item_icon" />
 						<td class="eveui_right">${ fittings[ item_id ] }
-						<td colspan="2">${ cache[ 'inventory/types/' + item_id ].name }
+						<td colspan="2"><div class="eveui_rowcontent">${ cache[ 'inventory/types/' + item_id ].name }</div>
 						<td class="eveui_right whitespace_nowrap">
 							<span data-itemid="${ item_id }" class="eveui_icon eveui_info_icon" />
 							<span class="eveui_icon eveui_plus_icon eveui_edit" />
@@ -680,7 +725,7 @@ namespace eveui {
 						<tr class="nocopy">
 							<td class="eveui_icon eveui_item_icon" />
 							<td class="eveui_right whitespace_nowrap">${ slots_available - slots_used }
-							<td colspan="2">Empty
+							<td colspan="2"><div class="eveui_rowcontent">Empty</div>
 							<td class="eveui_right"><span class="eveui_icon eveui_more_icon eveui_edit" />
 							`;
 				}
@@ -689,7 +734,7 @@ namespace eveui {
 						<tr class="nocopy">
 							<td class="eveui_icon eveui_item_icon" />
 							<td class="eveui_right">${ slots_available - slots_used }
-							<td>Excess
+							<td><div class="eveui_rowcontent">Excess</div>
 						`;
 				}
 			}
@@ -703,10 +748,12 @@ namespace eveui {
 			<tr class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
 			<td colspan="2"><img src="https://imageserver.eveonline.com/Type/${ ship_id }_32.png" class="eveui_icon eveui_ship_icon" />
 			<td>
-				<span class="eveui_startcopy" />
-					[<a target="_blank" href="${ eveui_urlify( dna ) }">
-						${ cache[ 'inventory/types/' + ship_id ].name }, ${ eveui_name || cache[ 'inventory/types/' + ship_id ].name }
-					</a>]<br/>
+				<div class="eveui_rowcontent">
+					<span class="eveui_startcopy" />
+						[<a target="_blank" href="${ eveui_urlify( dna ) }">
+							${ cache[ 'inventory/types/' + ship_id ].name }, ${ eveui_name || cache[ 'inventory/types/' + ship_id ].name }
+						</a>]<br/>
+				</div>
 				<td class="eveui_right whitespace_nowrap nocopy" colspan="2">
 					${ eveui_allow_edit ? '<span class="eveui_icon eveui_edit_icon" />' : '' }
 					<span class="eveui_icon eveui_copy_icon" />
