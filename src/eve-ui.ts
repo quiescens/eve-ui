@@ -796,7 +796,6 @@ namespace eveui {
 		// load required items and set callback to display
 		mark( 'fit window created' );
 		cache_fit( dna ).done( function() {
-			let eveui_window: JQuery = $( `.eveui_window[data-eveui-dna="${ dna }"]` );
 			eveui_window.find( '.eveui_content ').html( format_fit( dna, eveui_name) );
 			$( window ).trigger( 'resize' );
 			mark( 'fit window populated' );
@@ -835,15 +834,12 @@ namespace eveui {
 
 		// load required items and set callback to display
 		cache_request( 'crest/inventory/types/' + item_id, `https://crest-tq.eveonline.com/inventory/types/${ item_id }/` ).done( function() {
-			let eveui_window: JQuery = $( `.eveui_window[data-eveui-itemid="${ item_id }"]` );
-
 			eveui_window.find( '.eveui_content' ).html( format_item( item_id ) );
 
 			$( window ).trigger( 'resize' );
 
 			mark( 'item window populated' );
 		}).fail( function() {
-			let eveui_window: JQuery = $( `.eveui_window[data-eveui-itemid="${ item_id }"]` );
 			eveui_window.remove();
 		});
 		$( window ).trigger( 'resize' );
@@ -880,15 +876,12 @@ namespace eveui {
 
 		// load required chars and set callback to display
 		cache_request( 'crest/characters/' + char_id, `https://crest-tq.eveonline.com/characters/${ char_id }/` ).done( function() {
-			let eveui_window: JQuery = $( `.eveui_window[data-eveui-charid="${ char_id }"]` );
-
 			eveui_window.find( '.eveui_content' ).html( format_char( char_id ) );
 
 			$( window ).trigger( 'resize' );
 
 			mark( 'char window populated' );
 		}).fail( function() {
-			let eveui_window: JQuery = $( `.eveui_window[data-eveui-charid="${ char_id }"]` );
 			eveui_window.remove();
 		});
 		$( window ).trigger( 'resize' );
