@@ -3,6 +3,7 @@
 			position: fixed;
 			line-height: 1;
 			background: #eee;
+			color: #000;
 			border: 1px solid;
 			opacity: 0.95;
 			display: flex;
@@ -36,7 +37,7 @@
 			margin: 2px;
 			max-width: 30em;
 		}
-		.eveui_content div {
+		.eveui_content .eveui_title {
 			display: flex;
 		}
 		.eveui_content table {
@@ -45,6 +46,26 @@
 		.eveui_content td {
 			vertical-align: top;
 			padding: 0 2px;
+		}
+		.eveui_content .eveui_edit {
+			display: none;
+		}
+		.eveui_content.eveui_edit .eveui_edit {
+			display: inline-block;
+		}
+		.eveui_edit .eveui_edit_icon {
+			display: none;
+		}
+		.eveui_itemselect {
+			width: 100%;
+		}
+		.eveui_itemselect input {
+			width: 100%;
+			min-width: 20em;
+			padding: 0;
+		}
+		.eveui_rowcontent {
+			position: relative;
 		}
 		.eveui_flexgrow {
 			flex-grow: 1;
