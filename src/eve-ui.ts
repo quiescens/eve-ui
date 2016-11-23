@@ -956,6 +956,7 @@ namespace eveui {
 						clearTimeout( preload_timer );
 						preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
 					});
+					return false;
 				}
 			});
 		}
