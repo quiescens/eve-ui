@@ -58,6 +58,7 @@
 		}
 		.eveui_itemselect {
 			width: 100%;
+			position: absolute;
 		}
 		.eveui_itemselect input {
 			width: 100%;
