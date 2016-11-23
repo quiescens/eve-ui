@@ -77,6 +77,7 @@ var eveui_style: string = eveui_style || '<style>' + css`
 		}
 		.eveui_itemselect {
 			width: 100%;
+			position: absolute;
 		}
 		.eveui_itemselect input {
 			width: 100%;
@@ -343,7 +344,7 @@ namespace eveui {
 		$( '.eveui_itemselect' ).remove();
 
 		let eveui_itemselect = $( html`
-			<span class="eveui_itemselect" style="position:absolute">
+			<span class="eveui_itemselect">
 				<input type="text" list="eveui_itemselect" placeholder="${ $( this ).closest( '[data-eveui-itemid]' ).find( '.eveui_rowcontent' ).text() }" />
 				<datalist id="eveui_itemselect" />
 			</span>
