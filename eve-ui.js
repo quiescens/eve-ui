@@ -640,6 +640,7 @@ var eveui;
                 var elem = $(this);
                 var dna = elem.data('dna') || this.href.substring(this.href.indexOf(':') + 1);
                 var promise = cache_fit(dna);
+                mark('preload: ' + dna);
                 // skip if already cached
                 if (promise.state() === 'resolved') {
                     elem.attr('data-eveui-cached', 1);
@@ -650,7 +651,9 @@ var eveui;
                     promise.always(function () {
                         clearTimeout(preload_timer);
                         preload_timer = setTimeout(lazy_preload, eveui_preload_interval);
+                        mark('preload done: ' + dna);
                     });
+                    return false;
                 }
             });
         }
