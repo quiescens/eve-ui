@@ -186,7 +186,8 @@ namespace eveui {
 	let eve_version: string;
 	let localstorage_timer: number;
 	let localstorage_pending = {};
-	let itemselect_lastupdate = 0;
+	let requests_pending: number = 0;
+	let itemselect_lastupdate: number = 0;
 
 	if( typeof( Storage ) === 'undefined' ) {
 		// disable localstorage if unsupported/blocked/whatever
@@ -939,7 +940,10 @@ namespace eveui {
 
 	function lazy_preload(): void {
 		// preload timer function
-		let action_taken: boolean = false;
+		preload_timer = setTimeout( lazy_preload, 5000 );
+		if ( requests_pending >= 10 ) {
+			return;
+		}
 		if ( preload_quota > 0 ) {
 			$( eveui_fit_selector ).not( '[data-eveui-cached]' ).each( function( i ) {
 				let elem: JQuery = $( this );
@@ -952,7 +956,6 @@ namespace eveui {
 					elem.attr( 'data-eveui-cached', 1 );
 				} else {
 					preload_quota--;
-					action_taken = true;
 					promise.always( function() {
 						clearTimeout( preload_timer );
 						preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
@@ -960,9 +963,6 @@ namespace eveui {
 					return false;
 				}
 			});
-		}
-		if ( !action_taken ) {
-			preload_timer = setTimeout( lazy_preload, 5000 );
 		}
 	}
 
@@ -993,6 +993,7 @@ namespace eveui {
 				return $.Deferred().resolve();
 			}
 		}
+		requests_pending++;
 		return cache[ key ] = $.ajax(
 			url,
 			{
@@ -1045,6 +1046,10 @@ namespace eveui {
 		).fail(
 			function( xhr ) {
 				delete cache[ key ];
+			}
+		).always(
+			function() {
+				requests_pending--;
 			}
 		);
 	}
