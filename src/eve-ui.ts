@@ -14,7 +14,15 @@ var eveui_allow_edit: boolean = eveui_allow_edit || false;
 var eveui_fit_selector: string = eveui_fit_selector || '[href^="fitting:"],[data-dna]';
 var eveui_item_selector: string = eveui_item_selector || '[href^="item:"],[data-itemid]';
 var eveui_char_selector: string = eveui_char_selector || '[href^="char:"],[data-charid]';
-var eveui_urlify: ( dna: string ) => string = eveui_urlify || function( dna ) { return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); }
+var eveui_urlify: ( dna: string ) => string = eveui_urlify || function( dna ) { 
+	return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); 
+}
+var eveui_imageserver: ( image_ref: string ) => string = eveui_imageserver || function( image_ref ) {
+	if ( image_ref.startsWith( 'Character' ) ) {
+		return 'https://imageserver.eveonline.com/' + encodeURI( image_ref ) + '.jpg'; 
+	}
+	return 'https://imageserver.eveonline.com/' + encodeURI( image_ref ) + '.png'; 
+}
 /* icons from https://github.com/primer/octicons */
 var eveui_style: string = eveui_style || '<style>' + css`
 		/* eveui_css_start */
@@ -715,7 +723,7 @@ namespace eveui {
 				}
 				html += html`
 					<tr class="nocopy" data-eveui-itemid="${ item_id }">
-						<td><img src="https://imageserver.eveonline.com/Type/${ item_id }_32.png" class="eveui_icon eveui_item_icon" />
+						<td><img src="${ eveui_imageserver( 'Type/' + item_id + '_32' ) }" class="eveui_icon eveui_item_icon" />
 						<td class="eveui_right">${ fittings[ item_id ] }
 						<td colspan="2"><div class="eveui_rowcontent">${ item.name }</div>
 						<td class="eveui_right whitespace_nowrap">
@@ -753,7 +761,7 @@ namespace eveui {
 			<table>
 			<thead>
 			<tr class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
-			<td colspan="2"><img src="https://imageserver.eveonline.com/Type/${ ship_id }_32.png" class="eveui_icon eveui_ship_icon" />
+			<td colspan="2"><img src="${ eveui_imageserver( 'Type/' + ship_id + '_32' ) }" class="eveui_icon eveui_ship_icon" />
 			<td>
 				<div class="eveui_rowcontent">
 					<span class="eveui_startcopy" />
@@ -853,10 +861,10 @@ namespace eveui {
 		let html: string = html`
 			<table>
 			<tr><td colspan="2">
-			<img class="float_left" src="https://imageserver.eveonline.com/Character/${ character.id }_128.jpg" height="128" width="128" />
+			<img class="float_left" src="${ eveui_imageserver( 'Character/' + character.id + '_128' ) }" height="128" width="128" />
 			${ character.name }
 			<hr />
-			<img class="float_left" src="https://imageserver.eveonline.com/Corporation/${ character.corporation.id_str }_64.png" height="64" width="64" />
+			<img class="float_left" src="${ eveui_imageserver( 'Corporation/' + character.corporation.id_str + '_64' ) }" height="64" width="64" />
 			Member of ${ character.corporation.name }
 			<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
 			</table>
