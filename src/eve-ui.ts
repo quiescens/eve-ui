@@ -646,22 +646,28 @@ namespace eveui {
 
 		// ship name and number of slots
 		let ship_id: number = parseInt( items.shift() );
-		let ship = cache[ 'crest/inventory/types/' + ship_id ];
+		let ship = cache[ 'esi/universe/types/' + ship_id ];
 		ship.hiSlots = 0;
 		ship.medSlots = 0;
 		ship.lowSlots = 0;
-		for ( let i in ship.dogma.attributes ) {
-			let attr = cache[ 'crest/inventory/types/' + ship_id ].dogma.attributes[i];
-			if ( attr.attribute.name === 'hiSlots' ) {
-				ship[attr.attribute.name] = attr.value;
-			} else if ( attr.attribute.name === 'medSlots' ) {
-				ship[attr.attribute.name] = attr.value;
-			} else if ( attr.attribute.name === 'lowSlots' ) {
-				ship[attr.attribute.name] = attr.value;
-			} else if ( attr.attribute.name === 'rigSlots' ) {
-				ship[attr.attribute.name] = attr.value;
-			} else if ( attr.attribute.name === 'maxSubSystems' ) {
-				ship[attr.attribute.name] = attr.value;
+		for ( let i in ship.dogma_attributes ) {
+			let attr = cache[ 'esi/universe/types/' + ship_id ].dogma_attributes[i];
+			switch( attr.attribute_id ) {
+				case 14: // hiSlots
+					ship.hiSlots = attr.value;
+					break;
+				case 13: // medSlots
+					ship.medSlots = attr.value;
+					break;
+				case 12: // lowSlots
+					ship.lowSlots = attr.value;
+					break;
+				case 1137: // rigSlots
+					ship.rigSlots = attr.value;
+					break;
+				case 1367: //maxSubSystems
+					ship.maxSubSystems = attr.value;
+					break;
 			}
 		}
 
@@ -673,37 +679,40 @@ namespace eveui {
 			let match: Array<string> = items[i].split( ';' );
 			let item_id: string = match[0];
 			let quantity: number = parseInt( match[1] );
-			let item = cache[ 'crest/inventory/types/' + item_id ];
+			let item = cache[ 'esi/universe/types/' + item_id ];
 
-			for ( let j in item.dogma.attributes ) {
-				let attr = item.dogma.attributes[j];
-				if ( attr.attribute.name === 'hiSlotModifier' ) {
-					ship.hiSlots += attr.value;
-				}
-				if ( attr.attribute.name === 'medSlotModifier' ) {
-					ship.medSlots += attr.value;
-				}
-				if ( attr.attribute.name === 'lowSlotModifier' ) {
-					ship.lowSlots += attr.value;
+			for ( let j in item.dogma_attributes ) {
+				let attr = item.dogma_attributes[j];
+				switch( attr.attribute_id ) {
+					case 1374: // hiSlotModifier
+						ship.hiSlots += attr.value;
+						break;
+					case 1375: // medSlotModifier
+						ship.medSlots += attr.value;
+						break;
+					case 1376: // lowSlotModifier
+						ship.lowSlots += attr.value;
+						break;
 				}
 			}
-			for ( let j in item.dogma.effects ) {
-				let effect = item.dogma.effects[j].effect;
-				if ( effect.name === 'hiPower') {
-					high_slots[ item_id ] = quantity;
-					continue outer;
-				} else if ( effect.name === 'medPower') {
-					med_slots[ item_id ] = quantity;
-					continue outer;
-				} else if ( effect.name === 'loPower') {
-					low_slots[ item_id ] = quantity;
-					continue outer;
-				} else if ( effect.name === 'rigSlot') {
-					rig_slots[ item_id ] = quantity;
-					continue outer;
-				} else if ( effect.name === 'subSystem') {
-					subsystem_slots[ item_id ] = quantity;
-					continue outer;
+			for ( let j in item.dogma_effects ) {
+				let effect = item.dogma_effects[j];
+				switch( effect.effect_id ) {
+					case 12: // hiPower
+						high_slots[ item_id ] = quantity;
+						continue outer;
+					case 13: // medPower
+						med_slots[ item_id ] = quantity;
+						continue outer;
+					case 11: // loPower
+						low_slots[ item_id ] = quantity;
+						continue outer;
+					case 2663: // rigSlot
+						rig_slots[ item_id ] = quantity;
+						continue outer;
+					case 3772: // subSystem
+						subsystem_slots[ item_id ] = quantity;
+						continue outer;
 				}
 			}
 			other_slots[ item_id ] = quantity;
@@ -715,7 +724,7 @@ namespace eveui {
 			let slots_used: number = 0;
 
 			for ( let item_id in fittings ) {
-				let item = cache[ 'crest/inventory/types/' + item_id ];
+				let item = cache[ 'esi/universe/types/' + item_id ];
 
 				slots_used += fittings[ item_id ];
 				if ( slots_available ) {
@@ -824,15 +833,15 @@ namespace eveui {
 	}
 
 	export function format_item( item_id: string ): string {
-		let item = cache[ 'crest/inventory/types/' + item_id ];
+		let item = cache[ 'esi/universe/types/' + item_id ];
 		let html: string = html`
 			<table class="whitespace_nowrap">
 			<tr><td>${ item.name }
 			`;
-		for ( let i in item.dogma.attributes ) {
-			let attr = item.dogma.attributes[i];
+		for ( let i in item.dogma_attributes ) {
+			let attr = item.dogma_attributes[i];
 			html += '<tr>';
-			html += '<td>' + attr.attribute.name;
+			html += '<td>' + attr.attribute_id;
 			html += '<td>' + attr.value;
 		}
 		html += '</table>';
@@ -853,7 +862,7 @@ namespace eveui {
 		mark( 'item window created' );
 
 		// load required items and set callback to display
-		cache_request( 'crest/inventory/types/' + item_id, `https://crest-tq.eveonline.com/inventory/types/${ item_id }/` ).done( function() {
+		cache_request( 'esi/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
 			eveui_window.find( '.eveui_content' ).html( format_item( item_id ) );
 
 			$( window ).trigger( 'resize' );
@@ -937,7 +946,7 @@ namespace eveui {
 				return;
 			}
 			let item_id: string = selected_element.attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_request( 'crest/inventory/types/' + item_id, `https://crest-tq.eveonline.com/inventory/types/${ item_id }/` ).done( function() {
+			cache_request( 'esi/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_item">${ format_item( item_id ) }</span>` );
 				mark( 'item window expanded' );
 			});
@@ -996,7 +1005,7 @@ namespace eveui {
 			let match: Array<string> = items[item].split( ';' );
 			let item_id: string = match[0];
 
-			pending.push( cache_request( 'crest/inventory/types/' + item_id, `https://crest-tq.eveonline.com/inventory/types/${ item_id }/` ) );
+			pending.push( cache_request( 'esi/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ) );
 		}
 		return $.when.apply( null, pending );
 	}
@@ -1026,7 +1035,7 @@ namespace eveui {
 				// store data in localstorage where applicable
 				if ( eveui_use_localstorage > 0 ) {
 					let version: any;
-					if ( key.startsWith( 'crest/inventory/types' ) ) {
+					if ( key.startsWith( 'esi/universe/types' ) ) {
 						// inventory/types key should be reliably cachable until such time as the version changes
 						version = eve_version;
 					}
