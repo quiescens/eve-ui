@@ -6,6 +6,7 @@
 'use strict';
 
 // config stuff ( can be overridden in a script block or js file of your choice )
+var eveui_user_agent: string = eveui_user_agent || 'https://github.com/quiescens/eve-ui/';
 var eveui_use_localstorage: number = eveui_use_localstorage || 4000000;
 var eveui_preload_initial: number = eveui_preload_initial || 50;
 var eveui_preload_interval: number = eveui_preload_interval || 10;
@@ -196,6 +197,15 @@ namespace eveui {
 	let localstorage_pending = {};
 	let requests_pending: number = 0;
 	let itemselect_lastupdate: number = 0;
+
+	// set user_agent for all requests
+	/*
+	$.ajaxSetup({
+		data: {
+			user_agent: eveui_user_agent
+		}
+	});
+	*/
 
 	if( typeof( Storage ) === 'undefined' ) {
 		// disable localstorage if unsupported/blocked/whatever
