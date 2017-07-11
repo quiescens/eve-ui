@@ -553,14 +553,14 @@ namespace eveui {
 	function eve_version_query(): void {
 		mark( 'eve version request' );
 		$.ajax(
-			`https://crest-tq.eveonline.com/`,
+			`https://esi.tech.ccp.is/v1/status/`,
 			{
 				dataType: 'json',
 				cache: true,
 			}
 		).done(
 			function(data) {
-				eve_version = data.serverVersion;
+				eve_version = 'EVE-' + data.server_version;
 
 				mark( 'eve version response ' + eve_version );
 
@@ -876,15 +876,15 @@ namespace eveui {
 	}
 
 	export function format_char( char_id: string ): string {
-		let character = cache[ 'crest/characters/' + char_id ];
+		let character = cache[ 'esi/characters/' + char_id ];
 		let html: string = html`
 			<table>
 			<tr><td colspan="2">
-			<img class="float_left" src="${ eveui_imageserver( 'Character/' + character.id + '_128' ) }" height="128" width="128" />
+			<img class="float_left" src="${ eveui_imageserver( 'Character/' + char_id + '_128' ) }" height="128" width="128" />
 			${ character.name }
 			<hr />
-			<img class="float_left" src="${ eveui_imageserver( 'Corporation/' + character.corporation.id_str + '_64' ) }" height="64" width="64" />
-			Member of ${ character.corporation.name }
+			<img class="float_left" src="${ eveui_imageserver( 'Corporation/' + character.corporation_id + '_64' ) }" height="64" width="64" />
+			Member of ${ character.corporation_id }
 			<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
 			</table>
 			`;
@@ -904,7 +904,7 @@ namespace eveui {
 		mark( 'char window created' );
 
 		// load required chars and set callback to display
-		cache_request( 'crest/characters/' + char_id, `https://crest-tq.eveonline.com/characters/${ char_id }/` ).done( function() {
+		cache_request( 'esi/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
 			eveui_window.find( '.eveui_content' ).html( format_char( char_id ) );
 
 			$( window ).trigger( 'resize' );
@@ -958,7 +958,7 @@ namespace eveui {
 				return;
 			}
 			let char_id: string = selected_element.attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_request( 'crest/characters/' + char_id, `https://crest-tq.eveonline.com/characters/${ char_id }/` ).done( function() {
+			cache_request( 'esi/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_char">${ format_char( char_id ) }</span>` );
 				mark( 'char window expanded' );
 			});
