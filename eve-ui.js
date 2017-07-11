@@ -5,6 +5,7 @@
 // ` used whenever interpolation is required
 'use strict';
 // config stuff ( can be overridden in a script block or js file of your choice )
+var eveui_user_agent = eveui_user_agent || 'https://github.com/quiescens/eve-ui/';
 var eveui_use_localstorage = eveui_use_localstorage || 4000000;
 var eveui_preload_initial = eveui_preload_initial || 50;
 var eveui_preload_interval = eveui_preload_interval || 10;
@@ -43,6 +44,14 @@ var eveui;
     var localstorage_pending = {};
     var requests_pending = 0;
     var itemselect_lastupdate = 0;
+    // set user_agent for all requests
+    /*
+    $.ajaxSetup({
+        data: {
+            user_agent: eveui_user_agent
+        }
+    });
+    */
     if (typeof (Storage) === 'undefined') {
         // disable localstorage if unsupported/blocked/whatever
         eveui_use_localstorage = -1;
@@ -416,26 +425,28 @@ var eveui;
         var items = dna.split(':');
         // ship name and number of slots
         var ship_id = parseInt(items.shift());
-        var ship = cache['crest/inventory/types/' + ship_id];
+        var ship = cache['esi/universe/types/' + ship_id];
         ship.hiSlots = 0;
         ship.medSlots = 0;
         ship.lowSlots = 0;
-        for (var i in ship.dogma.attributes) {
-            var attr = cache['crest/inventory/types/' + ship_id].dogma.attributes[i];
-            if (attr.attribute.name === 'hiSlots') {
-                ship[attr.attribute.name] = attr.value;
-            }
-            else if (attr.attribute.name === 'medSlots') {
-                ship[attr.attribute.name] = attr.value;
-            }
-            else if (attr.attribute.name === 'lowSlots') {
-                ship[attr.attribute.name] = attr.value;
-            }
-            else if (attr.attribute.name === 'rigSlots') {
-                ship[attr.attribute.name] = attr.value;
-            }
-            else if (attr.attribute.name === 'maxSubSystems') {
-                ship[attr.attribute.name] = attr.value;
+        for (var i in ship.dogma_attributes) {
+            var attr = cache['esi/universe/types/' + ship_id].dogma_attributes[i];
+            switch (attr.attribute_id) {
+                case 14:
+                    ship.hiSlots = attr.value;
+                    break;
+                case 13:
+                    ship.medSlots = attr.value;
+                    break;
+                case 12:
+                    ship.lowSlots = attr.value;
+                    break;
+                case 1137:
+                    ship.rigSlots = attr.value;
+                    break;
+                case 1367:
+                    ship.maxSubSystems = attr.value;
+                    break;
             }
         }
         // categorize items into slots
@@ -446,40 +457,39 @@ var eveui;
             var match = items[i].split(';');
             var item_id = match[0];
             var quantity = parseInt(match[1]);
-            var item = cache['crest/inventory/types/' + item_id];
-            for (var j in item.dogma.attributes) {
-                var attr = item.dogma.attributes[j];
-                if (attr.attribute.name === 'hiSlotModifier') {
-                    ship.hiSlots += attr.value;
-                }
-                if (attr.attribute.name === 'medSlotModifier') {
-                    ship.medSlots += attr.value;
-                }
-                if (attr.attribute.name === 'lowSlotModifier') {
-                    ship.lowSlots += attr.value;
+            var item = cache['esi/universe/types/' + item_id];
+            for (var j in item.dogma_attributes) {
+                var attr = item.dogma_attributes[j];
+                switch (attr.attribute_id) {
+                    case 1374:
+                        ship.hiSlots += attr.value;
+                        break;
+                    case 1375:
+                        ship.medSlots += attr.value;
+                        break;
+                    case 1376:
+                        ship.lowSlots += attr.value;
+                        break;
                 }
             }
-            for (var j in item.dogma.effects) {
-                var effect = item.dogma.effects[j].effect;
-                if (effect.name === 'hiPower') {
-                    high_slots[item_id] = quantity;
-                    continue outer;
-                }
-                else if (effect.name === 'medPower') {
-                    med_slots[item_id] = quantity;
-                    continue outer;
-                }
-                else if (effect.name === 'loPower') {
-                    low_slots[item_id] = quantity;
-                    continue outer;
-                }
-                else if (effect.name === 'rigSlot') {
-                    rig_slots[item_id] = quantity;
-                    continue outer;
-                }
-                else if (effect.name === 'subSystem') {
-                    subsystem_slots[item_id] = quantity;
-                    continue outer;
+            for (var j in item.dogma_effects) {
+                var effect = item.dogma_effects[j];
+                switch (effect.effect_id) {
+                    case 12:
+                        high_slots[item_id] = quantity;
+                        continue outer;
+                    case 13:
+                        med_slots[item_id] = quantity;
+                        continue outer;
+                    case 11:
+                        low_slots[item_id] = quantity;
+                        continue outer;
+                    case 2663:
+                        rig_slots[item_id] = quantity;
+                        continue outer;
+                    case 3772:
+                        subsystem_slots[item_id] = quantity;
+                        continue outer;
                 }
             }
             other_slots[item_id] = quantity;
@@ -489,7 +499,7 @@ var eveui;
             var html = '';
             var slots_used = 0;
             for (var item_id in fittings) {
-                var item = cache['crest/inventory/types/' + item_id];
+                var item = cache['esi/universe/types/' + item_id];
                 slots_used += fittings[item_id];
                 if (slots_available) {
                     html += "<tr class=\"copy_only\"><td>" + (item.name + '<br />').repeat(fittings[item_id]);
@@ -531,12 +541,12 @@ var eveui;
     }
     eveui.fit_window = fit_window;
     function format_item(item_id) {
-        var item = cache['crest/inventory/types/' + item_id];
+        var item = cache['esi/universe/types/' + item_id];
         var html = "<table class=\"whitespace_nowrap\"><tr><td>" + item.name;
-        for (var i in item.dogma.attributes) {
-            var attr = item.dogma.attributes[i];
+        for (var i in item.dogma_attributes) {
+            var attr = item.dogma_attributes[i];
             html += '<tr>';
-            html += '<td>' + attr.attribute.name;
+            html += '<td>' + attr.attribute_id;
             html += '<td>' + attr.value;
         }
         html += '</table>';
@@ -555,7 +565,7 @@ var eveui;
         }
         mark('item window created');
         // load required items and set callback to display
-        cache_request('crest/inventory/types/' + item_id, "https://crest-tq.eveonline.com/inventory/types/" + item_id + "/").done(function () {
+        cache_request('esi/universe/types/' + item_id, "https://esi.tech.ccp.is/v2/universe/types/" + item_id + "/").done(function () {
             eveui_window.find('.eveui_content').html(format_item(item_id));
             $(window).trigger('resize');
             mark('item window populated');
@@ -622,7 +632,7 @@ var eveui;
                 return;
             }
             var item_id = selected_element.attr('data-itemid') || this.href.substring(this.href.indexOf(':') + 1);
-            cache_request('crest/inventory/types/' + item_id, "https://crest-tq.eveonline.com/inventory/types/" + item_id + "/").done(function () {
+            cache_request('esi/universe/types/' + item_id, "https://esi.tech.ccp.is/v2/universe/types/" + item_id + "/").done(function () {
                 selected_element.replaceWith("<span class=\"eveui_content eveui_item\">" + format_item(item_id) + "</span>");
                 mark('item window expanded');
             });
@@ -677,7 +687,7 @@ var eveui;
             }
             var match = items[item].split(';');
             var item_id = match[0];
-            pending.push(cache_request('crest/inventory/types/' + item_id, "https://crest-tq.eveonline.com/inventory/types/" + item_id + "/"));
+            pending.push(cache_request('esi/universe/types/' + item_id, "https://esi.tech.ccp.is/v2/universe/types/" + item_id + "/"));
         }
         return $.when.apply(null, pending);
     }
@@ -702,7 +712,7 @@ var eveui;
             // store data in localstorage where applicable
             if (eveui_use_localstorage > 0) {
                 var version = void 0;
-                if (key.startsWith('crest/inventory/types')) {
+                if (key.startsWith('esi/universe/types')) {
                     // inventory/types key should be reliably cachable until such time as the version changes
                     version = eve_version;
                 }
