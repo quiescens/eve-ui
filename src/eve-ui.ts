@@ -646,12 +646,12 @@ namespace eveui {
 
 		// ship name and number of slots
 		let ship_id: number = parseInt( items.shift() );
-		let ship = cache[ 'esi/universe/types/' + ship_id ];
+		let ship = cache[ 'esi/v2/universe/types/' + ship_id ];
 		ship.hiSlots = 0;
 		ship.medSlots = 0;
 		ship.lowSlots = 0;
 		for ( let i in ship.dogma_attributes ) {
-			let attr = cache[ 'esi/universe/types/' + ship_id ].dogma_attributes[i];
+			let attr = cache[ 'esi/v2/universe/types/' + ship_id ].dogma_attributes[i];
 			switch( attr.attribute_id ) {
 				case 14: // hiSlots
 					ship.hiSlots = attr.value;
@@ -679,7 +679,7 @@ namespace eveui {
 			let match: Array<string> = items[i].split( ';' );
 			let item_id: string = match[0];
 			let quantity: number = parseInt( match[1] );
-			let item = cache[ 'esi/universe/types/' + item_id ];
+			let item = cache[ 'esi/v2/universe/types/' + item_id ];
 
 			for ( let j in item.dogma_attributes ) {
 				let attr = item.dogma_attributes[j];
@@ -724,7 +724,7 @@ namespace eveui {
 			let slots_used: number = 0;
 
 			for ( let item_id in fittings ) {
-				let item = cache[ 'esi/universe/types/' + item_id ];
+				let item = cache[ 'esi/v2/universe/types/' + item_id ];
 
 				slots_used += fittings[ item_id ];
 				if ( slots_available ) {
@@ -812,6 +812,7 @@ namespace eveui {
 			</table>
 			<span class="eveui_endcopy" />
 			`;
+		setTimeout( expand, 0 );
 		return html;
 	}
 
@@ -833,18 +834,21 @@ namespace eveui {
 	}
 
 	export function format_item( item_id: string ): string {
-		let item = cache[ 'esi/universe/types/' + item_id ];
+		let item = cache[ 'esi/v2/universe/types/' + item_id ];
 		let html: string = html`
 			<table class="whitespace_nowrap">
 			<tr><td>${ item.name }
 			`;
 		for ( let i in item.dogma_attributes ) {
 			let attr = item.dogma_attributes[i];
-			html += '<tr>';
-			html += '<td>' + attr.attribute_id;
-			html += '<td>' + attr.value;
+			html += html`
+				<tr>
+				<td><eveui path="/v1/dogma/attributes/${ attr.attribute_id }" key="display_name">attribute:${ attr.attribute_id }</eveui>
+				<td> ${ attr.value }
+			`;
 		}
 		html += '</table>';
+		setTimeout( expand, 0 );
 		return html;
 	}
 
@@ -862,7 +866,7 @@ namespace eveui {
 		mark( 'item window created' );
 
 		// load required items and set callback to display
-		cache_request( 'esi/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
+		cache_request( 'esi/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
 			eveui_window.find( '.eveui_content' ).html( format_item( item_id ) );
 
 			$( window ).trigger( 'resize' );
@@ -876,7 +880,7 @@ namespace eveui {
 	}
 
 	export function format_char( char_id: string ): string {
-		let character = cache[ 'esi/characters/' + char_id ];
+		let character = cache[ 'esi/v4/characters/' + char_id ];
 		let html: string = html`
 			<table>
 			<tr><td colspan="2">
@@ -884,10 +888,12 @@ namespace eveui {
 			${ character.name }
 			<hr />
 			<img class="float_left" src="${ eveui_imageserver( 'Corporation/' + character.corporation_id + '_64' ) }" height="64" width="64" />
-			Member of ${ character.corporation_id }
+			Member of <eveui path="/v3/corporations/${ character.corporation_id }" key="corporation_name">${ character.corporation_id }</eveui>
+
 			<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
 			</table>
 			`;
+		setTimeout( expand, 0 );
 		return html;
 	}
 
@@ -904,7 +910,7 @@ namespace eveui {
 		mark( 'char window created' );
 
 		// load required chars and set callback to display
-		cache_request( 'esi/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
+		cache_request( 'esi/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
 			eveui_window.find( '.eveui_content' ).html( format_char( char_id ) );
 
 			$( window ).trigger( 'resize' );
@@ -923,6 +929,20 @@ namespace eveui {
 		if ( eveui_mode === "expand_all" ) {
 			expand_filter = '*';
 		}
+
+		$( 'eveui' ).filter( ':not([state])' ).each( function() {
+			let selected_element: JQuery = $( this );
+			let path: string = selected_element.attr( 'path' );
+			selected_element.attr( 'state', 'loading' );
+			cache_request( path, 'https://esi.tech.ccp.is' + path + '/').done( function() {
+				let result = cache[ path ];
+				let value = result[ selected_element.attr( 'key' ) ];
+				selected_element.attr( 'state', 'done' );
+				if ( value ) {
+					selected_element.html( value );
+				}
+			});
+		});
 
 		$( eveui_fit_selector ).filter( expand_filter ).each( function() {
 			let selected_element: JQuery = $( this );
@@ -946,7 +966,7 @@ namespace eveui {
 				return;
 			}
 			let item_id: string = selected_element.attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_request( 'esi/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
+			cache_request( 'esi/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_item">${ format_item( item_id ) }</span>` );
 				mark( 'item window expanded' );
 			});
@@ -958,7 +978,7 @@ namespace eveui {
 				return;
 			}
 			let char_id: string = selected_element.attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_request( 'esi/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
+			cache_request( 'esi/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_char">${ format_char( char_id ) }</span>` );
 				mark( 'char window expanded' );
 			});
@@ -1005,7 +1025,7 @@ namespace eveui {
 			let match: Array<string> = items[item].split( ';' );
 			let item_id: string = match[0];
 
-			pending.push( cache_request( 'esi/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ) );
+			pending.push( cache_request( 'esi/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ) );
 		}
 		return $.when.apply( null, pending );
 	}
@@ -1035,7 +1055,7 @@ namespace eveui {
 				// store data in localstorage where applicable
 				if ( eveui_use_localstorage > 0 ) {
 					let version: any;
-					if ( key.startsWith( 'esi/universe/types' ) ) {
+					if ( key.startsWith( 'esi/v2/universe/types' ) ) {
 						// inventory/types key should be reliably cachable until such time as the version changes
 						version = eve_version;
 					}
