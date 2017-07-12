@@ -1,5 +1,7 @@
 # eve-ui
-A nearly standalone (EVE Online) fit display script for inclusion in arbitrary websites. Basic usage example:
+A mostly standalone EVE Online fit display script for inclusion in arbitrary websites.
+(Mostly standalone, requires jQuery and uses CCP's APIs but no other servers.)
+Basic usage example:
 ```
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" defer></script>
 <script src="eve-ui.min.js" defer></script>
