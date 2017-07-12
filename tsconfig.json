@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "outFile": "eve-ui.js",
-        "target": "es5",
+        "target": "es6",
         "noEmitOnError": true
     },
     "include" : [

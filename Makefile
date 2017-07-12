@@ -3,7 +3,7 @@
 all: eve-ui.min.js.gz eve-ui.min.js eve-ui.js eve-ui.min.css eve-ui.css
 
 %.min.js: %.js
-	uglifyjs $< --output $@ --compress --mangle --pure-funcs mark
+	uglifyjs $< --output $@ --ecma=6 --compress pure_funcs=mark --mangle
 
 %.min.css: %.css
 	cssmin < $< > $@
