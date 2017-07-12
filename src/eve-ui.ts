@@ -6,7 +6,7 @@
 'use strict';
 
 // config stuff ( can be overridden in a script block or js file of your choice )
-var eveui_user_agent: string = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/';
+var eveui_user_agent: string = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + version``;
 var eveui_use_localstorage: number = eveui_use_localstorage || 4000000;
 var eveui_preload_initial: number = eveui_preload_initial || 50;
 var eveui_preload_interval: number = eveui_preload_interval || 10;
