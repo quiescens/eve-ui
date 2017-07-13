@@ -200,8 +200,8 @@ namespace eveui {
 
 	// set user_agent for all requests
 	$.ajaxSetup({
-		headers: {
-			"X-User-Agent": eveui_user_agent
+		data: {
+			"user_agent": eveui_user_agent
 		}
 	});
 
