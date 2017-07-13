@@ -5,7 +5,7 @@
 // ` used whenever interpolation is required
 'use strict';
 // config stuff ( can be overridden in a script block or js file of your choice )
-var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.8.6`;
+var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.8.7`;
 var eveui_use_localstorage = eveui_use_localstorage || 4000000;
 var eveui_preload_initial = eveui_preload_initial || 50;
 var eveui_preload_interval = eveui_preload_interval || 10;
@@ -46,8 +46,8 @@ var eveui;
     let itemselect_lastupdate = 0;
     // set user_agent for all requests
     $.ajaxSetup({
-        headers: {
-            "X-User-Agent": eveui_user_agent
+        data: {
+            "user_agent": eveui_user_agent
         }
     });
     if (typeof (Storage) === 'undefined') {
