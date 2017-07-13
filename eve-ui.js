@@ -5,7 +5,7 @@
 // ` used whenever interpolation is required
 'use strict';
 // config stuff ( can be overridden in a script block or js file of your choice )
-var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `87680b0`;
+var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `674929a`;
 var eveui_use_localstorage = eveui_use_localstorage || 4000000;
 var eveui_preload_initial = eveui_preload_initial || 50;
 var eveui_preload_interval = eveui_preload_interval || 10;
@@ -543,7 +543,7 @@ var eveui;
         let html = `<table class="whitespace_nowrap"><tr><td>${item.name}`;
         for (let i in item.dogma_attributes) {
             let attr = item.dogma_attributes[i];
-            html += `<tr><td><eveui path="/v1/dogma/attributes/${attr.attribute_id}" key="display_name">attribute:${attr.attribute_id}</eveui><td> ${attr.value}`;
+            html += `<tr><td><eveui path="/v1/dogma/attributes/${attr.attribute_id}" key="display_name,name">attribute:${attr.attribute_id}</eveui><td> ${attr.value}`;
         }
         html += '</table>';
         setTimeout(expand, 0);
@@ -614,11 +614,14 @@ var eveui;
             selected_element.attr('state', 'loading');
             cache_request(path, 'https://esi.tech.ccp.is' + path + '/').done(function () {
                 let result = cache[path];
-                let value = result[selected_element.attr('key')];
                 selected_element.attr('state', 'done');
-                if (value) {
-                    selected_element.html(value);
-                }
+                $.each(selected_element.attr('key').split(','), function (index, key) {
+                    let value = result[key];
+                    if (value) {
+                        selected_element.html(value);
+                        return false;
+                    }
+                });
             });
         });
         $(eveui_fit_selector).filter(expand_filter).each(function () {
