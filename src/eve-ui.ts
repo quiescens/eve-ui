@@ -841,7 +841,7 @@ namespace eveui {
 			let attr = item.dogma_attributes[i];
 			html += html`
 				<tr>
-				<td><eveui path="/v1/dogma/attributes/${ attr.attribute_id }" key="display_name">attribute:${ attr.attribute_id }</eveui>
+				<td><eveui path="/v1/dogma/attributes/${ attr.attribute_id }" key="display_name,name">attribute:${ attr.attribute_id }</eveui>
 				<td> ${ attr.value }
 			`;
 		}
@@ -934,11 +934,14 @@ namespace eveui {
 			selected_element.attr( 'state', 'loading' );
 			cache_request( path, 'https://esi.tech.ccp.is' + path + '/').done( function() {
 				let result = cache[ path ];
-				let value = result[ selected_element.attr( 'key' ) ];
 				selected_element.attr( 'state', 'done' );
-				if ( value ) {
-					selected_element.html( value );
-				}
+				$.each( selected_element.attr( 'key' ).split( ',' ), function( index, key ) {
+					let value = result[ key ];
+					if ( value ) {
+						selected_element.html( value );
+						return false;
+					}
+				});
 			});
 		});
 
