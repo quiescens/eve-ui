@@ -30,7 +30,13 @@ sub css {
 $file =~ s/css`(.+?)`/css($1)/egs;
 
 sub version {
-        my $version = `git diff-index --quiet HEAD -- src/eve-ui.ts && git rev-parse --short HEAD || echo dev`;
+        my $version = "";
+        if ( -r ".VERSION" ) {
+                $version = `cat .VERSION`;
+
+        } else {
+                $version = `git rev-parse --short HEAD`;
+        }
 
         chomp $version;
 
