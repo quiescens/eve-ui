@@ -7,7 +7,6 @@
 
 // config stuff ( can be overridden in a script block or js file of your choice )
 var eveui_user_agent: string = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + version``;
-var eveui_use_localstorage: number = eveui_use_localstorage || 4000000;
 var eveui_preload_initial: number = eveui_preload_initial || 50;
 var eveui_preload_interval: number = eveui_preload_interval || 10;
 var eveui_mode: string = eveui_mode || 'multi_window'; // expand_all, expand, multi_window, modal
@@ -192,11 +191,11 @@ namespace eveui {
 	let preload_timer: number;
 	let preload_quota: number = eveui_preload_initial;
 	let cache = {};
-	let eve_version: string;
-	let localstorage_timer: number;
-	let localstorage_pending = {};
+	let eve_version: number;
 	let requests_pending: number = 0;
 	let itemselect_lastupdate: number = 0;
+
+	let db;
 
 	// set user_agent for all requests
 	$.ajaxSetup({
@@ -204,11 +203,6 @@ namespace eveui {
 			"user_agent": eveui_user_agent
 		}
 	});
-
-	if( typeof( Storage ) === 'undefined' ) {
-		// disable localstorage if unsupported/blocked/whatever
-		eveui_use_localstorage = -1;
-	}
 
 	// insert required DOM elements / styles
 	$( 'head' ).append( eveui_style );
@@ -558,42 +552,52 @@ namespace eveui {
 			}
 		).done(
 			function(data) {
-				eve_version = 'EVE-' + data.server_version;
-
+				eve_version = data.server_version;
 				mark( 'eve version response ' + eve_version );
 
-				if( eveui_use_localstorage > 0 && typeof( localStorage['eveui_cache'] ) !== 'undefined' ) {
-					// load localstorage cache if applicable
-					let localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) );
-					$.each( localstorage_cache, function( k, v ) {
-						if ( k.startsWith( 'EVE' ) ) {
-							// version key
-							if ( k === eve_version ) {
-								$.extend( cache, v );
-							} else {
-								delete localstorage_cache[ k ];
-							}
-						} else {
-							// timestamp key
-							if ( Number( k ) > Date.now() ) {
-								$.extend( cache, v );
-							} else {
-								delete localstorage_cache[ k ];
-							}
+				if ( indexedDB ) { // indexedDB is available
+					let open = indexedDB.open( "eveui", eve_version );
+
+					open.onupgradeneeded = function(e) {
+						let db = open.result;
+						if ( db.objectStoreNames.contains("cache")) {
+							db.deleteObjectStore( "cache ");
 						}
+						db.createObjectStore( "cache", { keyPath: "path" } );
+					};
+
+					open.onsuccess = function() {
+						db = open.result;
+						let tx = db.transaction( "cache", "readonly" );
+						let store = tx.objectStore( "cache" );
+
+						store.getAll().onsuccess = function(e) {
+							$.each( e.target.result, function( index, value ) {
+								cache[ value.path ] = value;
+							});
+
+							// expand fits where applicable
+							$( document ).ready( function() {
+								mark( 'expanding fits' );
+								expand();
+							});
+
+							// start preload timer
+							preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
+							mark( 'preload timer set' );
+						}
+					}
+				} else { // indexedDB not available
+					// expand fits where applicable
+					$( document ).ready( function() {
+						mark( 'expanding fits' );
+						expand();
 					});
-					localStorage.setItem( 'eveui_cache', JSON.stringify( localstorage_cache ) );
-					mark( `localstorage cache loaded ${ Object.keys( cache ).length } entries`) ;
+
+					// start preload timer
+					preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
+					mark( 'preload timer set' );
 				}
-
-				$( document ).ready( function() {
-					mark( 'expanding fits' );
-					expand();
-				});
-
-				// lazy preload timer
-				preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
-				mark( 'preload timer set' );
 			}
 		).fail(
 			function( xhr ) {
@@ -644,12 +648,12 @@ namespace eveui {
 
 		// ship name and number of slots
 		let ship_id: number = parseInt( items.shift() );
-		let ship = cache[ 'esi/v2/universe/types/' + ship_id ];
+		let ship = cache[ '/v2/universe/types/' + ship_id ];
 		ship.hiSlots = 0;
 		ship.medSlots = 0;
 		ship.lowSlots = 0;
 		for ( let i in ship.dogma_attributes ) {
-			let attr = cache[ 'esi/v2/universe/types/' + ship_id ].dogma_attributes[i];
+			let attr = cache[ '/v2/universe/types/' + ship_id ].dogma_attributes[i];
 			switch( attr.attribute_id ) {
 				case 14: // hiSlots
 					ship.hiSlots = attr.value;
@@ -677,7 +681,7 @@ namespace eveui {
 			let match: Array<string> = items[i].split( ';' );
 			let item_id: string = match[0];
 			let quantity: number = parseInt( match[1] );
-			let item = cache[ 'esi/v2/universe/types/' + item_id ];
+			let item = cache[ '/v2/universe/types/' + item_id ];
 
 			for ( let j in item.dogma_attributes ) {
 				let attr = item.dogma_attributes[j];
@@ -722,7 +726,7 @@ namespace eveui {
 			let slots_used: number = 0;
 
 			for ( let item_id in fittings ) {
-				let item = cache[ 'esi/v2/universe/types/' + item_id ];
+				let item = cache[ '/v2/universe/types/' + item_id ];
 
 				slots_used += fittings[ item_id ];
 				if ( slots_available ) {
@@ -832,7 +836,7 @@ namespace eveui {
 	}
 
 	export function format_item( item_id: string ): string {
-		let item = cache[ 'esi/v2/universe/types/' + item_id ];
+		let item = cache[ '/v2/universe/types/' + item_id ];
 		let html: string = html`
 			<table class="whitespace_nowrap">
 			<tr><td>${ item.name }
@@ -864,7 +868,7 @@ namespace eveui {
 		mark( 'item window created' );
 
 		// load required items and set callback to display
-		cache_request( 'esi/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
+		cache_request( '/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
 			eveui_window.find( '.eveui_content' ).html( format_item( item_id ) );
 
 			$( window ).trigger( 'resize' );
@@ -878,7 +882,7 @@ namespace eveui {
 	}
 
 	export function format_char( char_id: string ): string {
-		let character = cache[ 'esi/v4/characters/' + char_id ];
+		let character = cache[ '/v4/characters/' + char_id ];
 		let html: string = html`
 			<table>
 			<tr><td colspan="2">
@@ -886,7 +890,7 @@ namespace eveui {
 			${ character.name }
 			<hr />
 			<img class="float_left" src="${ eveui_imageserver( 'Corporation/' + character.corporation_id + '_64' ) }" height="64" width="64" />
-			Member of <eveui path="/v3/corporations/${ character.corporation_id }" key="corporation_name">${ character.corporation_id }</eveui>
+			Member of <a href="corp:${ character.corporation_id }"><eveui path="/v3/corporations/${ character.corporation_id }" key="corporation_name">${ character.corporation_id }</eveui></a>
 
 			<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
 			</table>
@@ -908,7 +912,7 @@ namespace eveui {
 		mark( 'char window created' );
 
 		// load required chars and set callback to display
-		cache_request( 'esi/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
+		cache_request( '/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
 			eveui_window.find( '.eveui_content' ).html( format_char( char_id ) );
 
 			$( window ).trigger( 'resize' );
@@ -967,7 +971,7 @@ namespace eveui {
 				return;
 			}
 			let item_id: string = selected_element.attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_request( 'esi/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
+			cache_request( '/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_item">${ format_item( item_id ) }</span>` );
 				mark( 'item window expanded' );
 			});
@@ -979,7 +983,7 @@ namespace eveui {
 				return;
 			}
 			let char_id: string = selected_element.attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_request( 'esi/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
+			cache_request( '/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_char">${ format_char( char_id ) }</span>` );
 				mark( 'char window expanded' );
 			});
@@ -1026,7 +1030,7 @@ namespace eveui {
 			let match: Array<string> = items[item].split( ';' );
 			let item_id: string = match[0];
 
-			pending.push( cache_request( 'esi/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ) );
+			pending.push( cache_request( '/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ) );
 		}
 		return $.when.apply( null, pending );
 	}
@@ -1050,45 +1054,21 @@ namespace eveui {
 			}
 		).done(
 			function( data ) {
+				data.path = key;
+
 				// store data in session cache
 				cache[ key ] = data;
 
-				// store data in localstorage where applicable
-				if ( eveui_use_localstorage > 0 ) {
-					let version: any;
-					if ( key.startsWith( 'esi/v2/universe/types' ) ) {
-						// inventory/types key should be reliably cachable until such time as the version changes
-						version = eve_version;
+				if ( db ) { // indexedDB is ready
+					// only manually cache keypaths where the data doesn't change until the server version changes
+					if ( 
+							key.startsWith( '/v2/universe/types' )
+						 || key.startsWith( '/v1/dogma/attributes' )
+						 ) {
+						let tx = db.transaction( "cache", "readwrite" );
+						let store = tx.objectStore( "cache" );
+						store.put( data );
 					}
-					if ( typeof version === 'undefined' ) {
-						// default is to use the standard browser cache
-						return;
-					}
-
-					if ( typeof( localstorage_pending[ version ] ) !== 'object' ) {
-						localstorage_pending[ version ] = {};
-					}
-					localstorage_pending[ version ][ key ] = data;
-
-					// timer to throttle localstorage updates
-					clearTimeout( localstorage_timer );
-					localstorage_timer = setTimeout( function() {
-						let localstorage_cache = JSON.parse( localStorage.getItem( 'eveui_cache' ) ) || {};
-						$.extend( true, localstorage_cache, localstorage_pending );
-						let localstorage_cache_json: string = JSON.stringify( localstorage_cache );
-						if ( localstorage_cache_json.length > eveui_use_localstorage ) {
-							mark( 'localstorage limit exceeded' );
-							return;
-						}
-						try {
-							localStorage.setItem( 'eveui_cache', localstorage_cache_json );
-							mark( 'localstorage updated ' + Object.keys( localstorage_pending ).length );
-						}
-						catch( err ) {
-							// failure to add to long term cache doesn't have any significant effect that would require a catch block
-						}
-						localstorage_pending = {};
-					}, 5000 );
 				}
 			}
 		).fail(
