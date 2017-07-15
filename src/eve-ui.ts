@@ -14,6 +14,7 @@ var eveui_allow_edit: boolean = eveui_allow_edit || false;
 var eveui_fit_selector: string = eveui_fit_selector || '[href^="fitting:"],[data-dna]';
 var eveui_item_selector: string = eveui_item_selector || '[href^="item:"],[data-itemid]';
 var eveui_char_selector: string = eveui_char_selector || '[href^="char:"],[data-charid]';
+var eveui_corp_selector: string = eveui_corp_selector || '[href^="corp:"],[data-corpid]';
 var eveui_urlify: ( dna: string ) => string = eveui_urlify || function( dna ) { 
 	return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); 
 }
@@ -290,6 +291,30 @@ namespace eveui {
 				break;
 			default:
 				this.eveui_window = char_window( char_id );
+				break;
+		}
+	});
+
+	$( document ).on( 'click', eveui_corp_selector, function(e) {
+		e.preventDefault();
+
+		// hide window if it already exists
+		if ( this.eveui_window && document.contains( this.eveui_window[0] ) ) {
+			this.eveui_window.remove();
+			return;
+		}
+
+		let corp_id: string = $( this ).attr( 'data-corpid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
+
+		// create loading placeholder
+		switch ( eveui_mode ) {
+			case 'expand':
+			case 'expand_all':
+				$( this ).attr( 'data-eveui-expand', 1 );
+				expand();
+				break;
+			default:
+				this.eveui_window = corp_window( corp_id );
 				break;
 		}
 	});
@@ -918,6 +943,50 @@ namespace eveui {
 			$( window ).trigger( 'resize' );
 
 			mark( 'char window populated' );
+		}).fail( function() {
+			eveui_window.remove();
+		});
+		$( window ).trigger( 'resize' );
+		return eveui_window;
+	}
+
+	export function format_corp( corp_id: string ): string {
+		let corporation = cache[ '/v3/corporations/' + corp_id ];
+		let html: string = html`
+			<table>
+			<tr><td colspan="2">
+			<img class="float_left" src="${ eveui_imageserver( 'Corporation/' + corp_id + '_128' ) }" height="128" width="128" />
+			${ corporation.corporation_name }
+			<hr />
+			<img class="float_left" src="${ eveui_imageserver( 'Alliance/' + corporation.alliance_id + '_64' ) }" height="64" width="64" />
+			Member of <eveui path="/v2/alliances/${ corporation.alliance_id }" key="alliance_name">${ corporation.alliance_id }</eveui>
+
+			<tr><td>Bio:<td>${ corporation.corporation_description.replace( /<font[^>]+>/g, '<font>' ) }
+			</table>
+			`;
+		setTimeout( expand, 0 );
+		return html;
+	}
+
+	export function corp_window( corp_id: string ): JQuery {
+		let eveui_window: JQuery = new_window( 'Corporation' );
+		eveui_window.attr( 'data-eveui-corpid', corp_id );
+		eveui_window.addClass( 'corp_window' );
+		switch ( eveui_mode ) {
+			default:
+				$( 'body' ).append( eveui_window );
+				break;
+		}
+
+		mark( 'corp window created' );
+
+		// load required corps and set callback to display
+		cache_request( '/v3/corporations/' + corp_id, `https://esi.tech.ccp.is/v3/corporations/${ corp_id }/` ).done( function() {
+			eveui_window.find( '.eveui_content' ).html( format_corp( corp_id ) );
+
+			$( window ).trigger( 'resize' );
+
+			mark( 'corp window populated' );
 		}).fail( function() {
 			eveui_window.remove();
 		});
