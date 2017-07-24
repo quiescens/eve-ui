@@ -5,8 +5,7 @@
 // ` used whenever interpolation is required
 'use strict';
 // config stuff ( can be overridden in a script block or js file of your choice )
-var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.8.7`;
-var eveui_use_localstorage = eveui_use_localstorage || 4000000;
+var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.8.8`;
 var eveui_preload_initial = eveui_preload_initial || 50;
 var eveui_preload_interval = eveui_preload_interval || 10;
 var eveui_mode = eveui_mode || 'multi_window'; // expand_all, expand, multi_window, modal
@@ -14,6 +13,7 @@ var eveui_allow_edit = eveui_allow_edit || false;
 var eveui_fit_selector = eveui_fit_selector || '[href^="fitting:"],[data-dna]';
 var eveui_item_selector = eveui_item_selector || '[href^="item:"],[data-itemid]';
 var eveui_char_selector = eveui_char_selector || '[href^="char:"],[data-charid]';
+var eveui_corp_selector = eveui_corp_selector || '[href^="corp:"],[data-corpid]';
 var eveui_urlify = eveui_urlify || function (dna) {
     return 'https://o.smium.org/loadout/dna/' + encodeURI(dna);
 };
@@ -40,20 +40,15 @@ var eveui;
     let preload_quota = eveui_preload_initial;
     let cache = {};
     let eve_version;
-    let localstorage_timer;
-    let localstorage_pending = {};
     let requests_pending = 0;
     let itemselect_lastupdate = 0;
+    let db;
     // set user_agent for all requests
     $.ajaxSetup({
         data: {
             "user_agent": eveui_user_agent
         }
     });
-    if (typeof (Storage) === 'undefined') {
-        // disable localstorage if unsupported/blocked/whatever
-        eveui_use_localstorage = -1;
-    }
     // insert required DOM elements / styles
     $('head').append(eveui_style);
     // click handlers to create/close windows
@@ -125,6 +120,26 @@ var eveui;
                 break;
             default:
                 this.eveui_window = char_window(char_id);
+                break;
+        }
+    });
+    $(document).on('click', eveui_corp_selector, function (e) {
+        e.preventDefault();
+        // hide window if it already exists
+        if (this.eveui_window && document.contains(this.eveui_window[0])) {
+            this.eveui_window.remove();
+            return;
+        }
+        let corp_id = $(this).attr('data-corpid') || this.href.substring(this.href.indexOf(':') + 1);
+        // create loading placeholder
+        switch (eveui_mode) {
+            case 'expand':
+            case 'expand_all':
+                $(this).attr('data-eveui-expand', 1);
+                expand();
+                break;
+            default:
+                this.eveui_window = corp_window(corp_id);
                 break;
         }
     });
@@ -355,41 +370,46 @@ var eveui;
             dataType: 'json',
             cache: true,
         }).done(function (data) {
-            eve_version = 'EVE-' + data.server_version;
+            eve_version = data.server_version;
             mark('eve version response ' + eve_version);
-            if (eveui_use_localstorage > 0 && typeof (localStorage['eveui_cache']) !== 'undefined') {
-                // load localstorage cache if applicable
-                let localstorage_cache = JSON.parse(localStorage.getItem('eveui_cache'));
-                $.each(localstorage_cache, function (k, v) {
-                    if (k.startsWith('EVE')) {
-                        // version key
-                        if (k === eve_version) {
-                            $.extend(cache, v);
-                        }
-                        else {
-                            delete localstorage_cache[k];
-                        }
+            if (indexedDB) {
+                let open = indexedDB.open("eveui", eve_version);
+                open.onupgradeneeded = function (e) {
+                    let db = open.result;
+                    if (db.objectStoreNames.contains("cache")) {
+                        db.deleteObjectStore("cache");
                     }
-                    else {
-                        // timestamp key
-                        if (Number(k) > Date.now()) {
-                            $.extend(cache, v);
-                        }
-                        else {
-                            delete localstorage_cache[k];
-                        }
-                    }
-                });
-                localStorage.setItem('eveui_cache', JSON.stringify(localstorage_cache));
-                mark(`localstorage cache loaded ${Object.keys(cache).length} entries`);
+                    db.createObjectStore("cache", { keyPath: "path" });
+                };
+                open.onsuccess = function () {
+                    db = open.result;
+                    let tx = db.transaction("cache", "readonly");
+                    let store = tx.objectStore("cache");
+                    store.getAll().onsuccess = function (e) {
+                        $.each(e.target.result, function (index, value) {
+                            cache[value.path] = value;
+                        });
+                        // expand fits where applicable
+                        $(document).ready(function () {
+                            mark('expanding fits');
+                            expand();
+                        });
+                        // start preload timer
+                        preload_timer = setTimeout(lazy_preload, eveui_preload_interval);
+                        mark('preload timer set');
+                    };
+                };
             }
-            $(document).ready(function () {
-                mark('expanding fits');
-                expand();
-            });
-            // lazy preload timer
-            preload_timer = setTimeout(lazy_preload, eveui_preload_interval);
-            mark('preload timer set');
+            else {
+                // expand fits where applicable
+                $(document).ready(function () {
+                    mark('expanding fits');
+                    expand();
+                });
+                // start preload timer
+                preload_timer = setTimeout(lazy_preload, eveui_preload_interval);
+                mark('preload timer set');
+            }
         }).fail(function (xhr) {
             mark('eve version request failed');
             setTimeout(eve_version_query, 10000);
@@ -422,12 +442,12 @@ var eveui;
         let items = dna.split(':');
         // ship name and number of slots
         let ship_id = parseInt(items.shift());
-        let ship = cache['esi/v2/universe/types/' + ship_id];
+        let ship = cache['/v2/universe/types/' + ship_id];
         ship.hiSlots = 0;
         ship.medSlots = 0;
         ship.lowSlots = 0;
         for (let i in ship.dogma_attributes) {
-            let attr = cache['esi/v2/universe/types/' + ship_id].dogma_attributes[i];
+            let attr = cache['/v2/universe/types/' + ship_id].dogma_attributes[i];
             switch (attr.attribute_id) {
                 case 14:// hiSlots
                     ship.hiSlots = attr.value;
@@ -454,7 +474,7 @@ var eveui;
             let match = items[i].split(';');
             let item_id = match[0];
             let quantity = parseInt(match[1]);
-            let item = cache['esi/v2/universe/types/' + item_id];
+            let item = cache['/v2/universe/types/' + item_id];
             for (let j in item.dogma_attributes) {
                 let attr = item.dogma_attributes[j];
                 switch (attr.attribute_id) {
@@ -496,7 +516,7 @@ var eveui;
             let html = '';
             let slots_used = 0;
             for (let item_id in fittings) {
-                let item = cache['esi/v2/universe/types/' + item_id];
+                let item = cache['/v2/universe/types/' + item_id];
                 slots_used += fittings[item_id];
                 if (slots_available) {
                     html += `<tr class="copy_only"><td>${(item.name + '<br />').repeat(fittings[item_id])}`;
@@ -539,7 +559,7 @@ var eveui;
     }
     eveui.fit_window = fit_window;
     function format_item(item_id) {
-        let item = cache['esi/v2/universe/types/' + item_id];
+        let item = cache['/v2/universe/types/' + item_id];
         let html = `<table class="whitespace_nowrap"><tr><td>${item.name}`;
         for (let i in item.dogma_attributes) {
             let attr = item.dogma_attributes[i];
@@ -562,7 +582,7 @@ var eveui;
         }
         mark('item window created');
         // load required items and set callback to display
-        cache_request('esi/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${item_id}/`).done(function () {
+        cache_request('/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${item_id}/`).done(function () {
             eveui_window.find('.eveui_content').html(format_item(item_id));
             $(window).trigger('resize');
             mark('item window populated');
@@ -574,8 +594,8 @@ var eveui;
     }
     eveui.item_window = item_window;
     function format_char(char_id) {
-        let character = cache['esi/v4/characters/' + char_id];
-        let html = `<table><tr><td colspan="2"><img class="float_left" src="${eveui_imageserver('Character/' + char_id + '_128')}" height="128" width="128" />${character.name}<hr /><img class="float_left" src="${eveui_imageserver('Corporation/' + character.corporation_id + '_64')}" height="64" width="64" />Member of <eveui path="/v3/corporations/${character.corporation_id}" key="corporation_name">${character.corporation_id}</eveui><tr><td>Bio:<td>${character.description.replace(/<font[^>]+>/g, '<font>')}</table>`;
+        let character = cache['/v4/characters/' + char_id];
+        let html = `<table><tr><td colspan="2"><img class="float_left" src="${eveui_imageserver('Character/' + char_id + '_128')}" height="128" width="128" />${character.name}<hr /><img class="float_left" src="${eveui_imageserver('Corporation/' + character.corporation_id + '_64')}" height="64" width="64" />Member of <a href="corp:${character.corporation_id}"><eveui path="/v3/corporations/${character.corporation_id}" key="corporation_name">${character.corporation_id}</eveui></a><tr><td>Bio:<td>${character.description.replace(/<font[^>]+>/g, '<font>')}</table>`;
         setTimeout(expand, 0);
         return html;
     }
@@ -591,7 +611,7 @@ var eveui;
         }
         mark('char window created');
         // load required chars and set callback to display
-        cache_request('esi/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${char_id}/`).done(function () {
+        cache_request('/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${char_id}/`).done(function () {
             eveui_window.find('.eveui_content').html(format_char(char_id));
             $(window).trigger('resize');
             mark('char window populated');
@@ -602,6 +622,35 @@ var eveui;
         return eveui_window;
     }
     eveui.char_window = char_window;
+    function format_corp(corp_id) {
+        let corporation = cache['/v3/corporations/' + corp_id];
+        let html = `<table><tr><td colspan="2"><img class="float_left" src="${eveui_imageserver('Corporation/' + corp_id + '_128')}" height="128" width="128" />${corporation.corporation_name}<hr /><img class="float_left" src="${eveui_imageserver('Alliance/' + corporation.alliance_id + '_64')}" height="64" width="64" />Member of <eveui path="/v2/alliances/${corporation.alliance_id}" key="alliance_name">${corporation.alliance_id}</eveui><tr><td>Bio:<td>${corporation.corporation_description.replace(/<font[^>]+>/g, '<font>')}</table>`;
+        setTimeout(expand, 0);
+        return html;
+    }
+    eveui.format_corp = format_corp;
+    function corp_window(corp_id) {
+        let eveui_window = new_window('Corporation');
+        eveui_window.attr('data-eveui-corpid', corp_id);
+        eveui_window.addClass('corp_window');
+        switch (eveui_mode) {
+            default:
+                $('body').append(eveui_window);
+                break;
+        }
+        mark('corp window created');
+        // load required corps and set callback to display
+        cache_request('/v3/corporations/' + corp_id, `https://esi.tech.ccp.is/v3/corporations/${corp_id}/`).done(function () {
+            eveui_window.find('.eveui_content').html(format_corp(corp_id));
+            $(window).trigger('resize');
+            mark('corp window populated');
+        }).fail(function () {
+            eveui_window.remove();
+        });
+        $(window).trigger('resize');
+        return eveui_window;
+    }
+    eveui.corp_window = corp_window;
     function expand() {
         // expand any fits marked with a data-eveui-expand attribute ( or all, if expand_all mode )
         let expand_filter = '[data-eveui-expand]';
@@ -646,7 +695,7 @@ var eveui;
                 return;
             }
             let item_id = selected_element.attr('data-itemid') || this.href.substring(this.href.indexOf(':') + 1);
-            cache_request('esi/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${item_id}/`).done(function () {
+            cache_request('/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${item_id}/`).done(function () {
                 selected_element.replaceWith(`<span class="eveui_content eveui_item">${format_item(item_id)}</span>`);
                 mark('item window expanded');
             });
@@ -658,7 +707,7 @@ var eveui;
                 return;
             }
             let char_id = selected_element.attr('data-charid') || this.href.substring(this.href.indexOf(':') + 1);
-            cache_request('esi/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${char_id}/`).done(function () {
+            cache_request('/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${char_id}/`).done(function () {
                 selected_element.replaceWith(`<span class="eveui_content eveui_char">${format_char(char_id)}</span>`);
                 mark('char window expanded');
             });
@@ -701,7 +750,7 @@ var eveui;
             }
             let match = items[item].split(';');
             let item_id = match[0];
-            pending.push(cache_request('esi/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${item_id}/`));
+            pending.push(cache_request('/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${item_id}/`));
         }
         return $.when.apply(null, pending);
     }
@@ -721,42 +770,17 @@ var eveui;
             dataType: 'json',
             cache: true,
         }).done(function (data) {
+            data.path = key;
             // store data in session cache
             cache[key] = data;
-            // store data in localstorage where applicable
-            if (eveui_use_localstorage > 0) {
-                let version;
-                if (key.startsWith('esi/v2/universe/types')) {
-                    // inventory/types key should be reliably cachable until such time as the version changes
-                    version = eve_version;
+            if (db) {
+                // only manually cache keypaths where the data doesn't change until the server version changes
+                if (key.startsWith('/v2/universe/types')
+                    || key.startsWith('/v1/dogma/attributes')) {
+                    let tx = db.transaction("cache", "readwrite");
+                    let store = tx.objectStore("cache");
+                    store.put(data);
                 }
-                if (typeof version === 'undefined') {
-                    // default is to use the standard browser cache
-                    return;
-                }
-                if (typeof (localstorage_pending[version]) !== 'object') {
-                    localstorage_pending[version] = {};
-                }
-                localstorage_pending[version][key] = data;
-                // timer to throttle localstorage updates
-                clearTimeout(localstorage_timer);
-                localstorage_timer = setTimeout(function () {
-                    let localstorage_cache = JSON.parse(localStorage.getItem('eveui_cache')) || {};
-                    $.extend(true, localstorage_cache, localstorage_pending);
-                    let localstorage_cache_json = JSON.stringify(localstorage_cache);
-                    if (localstorage_cache_json.length > eveui_use_localstorage) {
-                        mark('localstorage limit exceeded');
-                        return;
-                    }
-                    try {
-                        localStorage.setItem('eveui_cache', localstorage_cache_json);
-                        mark('localstorage updated ' + Object.keys(localstorage_pending).length);
-                    }
-                    catch (err) {
-                        // failure to add to long term cache doesn't have any significant effect that would require a catch block
-                    }
-                    localstorage_pending = {};
-                }, 5000);
             }
         }).fail(function (xhr) {
             delete cache[key];
