@@ -586,7 +586,7 @@ namespace eveui {
 					open.onupgradeneeded = function(e) {
 						let db = open.result;
 						if ( db.objectStoreNames.contains("cache")) {
-							db.deleteObjectStore( "cache ");
+							db.deleteObjectStore( "cache");
 						}
 						db.createObjectStore( "cache", { keyPath: "path" } );
 					};
