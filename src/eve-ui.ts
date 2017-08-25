@@ -15,6 +15,7 @@ var eveui_fit_selector: string = eveui_fit_selector || '[href^="fitting:"],[data
 var eveui_item_selector: string = eveui_item_selector || '[href^="item:"],[data-itemid]';
 var eveui_char_selector: string = eveui_char_selector || '[href^="char:"],[data-charid]';
 var eveui_corp_selector: string = eveui_corp_selector || '[href^="corp:"],[data-corpid]';
+var eveui_use_osmium: boolean = eveui_use_osmium || false;
 var eveui_urlify: ( dna: string ) => string = eveui_urlify || function( dna ) { 
 	return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); 
 }
@@ -63,7 +64,7 @@ var eveui_style: string = eveui_style || '<style>' + css`
 		.eveui_content {
 			display: inline-block;
 			margin: 2px;
-			max-width: 30em;
+			max-width: 40em;
 		}
 		.eveui_content .eveui_title {
 			display: flex;
@@ -101,6 +102,16 @@ var eveui_style: string = eveui_style || '<style>' + css`
 		}
 		.eveui_fit_header {
 			align-items: center;
+		}
+		.eveui_fit_stats {
+		  background: #eee;
+			white-space: nowrap;
+			position: absolute;
+			margin-left: 19px;
+			border: 1px solid;
+			padding: 2px;
+			line-height: 1;
+			font-size: 90%;
 		}
 		.eveui_line_spacer {
 			line-height: 0.5em;
@@ -175,6 +186,10 @@ var eveui_style: string = eveui_style || '<style>' + css`
 		.float_right {
 			float: right;
 		}
+		.eveui_indent {
+		  margin-left: 0.5em;
+			display: inline-block;
+		}
 		/* eveui_css_end */
 ` + '</style>';
 
@@ -191,7 +206,7 @@ namespace eveui {
 	let current_zindex: number = 100;
 	let preload_timer: number;
 	let preload_quota: number = eveui_preload_initial;
-	let cache = {};
+	export let cache = {};
 	let eve_version: number;
 	let requests_pending: number = 0;
 	let itemselect_lastupdate: number = 0;
@@ -201,7 +216,7 @@ namespace eveui {
 	// set user_agent for all requests
 	$.ajaxSetup({
 		data: {
-			"user_agent": eveui_user_agent
+			user_agent: eveui_user_agent
 		}
 	});
 
@@ -397,12 +412,12 @@ namespace eveui {
 
 		let request_timestamp = performance.now();
 		// get market group id for selected item
-		cache_request( 'crest/market/types/' + item_id, `https://crest-tq.eveonline.com/market/types/${ item_id }/` ).done( function() {
+		cache_request( 'crest/market/types/' + item_id ).done( function() {
 			let data = cache[ 'crest/market/types/' + item_id ];
 			let market_group = data.marketGroup.id_str;
 
 			// get items with the same market group
-			cache_request( 'crest/market/groups/' + market_group, `https://crest-tq.eveonline.com/market/types/?group=https://crest-tq.eveonline.com/market/groups/${ market_group }/` ).done( function() {
+			cache_request( 'crest/market/groups/' + market_group ).done( function() {
 				if ( request_timestamp > itemselect_lastupdate ) {
 					itemselect_lastupdate = request_timestamp;
 				} else {
@@ -581,20 +596,20 @@ namespace eveui {
 				mark( 'eve version response ' + eve_version );
 
 				if ( indexedDB ) { // indexedDB is available
-					let open = indexedDB.open( "eveui", eve_version );
+					let open = indexedDB.open( 'eveui', eve_version );
 
 					open.onupgradeneeded = function(e) {
 						let db = open.result;
-						if ( db.objectStoreNames.contains("cache")) {
-							db.deleteObjectStore( "cache");
+						if ( db.objectStoreNames.contains('cache')) {
+							db.deleteObjectStore( 'cache' );
 						}
-						db.createObjectStore( "cache", { keyPath: "path" } );
+						db.createObjectStore( 'cache', { keyPath: 'path' } );
 					};
 
 					open.onsuccess = function() {
 						db = open.result;
-						let tx = db.transaction( "cache", "readonly" );
-						let store = tx.objectStore( "cache" );
+						let tx = db.transaction( 'cache', 'readonly' );
+						let store = tx.objectStore( 'cache' );
 
 						store.getAll().onsuccess = function(e) {
 							$.each( e.target.result, function( index, value ) {
@@ -623,6 +638,7 @@ namespace eveui {
 					preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
 					mark( 'preload timer set' );
 				}
+				setInterval( autoexpand, 100 );
 			}
 		).fail(
 			function( xhr ) {
@@ -804,7 +820,10 @@ namespace eveui {
 		}
 
 		let html: string = html`
-			<table>
+			<span class="float_right">
+			  <eveui type="osmium" key="${ dna }" />
+			</span>
+			<table class="eveui_fit_table">
 			<thead>
 			<tr class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
 			<td colspan="2"><img src="${ eveui_imageserver( 'Type/' + ship_id + '_32' ) }" class="eveui_icon eveui_ship_icon" />
@@ -839,7 +858,6 @@ namespace eveui {
 			</table>
 			<span class="eveui_endcopy" />
 			`;
-		setTimeout( expand, 0 );
 		return html;
 	}
 
@@ -870,12 +888,11 @@ namespace eveui {
 			let attr = item.dogma_attributes[i];
 			html += html`
 				<tr>
-				<td><eveui path="/v1/dogma/attributes/${ attr.attribute_id }" key="display_name,name">attribute:${ attr.attribute_id }</eveui>
+				<td><eveui key="/v1/dogma/attributes/${ attr.attribute_id }" path="display_name,name">attribute:${ attr.attribute_id }</eveui>
 				<td> ${ attr.value }
 			`;
 		}
 		html += '</table>';
-		setTimeout( expand, 0 );
 		return html;
 	}
 
@@ -893,7 +910,7 @@ namespace eveui {
 		mark( 'item window created' );
 
 		// load required items and set callback to display
-		cache_request( '/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
+		cache_request( '/v2/universe/types/' + item_id ).done( function() {
 			eveui_window.find( '.eveui_content' ).html( format_item( item_id ) );
 
 			$( window ).trigger( 'resize' );
@@ -915,12 +932,11 @@ namespace eveui {
 			${ character.name }
 			<hr />
 			<img class="float_left" src="${ eveui_imageserver( 'Corporation/' + character.corporation_id + '_64' ) }" height="64" width="64" />
-			Member of <a href="corp:${ character.corporation_id }"><eveui path="/v3/corporations/${ character.corporation_id }" key="corporation_name">${ character.corporation_id }</eveui></a>
+			Member of <a href="corp:${ character.corporation_id }"><eveui key="/v3/corporations/${ character.corporation_id }" path="corporation_name">${ character.corporation_id }</eveui></a>
 
 			<tr><td>Bio:<td>${ character.description.replace( /<font[^>]+>/g, '<font>' ) }
 			</table>
 			`;
-		setTimeout( expand, 0 );
 		return html;
 	}
 
@@ -937,7 +953,7 @@ namespace eveui {
 		mark( 'char window created' );
 
 		// load required chars and set callback to display
-		cache_request( '/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
+		cache_request( '/v4/characters/' + char_id ).done( function() {
 			eveui_window.find( '.eveui_content' ).html( format_char( char_id ) );
 
 			$( window ).trigger( 'resize' );
@@ -959,12 +975,11 @@ namespace eveui {
 			${ corporation.corporation_name }
 			<hr />
 			<img class="float_left" src="${ eveui_imageserver( 'Alliance/' + corporation.alliance_id + '_64' ) }" height="64" width="64" />
-			Member of <eveui path="/v2/alliances/${ corporation.alliance_id }" key="alliance_name">${ corporation.alliance_id }</eveui>
+			Member of <eveui key="/v2/alliances/${ corporation.alliance_id }" path="alliance_name">${ corporation.alliance_id }</eveui>
 
 			<tr><td>Bio:<td>${ corporation.corporation_description.replace( /<font[^>]+>/g, '<font>' ) }
 			</table>
 			`;
-		setTimeout( expand, 0 );
 		return html;
 	}
 
@@ -981,7 +996,7 @@ namespace eveui {
 		mark( 'corp window created' );
 
 		// load required corps and set callback to display
-		cache_request( '/v3/corporations/' + corp_id, `https://esi.tech.ccp.is/v3/corporations/${ corp_id }/` ).done( function() {
+		cache_request( '/v3/corporations/' + corp_id ).done( function() {
 			eveui_window.find( '.eveui_content' ).html( format_corp( corp_id ) );
 
 			$( window ).trigger( 'resize' );
@@ -994,29 +1009,65 @@ namespace eveui {
 		return eveui_window;
 	}
 
+	export function format_fitstats( dna: string ): string {
+		let html: string = '';
+		let osmium_stats = cache[ 'osmium:' + dna ];
+		html = html`
+			<span class="eveui_fit_stats">
+				Defense<br />
+				<span class="eveui_indent">
+					${ Math.floor( osmium_stats.ship.ehpAndResonances.ehp.avg ) } EHP
+					<table>
+						<tr>
+							<td>
+							<td>em
+							<td>th
+							<td>ki
+							<td>ex
+						<tr>
+							<td>s
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.shield.resonance.em * 100 ) }
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.shield.resonance.thermal * 100 ) }
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.shield.resonance.kinetic * 100 ) }
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.shield.resonance.explosive * 100 ) }
+						<tr>
+							<td>a
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.armor.resonance.em * 100 ) }
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.armor.resonance.thermal * 100 ) }
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.armor.resonance.kinetic * 100 ) }
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.armor.resonance.explosive * 100 ) }
+						<tr>
+							<td>h
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.hull.resonance.em * 100 ) }
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.hull.resonance.thermal * 100 ) }
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.hull.resonance.kinetic * 100 ) }
+							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.hull.resonance.explosive * 100 ) }
+					</table>
+				</span>
+				<hr />
+				Offense<br />
+				<span class="eveui_indent">
+					${ Math.round( osmium_stats.ship.damage.total.dps ) } Total DPS<br />
+					(${ Math.round( osmium_stats.ship.damage.drones.dps ) } Drone DPS)<br />
+				</span>
+				<hr />
+				Capacitor<br />
+				<span class="eveui_indent">
+					&Delta;${ ( osmium_stats.ship.capacitor.delta * -1000 ).toFixed( 2 )}/s<br />
+				</span>
+			</span>
+		`;
+		return html;
+	}
+
 	export function expand(): void {
-		// expand any fits marked with a data-eveui-expand attribute ( or all, if expand_all mode )
+		// expands anything that has been marked for expansion, or all applicable if we are set to expand_all mode
+		autoexpand();
+
 		let expand_filter: string = '[data-eveui-expand]';
-		if ( eveui_mode === "expand_all" ) {
+		if ( eveui_mode === 'expand_all' ) {
 			expand_filter = '*';
 		}
-
-		$( 'eveui' ).filter( ':not([state])' ).each( function() {
-			let selected_element: JQuery = $( this );
-			let path: string = selected_element.attr( 'path' );
-			selected_element.attr( 'state', 'loading' );
-			cache_request( path, 'https://esi.tech.ccp.is' + path + '/').done( function() {
-				let result = cache[ path ];
-				selected_element.attr( 'state', 'done' );
-				$.each( selected_element.attr( 'key' ).split( ',' ), function( index, key ) {
-					let value = result[ key ];
-					if ( value ) {
-						selected_element.html( value );
-						return false;
-					}
-				});
-			});
-		});
 
 		$( eveui_fit_selector ).filter( expand_filter ).each( function() {
 			let selected_element: JQuery = $( this );
@@ -1040,7 +1091,7 @@ namespace eveui {
 				return;
 			}
 			let item_id: string = selected_element.attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_request( '/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ).done( function() {
+			cache_request( '/v2/universe/types/' + item_id ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_item">${ format_item( item_id ) }</span>` );
 				mark( 'item window expanded' );
 			});
@@ -1052,9 +1103,44 @@ namespace eveui {
 				return;
 			}
 			let char_id: string = selected_element.attr( 'data-charid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_request( '/v4/characters/' + char_id, `https://esi.tech.ccp.is/v4/characters/${ char_id }/` ).done( function() {
+			cache_request( '/v4/characters/' + char_id ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_char">${ format_char( char_id ) }</span>` );
 				mark( 'char window expanded' );
+			});
+		});
+	}
+
+	function autoexpand(): void {
+		// expands elements that require expansion even when not in expand mode
+		$( 'eveui[type=osmium]' ).filter( ':not([state])' ).each( function() {
+			let selected_element: JQuery = $( this );
+			let dna: string = selected_element.attr( 'key' );
+
+			if ( eveui_use_osmium ) {
+				selected_element.attr( 'state', 'loading' );
+				cache_request( 'osmium:' + dna ).done( function() {
+					selected_element.html( format_fitstats( dna ) );
+					selected_element.attr( 'state', 'done' );
+				});
+			}
+		});
+
+		// generic expansion of simple expressions
+		$( 'eveui:not([type])' ).filter( ':not([state])' ).each( function() {
+			let selected_element: JQuery = $( this );
+			let key: string = selected_element.attr( 'key' );
+
+			selected_element.attr( 'state', 'loading' );
+			cache_request( key ).done( function() {
+				let result = cache[ key ];
+				$.each( selected_element.attr( 'path' ).split( ',' ), function( index, path ) {
+					let value = object_value( result, path );
+					if ( value ) {
+						selected_element.html( value );
+						selected_element.attr( 'state', 'done' );
+						return false;
+					}
+				});
 			});
 		});
 	}
@@ -1087,6 +1173,14 @@ namespace eveui {
 		}
 	}
 
+	function object_value( object: Object, path: string ): any {
+		let value = object;
+		$.each( path.split( '.' ), function( index, key ) {
+			value = value[ key ];
+		});
+		return value;
+	}
+
 	function cache_fit( dna: string ): JQueryPromise<any> {
 		// caches all items required to process the specified fit
 		let pending: Array<JQueryPromise<any>> = [];
@@ -1099,12 +1193,26 @@ namespace eveui {
 			let match: Array<string> = items[item].split( ';' );
 			let item_id: string = match[0];
 
-			pending.push( cache_request( '/v2/universe/types/' + item_id, `https://esi.tech.ccp.is/v2/universe/types/${ item_id }/` ) );
+			pending.push( cache_request( '/v2/universe/types/' + item_id ) );
 		}
+
 		return $.when.apply( null, pending );
 	}
 
-	function cache_request( key: string, url: string ): JQueryPromise<any> {
+	function cache_request( key: string ): JQueryPromise<any> {
+		let url: string;
+		let jsonp = false;
+
+		if ( key.startsWith( 'osmium:' ) ) {
+			jsonp = true;
+			let dna = key.split( ':', 2 )[1];
+			url = `https://o.smium.org/api/json/loadout/dna/attributes/loc:ship,a:ehpAndResonances,a:damage,a:outgoing,a:capacitor,a:tank?input=${ encodeURI( dna ) }`;
+		} else {
+			url = 'https://esi.tech.ccp.is' + key + '/';
+		}
+
+		let dataType: string = jsonp ? 'jsonp' : 'json';
+
 		if ( typeof ( cache[ key ] ) === 'object' ) {
 			if ( typeof ( cache[ key ].promise ) === 'function' ) {
 				// item is pending, return the existing deferred object
@@ -1118,7 +1226,7 @@ namespace eveui {
 		return cache[ key ] = $.ajax(
 			url,
 			{
-				dataType: 'json',
+				dataType: dataType,
 				cache: true,
 			}
 		).done(
@@ -1133,9 +1241,10 @@ namespace eveui {
 					if ( 
 							key.startsWith( '/v2/universe/types' )
 						 || key.startsWith( '/v1/dogma/attributes' )
+						 || key.startsWith( 'osmium' )
 						 ) {
-						let tx = db.transaction( "cache", "readwrite" );
-						let store = tx.objectStore( "cache" );
+						let tx = db.transaction( 'cache', 'readwrite' );
+						let store = tx.objectStore( 'cache' );
 						store.put( data );
 					}
 				}

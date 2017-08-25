@@ -1,6 +1,6 @@
 # eve-ui
 A mostly standalone EVE Online fit display script for inclusion in arbitrary websites.
-(Mostly standalone, requires jQuery and uses CCP's APIs but no other servers.)
+(Mostly standalone, requires jQuery and uses CCP's APIs but no other servers. Optionally uses https://o.smium.org/ to display stats for fittings.)
 Basic usage example:
 ```
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" defer></script>
