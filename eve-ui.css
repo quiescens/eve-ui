@@ -35,7 +35,7 @@
 		.eveui_content {
 			display: inline-block;
 			margin: 2px;
-			max-width: 30em;
+			max-width: 40em;
 		}
 		.eveui_content .eveui_title {
 			display: flex;
@@ -73,6 +73,16 @@
 		}
 		.eveui_fit_header {
 			align-items: center;
+		}
+		.eveui_fit_stats {
+		  background: #eee;
+			white-space: nowrap;
+			position: absolute;
+			margin-left: 19px;
+			border: 1px solid;
+			padding: 2px;
+			line-height: 1;
+			font-size: 90%;
 		}
 		.eveui_line_spacer {
 			line-height: 0.5em;
@@ -146,5 +156,9 @@
 		}
 		.float_right {
 			float: right;
+		}
+		.eveui_indent {
+		  margin-left: 0.5em;
+			display: inline-block;
 		}
 		/* eveui_css_end */
