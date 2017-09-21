@@ -210,6 +210,7 @@ namespace eveui {
 	let eve_version: number;
 	let requests_pending: number = 0;
 	let itemselect_lastupdate: number = 0;
+	let errors_lastminute: number = 0;
 
 	let db;
 
@@ -874,6 +875,8 @@ namespace eveui {
 			eveui_window.find( '.eveui_content ').html( format_fit( dna, eveui_name) );
 			$( window ).trigger( 'resize' );
 			mark( 'fit window populated' );
+		}).fail( function() {
+			eveui_window.remove();
 		});
 		return eveui_window;
 	}
@@ -1148,7 +1151,7 @@ namespace eveui {
 	function lazy_preload(): void {
 		// preload timer function
 		preload_timer = setTimeout( lazy_preload, 5000 );
-		if ( requests_pending >= 10 ) {
+		if ( requests_pending > 0 ) {
 			return;
 		}
 		if ( preload_quota > 0 ) {
@@ -1163,7 +1166,7 @@ namespace eveui {
 					elem.attr( 'data-eveui-cached', 1 );
 				} else {
 					preload_quota--;
-					promise.always( function() {
+					promise.done( function() {
 						clearTimeout( preload_timer );
 						preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
 					});
@@ -1222,6 +1225,9 @@ namespace eveui {
 				return $.Deferred().resolve();
 			}
 		}
+		if ( errors_lastminute > 50 ) {
+		  return $.Deferred().reject();
+		}
 		requests_pending++;
 		return cache[ key ] = $.ajax(
 			url,
@@ -1251,7 +1257,21 @@ namespace eveui {
 			}
 		).fail(
 			function( xhr ) {
-				delete cache[ key ];
+				// on a transient failed request, allow retry attempt on the same request after 10s
+				if ( xhr.status >= 500 ) {
+					setTimeout( function() {
+						delete cache[ key ];
+					}, 10000 );
+				}
+
+				// increment error count, decrement 1 minute later
+				errors_lastminute++;
+				if ( errors_lastminute == 50 ) {
+					mark( 'too many errors in last 60s' );
+				}
+				setTimeout( function() {
+					errors_lastminute--;
+				}, 60000 );
 			}
 		).always(
 			function() {
