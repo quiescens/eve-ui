@@ -350,7 +350,7 @@ namespace eveui {
 		}
 
 		$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
-		cache_fit( dna ).done( function() {
+		cache_items( dna ).done( function() {
 			let eveui_window: JQuery = $( `.eveui_window[data-eveui-dna="${ dna }"]` );
 			eveui_window.find( '.eveui_content ').html( format_fit( dna ) );
 			$( window ).trigger( 'resize' );
@@ -371,7 +371,7 @@ namespace eveui {
 		}
 
 		$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
-		cache_fit( dna ).done( function() {
+		cache_items( dna ).done( function() {
 			let eveui_window: JQuery = $( `.eveui_window[data-eveui-dna="${ dna }"]` );
 			eveui_window.find( '.eveui_content ').html( format_fit( dna ) );
 			$( window ).trigger( 'resize' );
@@ -413,25 +413,29 @@ namespace eveui {
 
 		let request_timestamp = performance.now();
 		// get market group id for selected item
-		cache_request( 'crest/market/types/' + item_id ).done( function() {
-			let data = cache[ 'crest/market/types/' + item_id ];
-			let market_group = data.marketGroup.id_str;
+		cache_request( '/v3/universe/types/' + item_id ).done( function() {
+			let data = cache[ '/v3/universe/types/' + item_id ];
+			let market_group = data.market_group_id;
 
 			// get items with the same market group
-			cache_request( 'crest/market/groups/' + market_group ).done( function() {
+			cache_request( '/v1/markets/groups/' + market_group ).done( function() {
 				if ( request_timestamp > itemselect_lastupdate ) {
 					itemselect_lastupdate = request_timestamp;
 				} else {
 					return;
 				}
-				let data = cache[ 'crest/market/groups/' + market_group ];
+				let data = cache[ '/v1/markets/groups/' + market_group ];
 				let datalist = $( '.eveui_itemselect datalist' );
-				data.items.sort( function( a,b ) { return a.type.name.localeCompare( b.type.name ) } );
-				for ( let i in data.items ) {
-					datalist.append( html`
-						<option label="${ data.items[i].type.name }">(${ data.items[i].type.id_str })</option>
-						` );
-				}
+
+				cache_items( data.types.join( ':' ) ).done( function() {
+					mark( 'marketgroup cached' );
+					data.types.sort( function( a,b ) { return cache[ '/v3/universe/types/' + a ].name.localeCompare( cache[ '/v3/universe/types/' + b ].name ) } );
+					for ( let i of data.types ) {
+						datalist.append( html`
+							<option label="${ cache[ '/v3/universe/types/' + i ].name }">(${ i })</option>
+							` );
+					}
+				});
 			});
 		});
 	});
@@ -458,7 +462,7 @@ namespace eveui {
 			}
 
 			$( this ).closest( '[data-eveui-dna]' ).attr( 'data-eveui-dna', dna );
-			cache_fit( dna ).done( function() {
+			cache_items( dna ).done( function() {
 				let eveui_window: JQuery = $( `.eveui_window[data-eveui-dna="${ dna }"]` );
 				eveui_window.find( '.eveui_content ').html( format_fit( dna ) );
 				$( window ).trigger( 'resize' );
@@ -690,12 +694,12 @@ namespace eveui {
 
 		// ship name and number of slots
 		let ship_id: number = parseInt( items.shift() );
-		let ship = cache[ '/v2/universe/types/' + ship_id ];
+		let ship = cache[ '/v3/universe/types/' + ship_id ];
 		ship.hiSlots = 0;
 		ship.medSlots = 0;
 		ship.lowSlots = 0;
 		for ( let i in ship.dogma_attributes ) {
-			let attr = cache[ '/v2/universe/types/' + ship_id ].dogma_attributes[i];
+			let attr = cache[ '/v3/universe/types/' + ship_id ].dogma_attributes[i];
 			switch( attr.attribute_id ) {
 				case 14: // hiSlots
 					ship.hiSlots = attr.value;
@@ -723,7 +727,7 @@ namespace eveui {
 			let match: Array<string> = items[i].split( ';' );
 			let item_id: string = match[0];
 			let quantity: number = parseInt( match[1] );
-			let item = cache[ '/v2/universe/types/' + item_id ];
+			let item = cache[ '/v3/universe/types/' + item_id ];
 
 			for ( let j in item.dogma_attributes ) {
 				let attr = item.dogma_attributes[j];
@@ -768,7 +772,7 @@ namespace eveui {
 			let slots_used: number = 0;
 
 			for ( let item_id in fittings ) {
-				let item = cache[ '/v2/universe/types/' + item_id ];
+				let item = cache[ '/v3/universe/types/' + item_id ];
 
 				slots_used += fittings[ item_id ];
 				if ( slots_available ) {
@@ -871,7 +875,7 @@ namespace eveui {
 		$( window ).trigger( 'resize' );
 		// load required items and set callback to display
 		mark( 'fit window created' );
-		cache_fit( dna ).done( function() {
+		cache_items( dna ).done( function() {
 			eveui_window.find( '.eveui_content ').html( format_fit( dna, eveui_name) );
 			$( window ).trigger( 'resize' );
 			mark( 'fit window populated' );
@@ -882,7 +886,7 @@ namespace eveui {
 	}
 
 	export function format_item( item_id: string ): string {
-		let item = cache[ '/v2/universe/types/' + item_id ];
+		let item = cache[ '/v3/universe/types/' + item_id ];
 		let html: string = html`
 			<table class="whitespace_nowrap">
 			<tr><td>${ item.name }
@@ -913,7 +917,7 @@ namespace eveui {
 		mark( 'item window created' );
 
 		// load required items and set callback to display
-		cache_request( '/v2/universe/types/' + item_id ).done( function() {
+		cache_request( '/v3/universe/types/' + item_id ).done( function() {
 			eveui_window.find( '.eveui_content' ).html( format_item( item_id ) );
 
 			$( window ).trigger( 'resize' );
@@ -1079,7 +1083,7 @@ namespace eveui {
 				return;
 			}
 			let dna: string = selected_element.attr( 'data-dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_fit( dna ).done( function() {
+			cache_items( dna ).done( function() {
 				let eveui_name: string = $( this ).text().trim();
 				let eveui_content = $( `<span class="eveui_content eveui_fit">${ format_fit( dna, eveui_name ) }</span>` );
 				eveui_content.attr( 'data-eveui-dna', dna );
@@ -1094,7 +1098,7 @@ namespace eveui {
 				return;
 			}
 			let item_id: string = selected_element.attr( 'data-itemid' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
-			cache_request( '/v2/universe/types/' + item_id ).done( function() {
+			cache_request( '/v3/universe/types/' + item_id ).done( function() {
 				selected_element.replaceWith( `<span class="eveui_content eveui_item">${ format_item( item_id ) }</span>` );
 				mark( 'item window expanded' );
 			});
@@ -1159,7 +1163,7 @@ namespace eveui {
 				let elem: JQuery = $( this );
 				let dna: string = elem.data( 'dna' ) || this.href.substring(this.href.indexOf( ':' ) + 1);
 
-				let promise: JQueryPromise<any> = cache_fit( dna );
+				let promise: JQueryPromise<any> = cache_items( dna );
 
 				// skip if already cached
 				if ( promise.state() === 'resolved' ) {
@@ -1184,7 +1188,7 @@ namespace eveui {
 		return value;
 	}
 
-	function cache_fit( dna: string ): JQueryPromise<any> {
+	function cache_items( dna: string ): JQueryPromise<any> {
 		// caches all items required to process the specified fit
 		let pending: Array<JQueryPromise<any>> = [];
 
@@ -1196,7 +1200,7 @@ namespace eveui {
 			let match: Array<string> = items[item].split( ';' );
 			let item_id: string = match[0];
 
-			pending.push( cache_request( '/v2/universe/types/' + item_id ) );
+			pending.push( cache_request( '/v3/universe/types/' + item_id ) );
 		}
 
 		return $.when.apply( null, pending );
@@ -1245,7 +1249,7 @@ namespace eveui {
 				if ( db ) { // indexedDB is ready
 					// only manually cache keypaths where the data doesn't change until the server version changes
 					if ( 
-							key.startsWith( '/v2/universe/types' )
+							key.startsWith( '/v3/universe/types' )
 						 || key.startsWith( '/v1/dogma/attributes' )
 						 || key.startsWith( 'osmium' )
 						 ) {
