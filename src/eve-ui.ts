@@ -1209,6 +1209,10 @@ namespace eveui {
 	function cache_request( key: string ): JQueryPromise<any> {
 		let url: string;
 		let jsonp = false;
+		let custom_cache =
+								key.startsWith( '/v3/universe/types' )
+						 || key.startsWith( '/v1/dogma/attributes' )
+						 || key.startsWith( 'osmium' );
 
 		if ( key.startsWith( 'osmium:' ) ) {
 			jsonp = true;
@@ -1237,7 +1241,7 @@ namespace eveui {
 			url,
 			{
 				dataType: dataType,
-				cache: true,
+				cache: ! custom_cache, // if this request is not going to be cached manually, allow the browser to cache it
 			}
 		).done(
 			function( data ) {
@@ -1248,11 +1252,7 @@ namespace eveui {
 
 				if ( db ) { // indexedDB is ready
 					// only manually cache keypaths where the data doesn't change until the server version changes
-					if ( 
-							key.startsWith( '/v3/universe/types' )
-						 || key.startsWith( '/v1/dogma/attributes' )
-						 || key.startsWith( 'osmium' )
-						 ) {
+					if ( custom_cache ) {
 						let tx = db.transaction( 'cache', 'readwrite' );
 						let store = tx.objectStore( 'cache' );
 						store.put( data );
