@@ -5,7 +5,7 @@
 // ` used whenever interpolation is required
 'use strict';
 // config stuff ( can be overridden in a script block or js file of your choice )
-var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.9.0`;
+var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.9.1`;
 var eveui_preload_initial = eveui_preload_initial || 50;
 var eveui_preload_interval = eveui_preload_interval || 10;
 var eveui_mode = eveui_mode || 'multi_window'; // expand_all, expand, multi_window, modal
@@ -791,6 +791,9 @@ var eveui;
     function cache_request(key) {
         let url;
         let jsonp = false;
+        let custom_cache = key.startsWith('/v3/universe/types')
+            || key.startsWith('/v1/dogma/attributes')
+            || key.startsWith('osmium');
         if (key.startsWith('osmium:')) {
             jsonp = true;
             let dna = key.split(':', 2)[1];
@@ -816,16 +819,14 @@ var eveui;
         requests_pending++;
         return eveui.cache[key] = $.ajax(url, {
             dataType: dataType,
-            cache: true,
+            cache: !custom_cache,
         }).done(function (data) {
             data.path = key;
             // store data in session cache
             eveui.cache[key] = data;
             if (db) {
                 // only manually cache keypaths where the data doesn't change until the server version changes
-                if (key.startsWith('/v3/universe/types')
-                    || key.startsWith('/v1/dogma/attributes')
-                    || key.startsWith('osmium')) {
+                if (custom_cache) {
                     let tx = db.transaction('cache', 'readwrite');
                     let store = tx.objectStore('cache');
                     store.put(data);
