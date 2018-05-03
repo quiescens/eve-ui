@@ -214,13 +214,6 @@ namespace eveui {
 
 	let db;
 
-	// set user_agent for all requests
-	$.ajaxSetup({
-		data: {
-			user_agent: eveui_user_agent
-		}
-	});
-
 	// insert required DOM elements / styles
 	$( 'head' ).append( eveui_style );
 
@@ -480,6 +473,7 @@ namespace eveui {
 				url: `https://esi.tech.ccp.is/v1/search/`,
 				cache: true,
 				data: {
+					user_agent: eveui_user_agent,
 					search: $( this ).val(),
 					categories: 'inventorytype'
 				}
@@ -488,6 +482,7 @@ namespace eveui {
 					return;
 				}
 				let arg = {
+					user_agent: eveui_user_agent,
 					ids: data.inventorytype.slice(0, 50)
 				};
 
@@ -594,6 +589,9 @@ namespace eveui {
 			{
 				dataType: 'json',
 				cache: true,
+				data: {
+					user_agent: eveui_user_agent
+				}
 			}
 		).done(
 			function(data) {
@@ -1240,6 +1238,9 @@ namespace eveui {
 		return cache[ key ] = $.ajax(
 			url,
 			{
+				data: {
+					user_agent: eveui_user_agent,
+				},
 				dataType: dataType,
 				cache: ! custom_cache, // if this request is not going to be cached manually, allow the browser to cache it
 			}
