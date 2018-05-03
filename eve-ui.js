@@ -5,7 +5,7 @@
 // ` used whenever interpolation is required
 'use strict';
 // config stuff ( can be overridden in a script block or js file of your choice )
-var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.9.2`;
+var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.9.3`;
 var eveui_preload_initial = eveui_preload_initial || 50;
 var eveui_preload_interval = eveui_preload_interval || 10;
 var eveui_mode = eveui_mode || 'multi_window'; // expand_all, expand, multi_window, modal
@@ -45,12 +45,6 @@ var eveui;
     let itemselect_lastupdate = 0;
     let errors_lastminute = 0;
     let db;
-    // set user_agent for all requests
-    $.ajaxSetup({
-        data: {
-            user_agent: eveui_user_agent
-        }
-    });
     // insert required DOM elements / styles
     $('head').append(eveui_style);
     // click handlers to create/close windows
@@ -269,6 +263,7 @@ var eveui;
                 url: `https://esi.tech.ccp.is/v1/search/`,
                 cache: true,
                 data: {
+                    user_agent: eveui_user_agent,
                     search: $(this).val(),
                     categories: 'inventorytype'
                 }
@@ -277,6 +272,7 @@ var eveui;
                     return;
                 }
                 let arg = {
+                    user_agent: eveui_user_agent,
                     ids: data.inventorytype.slice(0, 50)
                 };
                 // get names for required item ids
@@ -374,10 +370,13 @@ var eveui;
         $.ajax(`https://esi.tech.ccp.is/v1/status/`, {
             dataType: 'json',
             cache: true,
+            data: {
+                user_agent: eveui_user_agent
+            }
         }).done(function (data) {
             eve_version = data.server_version;
             mark('eve version response ' + eve_version);
-            if (indexedDB) {
+            if (indexedDB) { // indexedDB is available
                 let open = indexedDB.open('eveui', eve_version);
                 open.onupgradeneeded = function (e) {
                     let db = open.result;
@@ -405,7 +404,7 @@ var eveui;
                     };
                 };
             }
-            else {
+            else { // indexedDB not available
                 // expand fits where applicable
                 $(document).ready(function () {
                     mark('expanding fits');
@@ -455,19 +454,19 @@ var eveui;
         for (let i in ship.dogma_attributes) {
             let attr = eveui.cache['/v3/universe/types/' + ship_id].dogma_attributes[i];
             switch (attr.attribute_id) {
-                case 14:// hiSlots
+                case 14: // hiSlots
                     ship.hiSlots = attr.value;
                     break;
-                case 13:// medSlots
+                case 13: // medSlots
                     ship.medSlots = attr.value;
                     break;
-                case 12:// lowSlots
+                case 12: // lowSlots
                     ship.lowSlots = attr.value;
                     break;
-                case 1137:// rigSlots
+                case 1137: // rigSlots
                     ship.rigSlots = attr.value;
                     break;
-                case 1367://maxSubSystems
+                case 1367: //maxSubSystems
                     ship.maxSubSystems = attr.value;
                     break;
             }
@@ -484,13 +483,13 @@ var eveui;
             for (let j in item.dogma_attributes) {
                 let attr = item.dogma_attributes[j];
                 switch (attr.attribute_id) {
-                    case 1374:// hiSlotModifier
+                    case 1374: // hiSlotModifier
                         ship.hiSlots += attr.value;
                         break;
-                    case 1375:// medSlotModifier
+                    case 1375: // medSlotModifier
                         ship.medSlots += attr.value;
                         break;
-                    case 1376:// lowSlotModifier
+                    case 1376: // lowSlotModifier
                         ship.lowSlots += attr.value;
                         break;
                 }
@@ -498,19 +497,19 @@ var eveui;
             for (let j in item.dogma_effects) {
                 let effect = item.dogma_effects[j];
                 switch (effect.effect_id) {
-                    case 12:// hiPower
+                    case 12: // hiPower
                         high_slots[item_id] = quantity;
                         continue outer;
-                    case 13:// medPower
+                    case 13: // medPower
                         med_slots[item_id] = quantity;
                         continue outer;
-                    case 11:// loPower
+                    case 11: // loPower
                         low_slots[item_id] = quantity;
                         continue outer;
-                    case 2663:// rigSlot
+                    case 2663: // rigSlot
                         rig_slots[item_id] = quantity;
                         continue outer;
-                    case 3772:// subSystem
+                    case 3772: // subSystem
                         subsystem_slots[item_id] = quantity;
                         continue outer;
                 }
@@ -818,13 +817,16 @@ var eveui;
         }
         requests_pending++;
         return eveui.cache[key] = $.ajax(url, {
+            data: {
+                user_agent: eveui_user_agent,
+            },
             dataType: dataType,
             cache: !custom_cache,
         }).done(function (data) {
             data.path = key;
             // store data in session cache
             eveui.cache[key] = data;
-            if (db) {
+            if (db) { // indexedDB is ready
                 // only manually cache keypaths where the data doesn't change until the server version changes
                 if (custom_cache) {
                     let tx = db.transaction('cache', 'readwrite');
