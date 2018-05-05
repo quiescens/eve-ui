@@ -472,8 +472,10 @@ namespace eveui {
 			$.ajax({
 				url: `https://esi.tech.ccp.is/v1/search/`,
 				cache: true,
+				headers: {
+					'X-User-Agent': eveui_user_agent
+				},
 				data: {
-					user_agent: eveui_user_agent,
 					search: $( this ).val(),
 					categories: 'inventorytype'
 				}
@@ -482,7 +484,6 @@ namespace eveui {
 					return;
 				}
 				let arg = {
-					user_agent: eveui_user_agent,
 					ids: data.inventorytype.slice(0, 50)
 				};
 
@@ -492,6 +493,9 @@ namespace eveui {
 					cache: true,
 					method: 'POST',
 					contentType: 'application/json',
+					headers: {
+						'X-User-Agent': eveui_user_agent
+					},
 					data: JSON.stringify( arg )
 				}).done( function(data) {
 					if ( request_timestamp > itemselect_lastupdate ) {
@@ -589,8 +593,8 @@ namespace eveui {
 			{
 				dataType: 'json',
 				cache: true,
-				data: {
-					user_agent: eveui_user_agent
+				headers: {
+					'X-User-Agent': eveui_user_agent
 				}
 			}
 		).done(
@@ -1238,8 +1242,8 @@ namespace eveui {
 		return cache[ key ] = $.ajax(
 			url,
 			{
-				data: {
-					user_agent: eveui_user_agent,
+				headers: {
+					'X-User-Agent': eveui_user_agent
 				},
 				dataType: dataType,
 				cache: ! custom_cache, // if this request is not going to be cached manually, allow the browser to cache it
