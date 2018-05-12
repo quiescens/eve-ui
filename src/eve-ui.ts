@@ -16,6 +16,9 @@ var eveui_item_selector: string = eveui_item_selector || '[href^="item:"],[data-
 var eveui_char_selector: string = eveui_char_selector || '[href^="char:"],[data-charid]';
 var eveui_corp_selector: string = eveui_corp_selector || '[href^="corp:"],[data-corpid]';
 var eveui_use_osmium: boolean = eveui_use_osmium || false;
+var eveui_esi_endpoint: ( path: string ) => string = eveui_esi_endpoint || function( path ) {
+	return 'https://esi.evetech.net' + path;
+}
 var eveui_urlify: ( dna: string ) => string = eveui_urlify || function( dna ) { 
 	return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); 
 }
@@ -470,7 +473,7 @@ namespace eveui {
 			let request_timestamp = performance.now();
 			// get item ids that match input
 			$.ajax({
-				url: `https://esi.tech.ccp.is/v1/search/`,
+				url: eveui_esi_endpoint(`/v1/search/`),
 				cache: true,
 				data: {
 					user_agent: eveui_user_agent,
@@ -481,18 +484,17 @@ namespace eveui {
 				if ( typeof( data.inventorytype ) === 'undefined' ) {
 					return;
 				}
-				let arg = {
-					user_agent: eveui_user_agent,
-					ids: data.inventorytype.slice(0, 50)
-				};
 
 				// get names for required item ids
 				$.ajax({
-					url: `https://esi.tech.ccp.is/v1/universe/names/`,
+					url: eveui_esi_endpoint(`/v1/universe/names/`),
 					cache: true,
 					method: 'POST',
 					contentType: 'application/json',
-					data: JSON.stringify( arg )
+					data: JSON.stringify ({
+						user_agent: eveui_user_agent,
+						ids: data.inventorytype.slice(0, 50)
+					})
 				}).done( function(data) {
 					if ( request_timestamp > itemselect_lastupdate ) {
 						itemselect_lastupdate = request_timestamp;
@@ -585,7 +587,7 @@ namespace eveui {
 	function eve_version_query(): void {
 		mark( 'eve version request' );
 		$.ajax(
-			`https://esi.tech.ccp.is/v1/status/`,
+			eveui_esi_endpoint(`/v1/status/`),
 			{
 				dataType: 'json',
 				cache: true,
@@ -1217,7 +1219,7 @@ namespace eveui {
 			let dna = key.split( ':', 2 )[1];
 			url = `https://o.smium.org/api/json/loadout/dna/attributes/loc:ship,a:ehpAndResonances,a:damage,a:outgoing,a:capacitor,a:tank?input=${ encodeURI( dna ) }`;
 		} else {
-			url = 'https://esi.tech.ccp.is' + key + '/';
+			url = eveui_esi_endpoint(key + '/');
 		}
 
 		let dataType: string = jsonp ? 'jsonp' : 'json';
