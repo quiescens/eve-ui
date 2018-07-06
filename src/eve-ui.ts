@@ -7,6 +7,7 @@
 
 // config stuff ( can be overridden in a script block or js file of your choice )
 var eveui_user_agent: string = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + version``;
+var eveui_accept_language: string = eveui_accept_language;
 var eveui_preload_initial: number = eveui_preload_initial || 50;
 var eveui_preload_interval: number = eveui_preload_interval || 10;
 var eveui_mode: string = eveui_mode || 'multi_window'; // expand_all, expand, multi_window, modal
@@ -472,11 +473,10 @@ namespace eveui {
 
 			let request_timestamp = performance.now();
 			// get item ids that match input
-			$.ajax({
+			ajax({
 				url: eveui_esi_endpoint(`/v1/search/`),
 				cache: true,
 				data: {
-					user_agent: eveui_user_agent,
 					search: $( this ).val(),
 					categories: 'inventorytype'
 				}
@@ -486,13 +486,12 @@ namespace eveui {
 				}
 
 				// get names for required item ids
-				$.ajax({
+				ajax({
 					url: eveui_esi_endpoint(`/v1/universe/names/`),
 					cache: true,
 					method: 'POST',
 					contentType: 'application/json',
 					data: JSON.stringify ({
-						user_agent: eveui_user_agent,
 						ids: data.inventorytype.slice(0, 50)
 					})
 				}).done( function(data) {
@@ -586,14 +585,10 @@ namespace eveui {
 
 	function eve_version_query(): void {
 		mark( 'eve version request' );
-		$.ajax(
-			eveui_esi_endpoint(`/v1/status/`),
-			{
+		ajax({
+			  url: eveui_esi_endpoint(`/v1/status/`),
 				dataType: 'json',
 				cache: true,
-				data: {
-					user_agent: eveui_user_agent
-				}
 			}
 		).done(
 			function(data) {
@@ -1188,6 +1183,19 @@ namespace eveui {
 		return value;
 	}
 
+	function ajax( settings: Object ): JQueryPromise<any> {
+		let my_settings = {
+			headers: {
+				'Accept-Language': eveui_accept_language,
+			},
+			data: {
+				user_agent: eveui_user_agent,
+			},
+		};
+		$.extend( true, my_settings, settings );
+		return $.ajax( my_settings );
+	}
+
 	function cache_items( dna: string ): JQueryPromise<any> {
 		// caches all items required to process the specified fit
 		let pending: Array<JQueryPromise<any>> = [];
@@ -1237,16 +1245,11 @@ namespace eveui {
 		  return $.Deferred().reject();
 		}
 		requests_pending++;
-		return cache[ key ] = $.ajax(
-			url,
-			{
-				data: {
-					user_agent: eveui_user_agent,
-				},
+		return cache[ key ] = ajax({
+				url: url,
 				dataType: dataType,
 				cache: ! custom_cache, // if this request is not going to be cached manually, allow the browser to cache it
-			}
-		).done(
+			}).done(
 			function( data ) {
 				data.path = key;
 
