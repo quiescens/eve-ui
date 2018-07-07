@@ -5,7 +5,7 @@
 // ` used whenever interpolation is required
 'use strict';
 // config stuff ( can be overridden in a script block or js file of your choice )
-var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.9.4`;
+var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.9.5`;
 var eveui_accept_language = eveui_accept_language;
 var eveui_preload_initial = eveui_preload_initial || 50;
 var eveui_preload_interval = eveui_preload_interval || 10;
@@ -206,7 +206,7 @@ var eveui;
         let request_timestamp = performance.now();
         // get market group id for selected item
         cache_request('/v3/universe/types/' + item_id).done(function () {
-            let data = eveui.cache['/v3/universe/types/' + item_id];
+            let data = cache_retrieve('/v3/universe/types/' + item_id);
             let market_group = data.market_group_id;
             // get items with the same market group
             cache_request('/v1/markets/groups/' + market_group).done(function () {
@@ -216,13 +216,13 @@ var eveui;
                 else {
                     return;
                 }
-                let data = eveui.cache['/v1/markets/groups/' + market_group];
+                let data = cache_retrieve('/v1/markets/groups/' + market_group);
                 let datalist = $('.eveui_itemselect datalist');
                 cache_items(data.types.join(':')).done(function () {
                     mark('marketgroup cached');
-                    data.types.sort(function (a, b) { return eveui.cache['/v3/universe/types/' + a].name.localeCompare(eveui.cache['/v3/universe/types/' + b].name); });
+                    data.types.sort(function (a, b) { return cache_retrieve('/v3/universe/types/' + a).name.localeCompare(cache_retrieve('/v3/universe/types/' + b).name); });
                     for (let i of data.types) {
-                        datalist.append(`<option label="${eveui.cache['/v3/universe/types/' + i].name}">(${i})</option>`);
+                        datalist.append(`<option label="${cache_retrieve('/v3/universe/types/' + i).name}">(${i})</option>`);
                     }
                 });
             });
@@ -445,12 +445,12 @@ var eveui;
         let items = dna.split(':');
         // ship name and number of slots
         let ship_id = parseInt(items.shift());
-        let ship = eveui.cache['/v3/universe/types/' + ship_id];
+        let ship = cache_retrieve('/v3/universe/types/' + ship_id);
         ship.hiSlots = 0;
         ship.medSlots = 0;
         ship.lowSlots = 0;
         for (let i in ship.dogma_attributes) {
-            let attr = eveui.cache['/v3/universe/types/' + ship_id].dogma_attributes[i];
+            let attr = cache_retrieve('/v3/universe/types/' + ship_id).dogma_attributes[i];
             switch (attr.attribute_id) {
                 case 14: // hiSlots
                     ship.hiSlots = attr.value;
@@ -477,7 +477,7 @@ var eveui;
             let match = items[i].split(';');
             let item_id = match[0];
             let quantity = parseInt(match[1]);
-            let item = eveui.cache['/v3/universe/types/' + item_id];
+            let item = cache_retrieve('/v3/universe/types/' + item_id);
             for (let j in item.dogma_attributes) {
                 let attr = item.dogma_attributes[j];
                 switch (attr.attribute_id) {
@@ -519,7 +519,7 @@ var eveui;
             let html = '';
             let slots_used = 0;
             for (let item_id in fittings) {
-                let item = eveui.cache['/v3/universe/types/' + item_id];
+                let item = cache_retrieve('/v3/universe/types/' + item_id);
                 slots_used += fittings[item_id];
                 if (slots_available) {
                     html += `<tr class="copy_only"><td>${(item.name + '<br />').repeat(fittings[item_id])}`;
@@ -563,7 +563,7 @@ var eveui;
     }
     eveui.fit_window = fit_window;
     function format_item(item_id) {
-        let item = eveui.cache['/v3/universe/types/' + item_id];
+        let item = cache_retrieve('/v3/universe/types/' + item_id);
         let html = `<table class="whitespace_nowrap"><tr><td>${item.name}`;
         for (let i in item.dogma_attributes) {
             let attr = item.dogma_attributes[i];
@@ -597,7 +597,7 @@ var eveui;
     }
     eveui.item_window = item_window;
     function format_char(char_id) {
-        let character = eveui.cache['/v4/characters/' + char_id];
+        let character = cache_retrieve('/v4/characters/' + char_id);
         let html = `<table><tr><td colspan="2"><img class="float_left" src="${eveui_imageserver('Character/' + char_id + '_128')}" height="128" width="128" />${character.name}<hr /><img class="float_left" src="${eveui_imageserver('Corporation/' + character.corporation_id + '_64')}" height="64" width="64" />Member of <a href="corp:${character.corporation_id}"><eveui key="/v3/corporations/${character.corporation_id}" path="corporation_name">${character.corporation_id}</eveui></a><tr><td>Bio:<td>${character.description.replace(/<font[^>]+>/g, '<font>')}</table>`;
         return html;
     }
@@ -625,7 +625,7 @@ var eveui;
     }
     eveui.char_window = char_window;
     function format_corp(corp_id) {
-        let corporation = eveui.cache['/v3/corporations/' + corp_id];
+        let corporation = cache_retrieve('/v3/corporations/' + corp_id);
         let html = `<table><tr><td colspan="2"><img class="float_left" src="${eveui_imageserver('Corporation/' + corp_id + '_128')}" height="128" width="128" />${corporation.corporation_name}<hr /><img class="float_left" src="${eveui_imageserver('Alliance/' + corporation.alliance_id + '_64')}" height="64" width="64" />Member of <eveui key="/v2/alliances/${corporation.alliance_id}" path="alliance_name">${corporation.alliance_id}</eveui><tr><td>Bio:<td>${corporation.corporation_description.replace(/<font[^>]+>/g, '<font>')}</table>`;
         return html;
     }
@@ -707,7 +707,7 @@ var eveui;
             let key = selected_element.attr('key');
             selected_element.attr('state', 'loading');
             cache_request(key).done(function () {
-                let result = eveui.cache[key];
+                let result = cache_retrieve(key);
                 $.each(selected_element.attr('path').split(','), function (index, path) {
                     let value = object_value(result, path);
                     if (value) {
@@ -784,6 +784,7 @@ var eveui;
         let custom_cache = key.startsWith('/v3/universe/types')
             || key.startsWith('/v1/dogma/attributes');
         url = eveui_esi_endpoint(key + '/');
+        key = (eveui_accept_language || navigator.languages[0]) + key;
         let dataType = jsonp ? 'jsonp' : 'json';
         if (typeof (eveui.cache[key]) === 'object') {
             if (typeof (eveui.cache[key].promise) === 'function') {
@@ -833,6 +834,10 @@ var eveui;
         }).always(function () {
             requests_pending--;
         });
+    }
+    function cache_retrieve(key) {
+        key = (eveui_accept_language || navigator.languages[0]) + key;
+        return eveui.cache[key];
     }
     function clipboard_copy(element) {
         // copy the contents of selected element to clipboard
