@@ -410,7 +410,7 @@ namespace eveui {
 		let request_timestamp = performance.now();
 		// get market group id for selected item
 		cache_request( '/v3/universe/types/' + item_id ).done( function() {
-			let data = cache[ '/v3/universe/types/' + item_id ];
+			let data = cache_retrieve( '/v3/universe/types/' + item_id );
 			let market_group = data.market_group_id;
 
 			// get items with the same market group
@@ -420,15 +420,15 @@ namespace eveui {
 				} else {
 					return;
 				}
-				let data = cache[ '/v1/markets/groups/' + market_group ];
+				let data = cache_retrieve( '/v1/markets/groups/' + market_group );
 				let datalist = $( '.eveui_itemselect datalist' );
 
 				cache_items( data.types.join( ':' ) ).done( function() {
 					mark( 'marketgroup cached' );
-					data.types.sort( function( a,b ) { return cache[ '/v3/universe/types/' + a ].name.localeCompare( cache[ '/v3/universe/types/' + b ].name ) } );
+					data.types.sort( function( a,b ) { return cache_retrieve( '/v3/universe/types/' + a ).name.localeCompare( cache_retrieve( '/v3/universe/types/' + b ).name ) } );
 					for ( let i of data.types ) {
 						datalist.append( html`
-							<option label="${ cache[ '/v3/universe/types/' + i ].name }">(${ i })</option>
+							<option label="${ cache_retrieve( '/v3/universe/types/' + i ).name }">(${ i })</option>
 							` );
 					}
 				});
@@ -688,12 +688,12 @@ namespace eveui {
 
 		// ship name and number of slots
 		let ship_id: number = parseInt( items.shift() );
-		let ship = cache[ '/v3/universe/types/' + ship_id ];
+		let ship = cache_retrieve( '/v3/universe/types/' + ship_id );
 		ship.hiSlots = 0;
 		ship.medSlots = 0;
 		ship.lowSlots = 0;
 		for ( let i in ship.dogma_attributes ) {
-			let attr = cache[ '/v3/universe/types/' + ship_id ].dogma_attributes[i];
+			let attr = cache_retrieve( '/v3/universe/types/' + ship_id ).dogma_attributes[i];
 			switch( attr.attribute_id ) {
 				case 14: // hiSlots
 					ship.hiSlots = attr.value;
@@ -721,7 +721,7 @@ namespace eveui {
 			let match: Array<string> = items[i].split( ';' );
 			let item_id: string = match[0];
 			let quantity: number = parseInt( match[1] );
-			let item = cache[ '/v3/universe/types/' + item_id ];
+			let item = cache_retrieve( '/v3/universe/types/' + item_id );
 
 			for ( let j in item.dogma_attributes ) {
 				let attr = item.dogma_attributes[j];
@@ -766,7 +766,7 @@ namespace eveui {
 			let slots_used: number = 0;
 
 			for ( let item_id in fittings ) {
-				let item = cache[ '/v3/universe/types/' + item_id ];
+				let item = cache_retrieve( '/v3/universe/types/' + item_id );
 
 				slots_used += fittings[ item_id ];
 				if ( slots_available ) {
@@ -877,7 +877,7 @@ namespace eveui {
 	}
 
 	export function format_item( item_id: string ): string {
-		let item = cache[ '/v3/universe/types/' + item_id ];
+		let item = cache_retrieve( '/v3/universe/types/' + item_id );
 		let html: string = html`
 			<table class="whitespace_nowrap">
 			<tr><td>${ item.name }
@@ -922,7 +922,7 @@ namespace eveui {
 	}
 
 	export function format_char( char_id: string ): string {
-		let character = cache[ '/v4/characters/' + char_id ];
+		let character = cache_retrieve( '/v4/characters/' + char_id );
 		let html: string = html`
 			<table>
 			<tr><td colspan="2">
@@ -965,7 +965,7 @@ namespace eveui {
 	}
 
 	export function format_corp( corp_id: string ): string {
-		let corporation = cache[ '/v3/corporations/' + corp_id ];
+		let corporation = cache_retrieve( '/v3/corporations/' + corp_id );
 		let html: string = html`
 			<table>
 			<tr><td colspan="2">
@@ -1065,7 +1065,7 @@ namespace eveui {
 
 			selected_element.attr( 'state', 'loading' );
 			cache_request( key ).done( function() {
-				let result = cache[ key ];
+				let result = cache_retrieve( key );
 				$.each( selected_element.attr( 'path' ).split( ',' ), function( index, path ) {
 					let value = object_value( result, path );
 					if ( value ) {
@@ -1154,6 +1154,8 @@ namespace eveui {
 
 		url = eveui_esi_endpoint(key + '/');
 
+		key = ( eveui_accept_language || navigator.languages[0] ) + key;
+
 		let dataType: string = jsonp ? 'jsonp' : 'json';
 
 		if ( typeof ( cache[ key ] ) === 'object' ) {
@@ -1212,6 +1214,11 @@ namespace eveui {
 				requests_pending--;
 			}
 		);
+	}
+
+	function cache_retrieve( key: string ): any {
+		key = ( eveui_accept_language || navigator.languages[0] ) + key;
+		return cache[key];
 	}
 
 	function clipboard_copy( element: JQuery ): void {
