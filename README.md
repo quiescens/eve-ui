@@ -1,6 +1,6 @@
 # eve-ui
 A mostly standalone EVE Online fit display script for inclusion in arbitrary websites.
-(Mostly standalone, requires jQuery and uses CCP's APIs but no other servers. Optionally uses https://o.smium.org/ to display stats for fittings.)
+(Mostly standalone, requires jQuery and uses CCP's APIs but no other servers.)
 Basic usage example:
 ```
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" defer></script>
@@ -30,6 +30,5 @@ The data- format is more flexible, but the href format can be useful for support
 
 Getting the DNA string for a fit is left as an exercise for the reader, see:
 * Pyfa
-* https://o.smium.org/
 * https://www.fuzzwork.co.uk/ships/dnagen.php
 * Copying ingame text from a notepad or chat also works if you know how

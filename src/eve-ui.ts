@@ -16,12 +16,11 @@ var eveui_fit_selector: string = eveui_fit_selector || '[href^="fitting:"],[data
 var eveui_item_selector: string = eveui_item_selector || '[href^="item:"],[data-itemid]';
 var eveui_char_selector: string = eveui_char_selector || '[href^="char:"],[data-charid]';
 var eveui_corp_selector: string = eveui_corp_selector || '[href^="corp:"],[data-corpid]';
-var eveui_use_osmium: boolean = eveui_use_osmium || false;
 var eveui_esi_endpoint: ( path: string ) => string = eveui_esi_endpoint || function( path ) {
 	return 'https://esi.evetech.net' + path;
 }
 var eveui_urlify: ( dna: string ) => string = eveui_urlify || function( dna ) { 
-	return 'https://o.smium.org/loadout/dna/' + encodeURI( dna ); 
+	return 'fitting:' + encodeURI( dna ); 
 }
 var eveui_imageserver: ( image_ref: string ) => string = eveui_imageserver || function( image_ref ) {
 	if ( image_ref.startsWith( 'Character' ) ) {
@@ -820,9 +819,6 @@ namespace eveui {
 		}
 
 		let html: string = html`
-			<span class="float_right">
-			  <eveui type="osmium" key="${ dna }" />
-			</span>
 			<table class="eveui_fit_table">
 			<thead>
 			<tr class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
@@ -1011,57 +1007,6 @@ namespace eveui {
 		return eveui_window;
 	}
 
-	export function format_fitstats( dna: string ): string {
-		let html: string = '';
-		let osmium_stats = cache[ 'osmium:' + dna ];
-		html = html`
-			<span class="eveui_fit_stats">
-				Defense<br />
-				<span class="eveui_indent">
-					${ Math.floor( osmium_stats.ship.ehpAndResonances.ehp.avg ) } EHP
-					<table>
-						<tr>
-							<td>
-							<td>em
-							<td>th
-							<td>ki
-							<td>ex
-						<tr>
-							<td>s
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.shield.resonance.em * 100 ) }
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.shield.resonance.thermal * 100 ) }
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.shield.resonance.kinetic * 100 ) }
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.shield.resonance.explosive * 100 ) }
-						<tr>
-							<td>a
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.armor.resonance.em * 100 ) }
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.armor.resonance.thermal * 100 ) }
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.armor.resonance.kinetic * 100 ) }
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.armor.resonance.explosive * 100 ) }
-						<tr>
-							<td>h
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.hull.resonance.em * 100 ) }
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.hull.resonance.thermal * 100 ) }
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.hull.resonance.kinetic * 100 ) }
-							<td>${ Math.round( 100 - osmium_stats.ship.ehpAndResonances.hull.resonance.explosive * 100 ) }
-					</table>
-				</span>
-				<hr />
-				Offense<br />
-				<span class="eveui_indent">
-					${ Math.round( osmium_stats.ship.damage.total.dps ) } Total DPS<br />
-					(${ Math.round( osmium_stats.ship.damage.drones.dps ) } Drone DPS)<br />
-				</span>
-				<hr />
-				Capacitor<br />
-				<span class="eveui_indent">
-					&Delta;${ ( osmium_stats.ship.capacitor.delta * -1000 ).toFixed( 2 )}/s<br />
-				</span>
-			</span>
-		`;
-		return html;
-	}
-
 	export function expand(): void {
 		// expands anything that has been marked for expansion, or all applicable if we are set to expand_all mode
 		autoexpand();
@@ -1113,20 +1058,6 @@ namespace eveui {
 	}
 
 	function autoexpand(): void {
-		// expands elements that require expansion even when not in expand mode
-		$( 'eveui[type=osmium]' ).filter( ':not([state])' ).each( function() {
-			let selected_element: JQuery = $( this );
-			let dna: string = selected_element.attr( 'key' );
-
-			if ( eveui_use_osmium ) {
-				selected_element.attr( 'state', 'loading' );
-				cache_request( 'osmium:' + dna ).done( function() {
-					selected_element.html( format_fitstats( dna ) );
-					selected_element.attr( 'state', 'done' );
-				});
-			}
-		});
-
 		// generic expansion of simple expressions
 		$( 'eveui:not([type])' ).filter( ':not([state])' ).each( function() {
 			let selected_element: JQuery = $( this );
@@ -1219,16 +1150,9 @@ namespace eveui {
 		let jsonp = false;
 		let custom_cache =
 								key.startsWith( '/v3/universe/types' )
-						 || key.startsWith( '/v1/dogma/attributes' )
-						 || key.startsWith( 'osmium' );
+						 || key.startsWith( '/v1/dogma/attributes' );
 
-		if ( key.startsWith( 'osmium:' ) ) {
-			jsonp = true;
-			let dna = key.split( ':', 2 )[1];
-			url = `https://o.smium.org/api/json/loadout/dna/attributes/loc:ship,a:ehpAndResonances,a:damage,a:outgoing,a:capacitor,a:tank?input=${ encodeURI( dna ) }`;
-		} else {
-			url = eveui_esi_endpoint(key + '/');
-		}
+		url = eveui_esi_endpoint(key + '/');
 
 		let dataType: string = jsonp ? 'jsonp' : 'json';
 
