@@ -5,7 +5,8 @@
 // ` used whenever interpolation is required
 'use strict';
 // config stuff ( can be overridden in a script block or js file of your choice )
-var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.9.3`;
+var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.9.4`;
+var eveui_accept_language = eveui_accept_language;
 var eveui_preload_initial = eveui_preload_initial || 50;
 var eveui_preload_interval = eveui_preload_interval || 10;
 var eveui_mode = eveui_mode || 'multi_window'; // expand_all, expand, multi_window, modal
@@ -14,9 +15,11 @@ var eveui_fit_selector = eveui_fit_selector || '[href^="fitting:"],[data-dna]';
 var eveui_item_selector = eveui_item_selector || '[href^="item:"],[data-itemid]';
 var eveui_char_selector = eveui_char_selector || '[href^="char:"],[data-charid]';
 var eveui_corp_selector = eveui_corp_selector || '[href^="corp:"],[data-corpid]';
-var eveui_use_osmium = eveui_use_osmium || false;
+var eveui_esi_endpoint = eveui_esi_endpoint || function (path) {
+    return 'https://esi.evetech.net' + path;
+};
 var eveui_urlify = eveui_urlify || function (dna) {
-    return 'https://o.smium.org/loadout/dna/' + encodeURI(dna);
+    return 'fitting:' + encodeURI(dna);
 };
 var eveui_imageserver = eveui_imageserver || function (image_ref) {
     if (image_ref.startsWith('Character')) {
@@ -259,11 +262,10 @@ var eveui;
             }
             let request_timestamp = performance.now();
             // get item ids that match input
-            $.ajax({
-                url: `https://esi.tech.ccp.is/v1/search/`,
+            ajax({
+                url: eveui_esi_endpoint(`/v1/search/`),
                 cache: true,
                 data: {
-                    user_agent: eveui_user_agent,
                     search: $(this).val(),
                     categories: 'inventorytype'
                 }
@@ -271,17 +273,15 @@ var eveui;
                 if (typeof (data.inventorytype) === 'undefined') {
                     return;
                 }
-                let arg = {
-                    user_agent: eveui_user_agent,
-                    ids: data.inventorytype.slice(0, 50)
-                };
                 // get names for required item ids
-                $.ajax({
-                    url: `https://esi.tech.ccp.is/v1/universe/names/`,
+                ajax({
+                    url: eveui_esi_endpoint(`/v1/universe/names/`),
                     cache: true,
                     method: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify(arg)
+                    data: JSON.stringify({
+                        ids: data.inventorytype.slice(0, 50)
+                    })
                 }).done(function (data) {
                     if (request_timestamp > itemselect_lastupdate) {
                         itemselect_lastupdate = request_timestamp;
@@ -367,12 +367,10 @@ var eveui;
     mark('event handlers set');
     function eve_version_query() {
         mark('eve version request');
-        $.ajax(`https://esi.tech.ccp.is/v1/status/`, {
+        ajax({
+            url: eveui_esi_endpoint(`/v1/status/`),
             dataType: 'json',
             cache: true,
-            data: {
-                user_agent: eveui_user_agent
-            }
         }).done(function (data) {
             eve_version = data.server_version;
             mark('eve version response ' + eve_version);
@@ -541,7 +539,7 @@ var eveui;
             }
             return html;
         }
-        let html = `<span class="float_right"><eveui type="osmium" key="${dna}" /></span><table class="eveui_fit_table"><thead><tr class="eveui_fit_header" data-eveui-itemid="${ship_id}"><td colspan="2"><img src="${eveui_imageserver('Type/' + ship_id + '_32')}" class="eveui_icon eveui_ship_icon" /><td><div class="eveui_rowcontent"><span class="eveui_startcopy" />[<a target="_blank" href="${eveui_urlify(dna)}">${ship.name}, ${eveui_name || ship.name}</a>]<br/></div><td class="eveui_right whitespace_nowrap nocopy" colspan="2">${eveui_allow_edit ? '<span class="eveui_icon eveui_edit_icon" />' : ''}<span class="eveui_icon eveui_copy_icon" /><span data-itemid="${ship_id}" class="eveui_icon eveui_info_icon" /><span class="eveui_icon eveui_edit" /><span class="eveui_icon eveui_edit" /><span class="eveui_icon eveui_more_icon eveui_edit" /></thead><tbody class="whitespace_nowrap">${item_rows(high_slots, ship.hiSlots)}<tr><td class="eveui_line_spacer">&nbsp;${item_rows(med_slots, ship.medSlots)}<tr><td class="eveui_line_spacer">&nbsp;${item_rows(low_slots, ship.lowSlots)}<tr><td class="eveui_line_spacer">&nbsp;${item_rows(rig_slots, ship.rigSlots)}<tr><td class="eveui_line_spacer">&nbsp;${item_rows(subsystem_slots, ship.maxSubSystems)}<tr><td class="eveui_line_spacer">&nbsp;${item_rows(other_slots)}</tbody></table><span class="eveui_endcopy" />`;
+        let html = `<table class="eveui_fit_table"><thead><tr class="eveui_fit_header" data-eveui-itemid="${ship_id}"><td colspan="2"><img src="${eveui_imageserver('Type/' + ship_id + '_32')}" class="eveui_icon eveui_ship_icon" /><td><div class="eveui_rowcontent"><span class="eveui_startcopy" />[<a target="_blank" href="${eveui_urlify(dna)}">${ship.name}, ${eveui_name || ship.name}</a>]<br/></div><td class="eveui_right whitespace_nowrap nocopy" colspan="2">${eveui_allow_edit ? '<span class="eveui_icon eveui_edit_icon" />' : ''}<span class="eveui_icon eveui_copy_icon" /><span data-itemid="${ship_id}" class="eveui_icon eveui_info_icon" /><span class="eveui_icon eveui_edit" /><span class="eveui_icon eveui_edit" /><span class="eveui_icon eveui_more_icon eveui_edit" /></thead><tbody class="whitespace_nowrap">${item_rows(high_slots, ship.hiSlots)}<tr><td class="eveui_line_spacer">&nbsp;${item_rows(med_slots, ship.medSlots)}<tr><td class="eveui_line_spacer">&nbsp;${item_rows(low_slots, ship.lowSlots)}<tr><td class="eveui_line_spacer">&nbsp;${item_rows(rig_slots, ship.rigSlots)}<tr><td class="eveui_line_spacer">&nbsp;${item_rows(subsystem_slots, ship.maxSubSystems)}<tr><td class="eveui_line_spacer">&nbsp;${item_rows(other_slots)}</tbody></table><span class="eveui_endcopy" />`;
         return html;
     }
     eveui.format_fit = format_fit;
@@ -654,13 +652,6 @@ var eveui;
         return eveui_window;
     }
     eveui.corp_window = corp_window;
-    function format_fitstats(dna) {
-        let html = '';
-        let osmium_stats = eveui.cache['osmium:' + dna];
-        html = `<span class="eveui_fit_stats">Defense<br /><span class="eveui_indent">${Math.floor(osmium_stats.ship.ehpAndResonances.ehp.avg)} EHP<table><tr><td><td>em<td>th<td>ki<td>ex<tr><td>s<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.shield.resonance.em * 100)}<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.shield.resonance.thermal * 100)}<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.shield.resonance.kinetic * 100)}<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.shield.resonance.explosive * 100)}<tr><td>a<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.armor.resonance.em * 100)}<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.armor.resonance.thermal * 100)}<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.armor.resonance.kinetic * 100)}<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.armor.resonance.explosive * 100)}<tr><td>h<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.hull.resonance.em * 100)}<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.hull.resonance.thermal * 100)}<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.hull.resonance.kinetic * 100)}<td>${Math.round(100 - osmium_stats.ship.ehpAndResonances.hull.resonance.explosive * 100)}</table></span><hr />Offense<br /><span class="eveui_indent">${Math.round(osmium_stats.ship.damage.total.dps)} Total DPS<br />(${Math.round(osmium_stats.ship.damage.drones.dps)} Drone DPS)<br /></span><hr />Capacitor<br /><span class="eveui_indent">&Delta;${(osmium_stats.ship.capacitor.delta * -1000).toFixed(2)}/s<br /></span></span>`;
-        return html;
-    }
-    eveui.format_fitstats = format_fitstats;
     function expand() {
         // expands anything that has been marked for expansion, or all applicable if we are set to expand_all mode
         autoexpand();
@@ -710,18 +701,6 @@ var eveui;
     }
     eveui.expand = expand;
     function autoexpand() {
-        // expands elements that require expansion even when not in expand mode
-        $('eveui[type=osmium]').filter(':not([state])').each(function () {
-            let selected_element = $(this);
-            let dna = selected_element.attr('key');
-            if (eveui_use_osmium) {
-                selected_element.attr('state', 'loading');
-                cache_request('osmium:' + dna).done(function () {
-                    selected_element.html(format_fitstats(dna));
-                    selected_element.attr('state', 'done');
-                });
-            }
-        });
         // generic expansion of simple expressions
         $('eveui:not([type])').filter(':not([state])').each(function () {
             let selected_element = $(this);
@@ -773,6 +752,18 @@ var eveui;
         });
         return value;
     }
+    function ajax(settings) {
+        let my_settings = {
+            headers: {
+                'Accept-Language': eveui_accept_language,
+            },
+            data: {
+                user_agent: eveui_user_agent,
+            },
+        };
+        $.extend(true, my_settings, settings);
+        return $.ajax(my_settings);
+    }
     function cache_items(dna) {
         // caches all items required to process the specified fit
         let pending = [];
@@ -791,16 +782,8 @@ var eveui;
         let url;
         let jsonp = false;
         let custom_cache = key.startsWith('/v3/universe/types')
-            || key.startsWith('/v1/dogma/attributes')
-            || key.startsWith('osmium');
-        if (key.startsWith('osmium:')) {
-            jsonp = true;
-            let dna = key.split(':', 2)[1];
-            url = `https://o.smium.org/api/json/loadout/dna/attributes/loc:ship,a:ehpAndResonances,a:damage,a:outgoing,a:capacitor,a:tank?input=${encodeURI(dna)}`;
-        }
-        else {
-            url = 'https://esi.tech.ccp.is' + key + '/';
-        }
+            || key.startsWith('/v1/dogma/attributes');
+        url = eveui_esi_endpoint(key + '/');
         let dataType = jsonp ? 'jsonp' : 'json';
         if (typeof (eveui.cache[key]) === 'object') {
             if (typeof (eveui.cache[key].promise) === 'function') {
@@ -816,10 +799,8 @@ var eveui;
             return $.Deferred().reject();
         }
         requests_pending++;
-        return eveui.cache[key] = $.ajax(url, {
-            data: {
-                user_agent: eveui_user_agent,
-            },
+        return eveui.cache[key] = ajax({
+            url: url,
             dataType: dataType,
             cache: !custom_cache,
         }).done(function (data) {
