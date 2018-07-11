@@ -12,6 +12,7 @@ var eveui_preload_initial: number = eveui_preload_initial || 50;
 var eveui_preload_interval: number = eveui_preload_interval || 10;
 var eveui_mode: string = eveui_mode || 'multi_window'; // expand_all, expand, multi_window, modal
 var eveui_allow_edit: boolean = eveui_allow_edit || false;
+var eveui_show_fitstats: boolean = eveui_show_fitstats || true;
 var eveui_fit_selector: string = eveui_fit_selector || '[href^="fitting:"],[data-dna]';
 var eveui_item_selector: string = eveui_item_selector || '[href^="item:"],[data-itemid]';
 var eveui_char_selector: string = eveui_char_selector || '[href^="char:"],[data-charid]';
@@ -107,7 +108,7 @@ var eveui_style: string = eveui_style || '<style>' + css`
 			align-items: center;
 		}
 		.eveui_fit_stats {
-		  background: #eee;
+			background: #eee;
 			white-space: nowrap;
 			position: absolute;
 			margin-left: 19px;
@@ -190,7 +191,7 @@ var eveui_style: string = eveui_style || '<style>' + css`
 			float: right;
 		}
 		.eveui_indent {
-		  margin-left: 0.5em;
+			margin-left: 0.5em;
 			display: inline-block;
 		}
 		/* eveui_css_end */
@@ -585,7 +586,7 @@ namespace eveui {
 	function eve_version_query(): void {
 		mark( 'eve version request' );
 		ajax({
-			  url: eveui_esi_endpoint(`/v1/status/`),
+				url: eveui_esi_endpoint(`/v1/status/`),
 				dataType: 'json',
 				cache: true,
 			}
@@ -615,27 +616,11 @@ namespace eveui {
 								cache[ value.path ] = value;
 							});
 
-							// expand fits where applicable
-							$( document ).ready( function() {
-								mark( 'expanding fits' );
-								expand();
-							});
-
-							// start preload timer
-							preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
-							mark( 'preload timer set' );
+							$( document ).ready( eveui_document_ready );
 						}
 					}
 				} else { // indexedDB not available
-					// expand fits where applicable
-					$( document ).ready( function() {
-						mark( 'expanding fits' );
-						expand();
-					});
-
-					// start preload timer
-					preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
-					mark( 'preload timer set' );
+					$( document ).ready( eveui_document_ready );
 				}
 				setInterval( autoexpand, 100 );
 			}
@@ -647,6 +632,18 @@ namespace eveui {
 		);
 	}
 	eve_version_query();
+
+	function eveui_document_ready() {
+		// expand fits where applicable
+		mark( 'expanding fits' );
+		expand();
+
+		cache_request( '/v1/markets/prices' );
+
+		// start preload timer
+		preload_timer = setTimeout( lazy_preload, eveui_preload_interval );
+		mark( 'preload timer set' );
+	}
 
 	function new_window( title = '&nbsp;' ): JQuery {
 		let eveui_window: JQuery = $( html`
@@ -819,6 +816,9 @@ namespace eveui {
 		}
 
 		let html: string = html`
+			<span class="float_right">
+				<eveui type="fit_stats" key="${ dna }" />
+			</span>
 			<table class="eveui_fit_table">
 			<thead>
 			<tr class="eveui_fit_header" data-eveui-itemid="${ ship_id }">
@@ -882,6 +882,9 @@ namespace eveui {
 			<table class="whitespace_nowrap">
 			<tr><td>${ item.name }
 			`;
+		html += html`
+			<tr><td>Approx price<td>${ format_number( market_retrieve( item_id ).average_price ) }
+		`;
 		for ( let i in item.dogma_attributes ) {
 			let attr = item.dogma_attributes[i];
 			html += html`
@@ -1007,6 +1010,53 @@ namespace eveui {
 		return eveui_window;
 	}
 
+	export function format_fitstats( dna: string ): string {
+		let html: string = '';
+		let items: Array<string> = dna.split( ':' );
+		let total_price: number = 0;
+		
+		for ( let i in items ) {
+			if ( items[i].length === 0 ) {
+				continue;
+			}
+			let match: Array<string> = items[i].split( ';' );
+			let item_id: string = match[0];
+			let quantity: number = parseInt( match[1] ) || 1;
+
+			total_price += $.grep( cache_retrieve( '/v1/markets/prices' ), function(v) {
+					return v['type_id'] == item_id;
+				})[0]['average_price'] * quantity;
+
+		}
+
+		html = html`
+			<span class="eveui_fit_stats">
+				Approx. total price: ${ format_number( total_price ) }
+			</span>
+		`;
+		return html;
+	}
+
+	function format_number( num: number ): string {
+		if  ( isNaN( num ) ) {
+			return 'n/a';
+		}
+		let suffix: string;
+		if ( num > 1000000000 ) {
+			suffix = 'B';
+			num /= 1000000000;
+		}
+		if ( num > 1000000 ) {
+			suffix = 'M';
+			num /= 1000000;
+		}
+		if ( num > 1000 ) {
+			suffix = 'K';
+			num /= 1000;
+		}
+		return `${num.toFixed(2)}${suffix}`;
+	}
+
 	export function expand(): void {
 		// expands anything that has been marked for expansion, or all applicable if we are set to expand_all mode
 		autoexpand();
@@ -1058,6 +1108,20 @@ namespace eveui {
 	}
 
 	function autoexpand(): void {
+		// expands elements that require expansion even when not in expand mode
+		$( 'eveui[type=fit_stats]' ).filter( ':not([state])' ).each( function() {
+			let selected_element: JQuery = $( this );
+			let dna: string = selected_element.attr( 'key' );
+
+			if ( eveui_show_fitstats ) {
+				cache_request( '/v1/markets/prices' ).done( function() {
+					selected_element.html( format_fitstats( dna ) );
+				});
+			}
+
+			selected_element.attr( 'state', 'done' );
+		});
+
 		// generic expansion of simple expressions
 		$( 'eveui:not([type])' ).filter( ':not([state])' ).each( function() {
 			let selected_element: JQuery = $( this );
@@ -1168,7 +1232,7 @@ namespace eveui {
 			}
 		}
 		if ( errors_lastminute > 50 ) {
-		  return $.Deferred().reject();
+			return $.Deferred().reject();
 		}
 		requests_pending++;
 		return cache[ key ] = ajax({
@@ -1219,6 +1283,12 @@ namespace eveui {
 	function cache_retrieve( key: string ): any {
 		key = ( eveui_accept_language || navigator.languages[0] ) + key;
 		return cache[key];
+	}
+
+	function market_retrieve( type_id: string ): any {
+		return $.grep( cache_retrieve( '/v1/markets/prices' ), function(v) {
+			return v['type_id'] == type_id 
+		} )[0];
 	}
 
 	function clipboard_copy( element: JQuery ): void {
