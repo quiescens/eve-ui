@@ -12,7 +12,7 @@ sub html {
         $str =~ s/\n//g;
         return "`$str`";
 }
-$file =~ s/html`(.+?)`/html($1)/egs;
+$file =~ s#/\*m_html\*/`(.+?)`#html($1)#egs;
 
 sub css {
         my $str = shift;
@@ -27,7 +27,7 @@ sub css {
 
         return "`$str`";
 }
-$file =~ s/css`(.+?)`/css($1)/egs;
+$file =~ s#/\*m_css\*/`(.+?)`#css($1)#egs;
 
 sub version {
         my $version = "";
@@ -42,6 +42,6 @@ sub version {
 
         return "`$version`";
 }
-$file =~ s/version``/version()/egs;
+$file =~ s#/\*m_version\*/``#version()#egs;
 
 print $file;

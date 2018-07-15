@@ -6,7 +6,7 @@
 'use strict';
 
 // config stuff ( can be overridden in a script block or js file of your choice )
-var eveui_user_agent: string = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + version``;
+var eveui_user_agent: string = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + /*m_version*/``;
 var eveui_accept_language: string = eveui_accept_language;
 var eveui_preload_initial: number = eveui_preload_initial || 50;
 var eveui_preload_interval: number = eveui_preload_interval || 10;
@@ -30,7 +30,7 @@ var eveui_imageserver: ( image_ref: string ) => string = eveui_imageserver || fu
 	return 'https://imageserver.eveonline.com/' + encodeURI( image_ref ) + '.png'; 
 }
 /* icons from https://github.com/primer/octicons */
-var eveui_style: string = eveui_style || '<style>' + css`
+var eveui_style: string = eveui_style || '<style>' + /*m_css*/`
 		/* eveui_css_start */
 		.eveui_window {
 			position: fixed;
@@ -392,7 +392,7 @@ namespace eveui {
 		}
 		$( '.eveui_itemselect' ).remove();
 
-		let eveui_itemselect = $( html`
+		let eveui_itemselect = $( /*m_html*/`
 			<span class="eveui_itemselect">
 				<input type="text" list="eveui_itemselect" placeholder="${ $( this ).closest( '[data-eveui-itemid]' ).find( '.eveui_rowcontent' ).text() }" />
 				<datalist id="eveui_itemselect" />
@@ -428,7 +428,7 @@ namespace eveui {
 					mark( 'marketgroup cached' );
 					data.types.sort( function( a,b ) { return cache_retrieve( '/v3/universe/types/' + a ).name.localeCompare( cache_retrieve( '/v3/universe/types/' + b ).name ) } );
 					for ( let i of data.types ) {
-						datalist.append( html`
+						datalist.append( /*m_html*/`
 							<option label="${ cache_retrieve( '/v3/universe/types/' + i ).name }">(${ i })</option>
 							` );
 					}
@@ -504,7 +504,7 @@ namespace eveui {
 					data.sort( function( a,b ) { return a.name.localeCompare( b.name ) } );
 					datalist.empty();
 					for ( let i in data ) {
-						datalist.append( html`
+						datalist.append( /*m_html*/`
 							<option label="${ data[i].name }">(${ data[i].id })</option>
 							` );
 					}
@@ -646,7 +646,7 @@ namespace eveui {
 	}
 
 	function new_window( title = '&nbsp;' ): JQuery {
-		let eveui_window: JQuery = $( html`
+		let eveui_window: JQuery = $( /*m_html*/`
 			<span class="eveui_window">
 				<div class="eveui_title">${ title }</div>
 				<span class="eveui_icon eveui_close_icon" />
@@ -767,19 +767,19 @@ namespace eveui {
 
 				slots_used += fittings[ item_id ];
 				if ( slots_available ) {
-					html += html`
+					html += /*m_html*/`
 						<tr class="copy_only">
 						<td>
 							${ ( item.name + '<br />' ).repeat(fittings[ item_id ] ) }
 						`;
 				} else {
-					html += html`
+					html += /*m_html*/`
 						<tr class="copy_only">
 						<td>
 							${ item.name } x${ fittings[ item_id ] }<br />
 						`;
 				}
-				html += html`
+				html += /*m_html*/`
 					<tr class="nocopy" data-eveui-itemid="${ item_id }">
 						<td><img src="${ eveui_imageserver( 'Type/' + item_id + '_32' ) }" class="eveui_icon eveui_item_icon" />
 						<td class="eveui_right">${ fittings[ item_id ] }
@@ -794,7 +794,7 @@ namespace eveui {
 
 			if ( typeof ( slots_available ) !== 'undefined' ) {
 				if ( slots_available > slots_used ) {
-					html += html`
+					html += /*m_html*/`
 						<tr class="nocopy">
 							<td class="eveui_icon eveui_item_icon" />
 							<td class="eveui_right whitespace_nowrap">${ slots_available - slots_used }
@@ -803,7 +803,7 @@ namespace eveui {
 							`;
 				}
 				if ( slots_used > slots_available ) {
-					html += html`
+					html += /*m_html*/`
 						<tr class="nocopy">
 							<td class="eveui_icon eveui_item_icon" />
 							<td class="eveui_right">${ slots_available - slots_used }
@@ -815,7 +815,7 @@ namespace eveui {
 			return html;
 		}
 
-		let html: string = html`
+		let html: string = /*m_html*/`
 			<span class="float_right">
 				<eveui type="fit_stats" key="${ dna }" />
 			</span>
@@ -878,16 +878,17 @@ namespace eveui {
 
 	export function format_item( item_id: string ): string {
 		let item = cache_retrieve( '/v3/universe/types/' + item_id );
-		let html: string = html`
+		let html: string = /*m_html*/`
 			<table class="whitespace_nowrap">
 			<tr><td>${ item.name }
 			`;
-		html += html`
+		html += /*m_html*/`
 			<tr><td>Approx price<td>${ format_number( market_retrieve( item_id ).average_price ) }
+			<tr><td>&nbsp;
 		`;
 		for ( let i in item.dogma_attributes ) {
 			let attr = item.dogma_attributes[i];
-			html += html`
+			html += /*m_html*/`
 				<tr>
 				<td><eveui key="/v1/dogma/attributes/${ attr.attribute_id }" path="display_name,name">attribute:${ attr.attribute_id }</eveui>
 				<td> ${ attr.value }
@@ -926,7 +927,7 @@ namespace eveui {
 
 	export function format_char( char_id: string ): string {
 		let character = cache_retrieve( '/v4/characters/' + char_id );
-		let html: string = html`
+		let html: string = /*m_html*/`
 			<table>
 			<tr><td colspan="2">
 			<img class="float_left" src="${ eveui_imageserver( 'Character/' + char_id + '_128' ) }" height="128" width="128" />
@@ -969,7 +970,7 @@ namespace eveui {
 
 	export function format_corp( corp_id: string ): string {
 		let corporation = cache_retrieve( '/v3/corporations/' + corp_id );
-		let html: string = html`
+		let html: string = /*m_html*/`
 			<table>
 			<tr><td colspan="2">
 			<img class="float_left" src="${ eveui_imageserver( 'Corporation/' + corp_id + '_128' ) }" height="128" width="128" />
@@ -1029,7 +1030,7 @@ namespace eveui {
 
 		}
 
-		html = html`
+		html = /*m_html*/`
 			<span class="eveui_fit_stats">
 				Approx. total price: ${ format_number( total_price ) }
 			</span>
