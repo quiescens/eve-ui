@@ -75,7 +75,7 @@
 			align-items: center;
 		}
 		.eveui_fit_stats {
-		  background: #eee;
+			background: #eee;
 			white-space: nowrap;
 			position: absolute;
 			margin-left: 19px;
@@ -158,7 +158,7 @@
 			float: right;
 		}
 		.eveui_indent {
-		  margin-left: 0.5em;
+			margin-left: 0.5em;
 			display: inline-block;
 		}
 		/* eveui_css_end */
