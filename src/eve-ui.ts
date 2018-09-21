@@ -12,7 +12,7 @@ var eveui_preload_initial: number = eveui_preload_initial || 50;
 var eveui_preload_interval: number = eveui_preload_interval || 10;
 var eveui_mode: string = eveui_mode || 'multi_window'; // expand_all, expand, multi_window, modal
 var eveui_allow_edit: boolean = eveui_allow_edit || false;
-var eveui_show_fitstats: boolean = eveui_show_fitstats || true;
+var eveui_show_fitstats: boolean = eveui_show_fitstats || fals;
 var eveui_fit_selector: string = eveui_fit_selector || '[href^="fitting:"],[data-dna]';
 var eveui_item_selector: string = eveui_item_selector || '[href^="item:"],[data-itemid]';
 var eveui_char_selector: string = eveui_char_selector || '[href^="char:"],[data-charid]';
