@@ -5,13 +5,13 @@
 // ` used whenever interpolation is required
 'use strict';
 // config stuff ( can be overridden in a script block or js file of your choice )
-var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.9.6`;
+var eveui_user_agent = eveui_user_agent || 'For source website, see referrer. For library, see https://github.com/quiescens/eve-ui/ r:' + `0.9.7`;
 var eveui_accept_language = eveui_accept_language;
 var eveui_preload_initial = eveui_preload_initial || 50;
 var eveui_preload_interval = eveui_preload_interval || 10;
 var eveui_mode = eveui_mode || 'multi_window'; // expand_all, expand, multi_window, modal
 var eveui_allow_edit = eveui_allow_edit || false;
-var eveui_show_fitstats = eveui_show_fitstats || true;
+var eveui_show_fitstats = eveui_show_fitstats || false;
 var eveui_fit_selector = eveui_fit_selector || '[href^="fitting:"],[data-dna]';
 var eveui_item_selector = eveui_item_selector || '[href^="item:"],[data-itemid]';
 var eveui_char_selector = eveui_char_selector || '[href^="char:"],[data-charid]';
