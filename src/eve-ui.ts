@@ -196,7 +196,6 @@ var eveui_style: string = eveui_style || '<style>' + /*m_css*/`
 		}
 		/* eveui_css_end */
 ` + '</style>';
-
 namespace eveui {
 	mark( 'script start' );
 
@@ -215,6 +214,7 @@ namespace eveui {
 	let requests_pending: number = 0;
 	let itemselect_lastupdate: number = 0;
 	let errors_lastminute: number = 0;
+	let stacking = [ 1, 0.8691, 0.5706, 0.2830, 0.1060, 0.0300 ];
 
 	let db;
 
@@ -680,6 +680,7 @@ namespace eveui {
 		let rig_slots = {};
 		let subsystem_slots = {};
 		let other_slots = {};
+		let cargo_slots = {};
 
 		let items: Array<string> = dna.split( ':' );
 
@@ -718,11 +719,19 @@ namespace eveui {
 			let match: Array<string> = items[i].split( ';' );
 			let item_id: string = match[0];
 			let quantity: number = parseInt( match[1] );
+			if (item_id.endsWith('_')) {
+				item_id = item_id.slice(0, -1);
+				cargo_slots[ item_id ] = quantity;
+				continue;
+			}
 			let item = cache_retrieve( '/v3/universe/types/' + item_id );
 
 			for ( let j in item.dogma_attributes ) {
 				let attr = item.dogma_attributes[j];
 				switch( attr.attribute_id ) {
+					case 1272:
+						other_slots[ item_id ] = quantity;
+						continue outer;
 					case 1374: // hiSlotModifier
 						ship.hiSlots += attr.value;
 						break;
@@ -754,7 +763,7 @@ namespace eveui {
 						continue outer;
 				}
 			}
-			other_slots[ item_id ] = quantity;
+			cargo_slots[ item_id ] = quantity;
 		}
 
 		function item_rows( fittings, slots_available?: number ) {
@@ -850,6 +859,8 @@ namespace eveui {
 			${ item_rows( subsystem_slots, ship.maxSubSystems ) }
 			<tr><td class="eveui_line_spacer">&nbsp;
 			${ item_rows( other_slots ) }
+			<tr><td class="eveui_line_spacer">&nbsp;
+			${ item_rows( cargo_slots ) }
 			</tbody>
 			</table>
 			<span class="eveui_endcopy" />
@@ -879,8 +890,10 @@ namespace eveui {
 	export function format_item( item_id: string ): string {
 		let item = cache_retrieve( '/v3/universe/types/' + item_id );
 		let html: string = /*m_html*/`
+		  <img src="${ eveui_imageserver( 'Type/' + item_id + '_64' ) }" class="float_right" />
+			${ item.name }<br />
+			${ item.description }<hr />
 			<table class="whitespace_nowrap">
-			<tr><td>${ item.name }
 			`;
 		html += /*m_html*/`
 			<tr><td>Approx price<td>${ format_number( market_retrieve( item_id ).average_price ) }
@@ -1011,8 +1024,22 @@ namespace eveui {
 		return eveui_window;
 	}
 
+	// i am going for clarity and extendability here more so than efficiency
 	export function format_fitstats( dna: string ): string {
 		let html: string = '';
+
+		html = /*m_html*/`
+			<span class="eveui_fit_stats">
+				Approx. total price: ${ format_number( calculate_fit_price( dna ) ) }<br />
+				Gun DPS: ${ format_number( calculate_gun_dps( dna ) ) }<br />
+				Missile DPS: ?<br />
+				Drone DPS: ?<br />
+			</span>
+		`;
+		return html;
+	}
+
+	function calculate_fit_price( dna: string ): number {
 		let items: Array<string> = dna.split( ':' );
 		let total_price: number = 0;
 		
@@ -1027,22 +1054,109 @@ namespace eveui {
 			total_price += $.grep( cache_retrieve( '/v1/markets/prices' ), function(v) {
 					return v['type_id'] == item_id;
 				})[0]['average_price'] * quantity;
-
 		}
+		return total_price;
+	}
 
-		html = /*m_html*/`
-			<span class="eveui_fit_stats">
-				Approx. total price: ${ format_number( total_price ) }
-			</span>
-		`;
-		return html;
+	function calculate_gun_dps( dna: string ): number {
+		let total_dps:number = 0;
+		let items: Array<string> = dna.replace(/:+$/,'').split( ':' );
+
+		for ( let i in items ) {
+			let match: Array<string> = items[i].split( ';' );
+			let item_id: string = match[0];
+			let quantity: number = parseInt( match[1] ) || 1;
+
+			let item = cache_retrieve( '/v3/universe/types/' + item_id );
+			let attr = {};
+			for ( let j in item.dogma_attributes ) {
+				attr[ item.dogma_attributes[j]['attribute_id'] ] = item.dogma_attributes[j]['value'];
+			}
+
+			let groups =  {
+				53: 'energy',
+				55: 'projectile',
+				74: 'hybrid',
+			};
+			if ( item.group_id in groups ) {
+				let base_dmg = 0;
+				let base_dmg_mult = attr[64];
+				let base_rof = attr[51] / 1000;
+				let dmg_mult = [];
+				let rof_mult = [];
+				let ammo_groups = {};
+				ammo_groups[ attr[604] ] = 1;
+				ammo_groups[ attr[605] ] = 1;
+
+				// check all items for any relevant modifiers
+				for ( let j in items ) {
+					let match: Array<string> = items[j].split( ';' );
+					let item_id: string = match[0];
+					let quantity: number = parseInt( match[1] ) || 1;
+					let item = cache_retrieve( '/v3/universe/types/' + item_id );
+					let attr = {};
+					for ( let k in item.dogma_attributes ) {
+						attr[ item.dogma_attributes[k]['attribute_id'] ] = item.dogma_attributes[k]['value'];
+					}
+
+					// find highest damage ammo
+					if ( item.group_id in ammo_groups ) {
+						let total_dmg = 0;
+						total_dmg += attr[114];
+						total_dmg += attr[116];
+						total_dmg += attr[117];
+						total_dmg += attr[118];
+						if ( total_dmg > base_dmg ) {
+							base_dmg = total_dmg;
+						}
+					}
+
+					// rof
+					if ( 204 in attr ) {
+						for ( let k=0; k<quantity; k++ ) {
+							rof_mult.push( attr[204] );
+						}
+					}
+					
+					// dmg_mult
+					switch( item.group_id ) {
+						case 302:
+							if ( 64 in attr ) {
+								for ( let k=0; k<quantity; k++ ) {
+									dmg_mult.push( attr[64] );
+								}
+							}
+							break;
+					}
+				}
+
+				// skills, we are only going to handle level 5 skills, we are a basic fit display system, not an actually fitting program
+				base_rof *= .9; // gunnery
+				base_rof *= .8; // rapid firing
+				rof_mult.sort( function(a,b) { return a-b } );
+				for ( let i in rof_mult ) {
+					base_rof *= 1 - (1 - rof_mult[i]) * stacking[i];
+				}
+				base_dmg_mult *= 1.15; // surgical strike
+				base_dmg_mult *= 1.25; // turret skill
+				base_dmg_mult *= 1.1; // turret spec TODO: only for guns that require t2 skill
+				base_dmg_mult *= 1.375 // ship skill TODO: actual ship skill
+				dmg_mult.sort( function(a,b) { return b-a } );
+				for ( let i in dmg_mult ) {
+					base_dmg_mult *= 1 + (dmg_mult[i] - 1) * stacking[i];
+				}
+
+				total_dps += ( base_dmg * base_dmg_mult ) / ( base_rof ) * quantity;
+			}
+		}
+		return total_dps;
 	}
 
 	function format_number( num: number ): string {
 		if  ( isNaN( num ) ) {
 			return 'n/a';
 		}
-		let suffix: string;
+		let suffix: string = '';
 		if ( num > 1000000000 ) {
 			suffix = 'B';
 			num /= 1000000000;
@@ -1203,6 +1317,9 @@ namespace eveui {
 			}
 			let match: Array<string> = items[item].split( ';' );
 			let item_id: string = match[0];
+			if (item_id.endsWith('_')) {
+				item_id = item_id.slice(0, -1);
+			}
 
 			pending.push( cache_request( '/v3/universe/types/' + item_id ) );
 		}
