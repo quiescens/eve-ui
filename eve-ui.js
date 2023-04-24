@@ -605,7 +605,7 @@ var eveui;
     eveui.item_window = item_window;
     function format_char(char_id) {
         let character = cache_retrieve('/v5/characters/' + char_id);
-        let html = `<table><tr><td colspan="2"><img class="float_left" src="${eveui_imageserver('Character/' + char_id + '_128')}" height="128" width="128" />${character.name}<hr /><img class="float_left" src="${eveui_imageserver('Corporation/' + character.corporation_id + '_64')}" height="64" width="64" />Member of <a href="corp:${character.corporation_id}"><eveui key="/v3/corporations/${character.corporation_id}" path="corporation_name">${character.corporation_id}</eveui></a><tr><td>Bio:<td>${character.description.replace(/<font[^>]+>/g, '<font>')}</table>`;
+        let html = `<table><tr><td colspan="2"><img class="float_left" src="${eveui_imageserver('Character/' + char_id + '_128')}" height="128" width="128" />${character.name}<hr /><img class="float_left" src="${eveui_imageserver('Corporation/' + character.corporation_id + '_64')}" height="64" width="64" />Member of <a href="corp:${character.corporation_id}"><eveui key="/v5/corporations/${character.corporation_id}" path="corporation_name">${character.corporation_id}</eveui></a><tr><td>Bio:<td>${character.description.replace(/<font[^>]+>/g, '<font>')}</table>`;
         return html;
     }
     eveui.format_char = format_char;
@@ -632,8 +632,8 @@ var eveui;
     }
     eveui.char_window = char_window;
     function format_corp(corp_id) {
-        let corporation = cache_retrieve('/v3/corporations/' + corp_id);
-        let html = `<table><tr><td colspan="2"><img class="float_left" src="${eveui_imageserver('Corporation/' + corp_id + '_128')}" height="128" width="128" />${corporation.corporation_name}<hr /><img class="float_left" src="${eveui_imageserver('Alliance/' + corporation.alliance_id + '_64')}" height="64" width="64" />Member of <eveui key="/v2/alliances/${corporation.alliance_id}" path="alliance_name">${corporation.alliance_id}</eveui><tr><td>Bio:<td>${corporation.corporation_description.replace(/<font[^>]+>/g, '<font>')}</table>`;
+        let corporation = cache_retrieve('/v5/corporations/' + corp_id);
+        let html = `<table><tr><td colspan="2"><img class="float_left" src="${eveui_imageserver('Corporation/' + corp_id + '_128')}" height="128" width="128" />${corporation.corporation_name}<hr /><img class="float_left" src="${eveui_imageserver('Alliance/' + corporation.alliance_id + '_64')}" height="64" width="64" />Member of <eveui key="/v4/alliances/${corporation.alliance_id}" path="alliance_name">${corporation.alliance_id}</eveui><tr><td>Bio:<td>${corporation.corporation_description.replace(/<font[^>]+>/g, '<font>')}</table>`;
         return html;
     }
     eveui.format_corp = format_corp;
@@ -648,7 +648,7 @@ var eveui;
         }
         mark('corp window created');
         // load required corps and set callback to display
-        cache_request('/v3/corporations/' + corp_id).done(function () {
+        cache_request('/v5/corporations/' + corp_id).done(function () {
             eveui_window.find('.eveui_content').html(format_corp(corp_id));
             $(window).trigger('resize');
             mark('corp window populated');

@@ -1,4 +1,6 @@
 # eve-ui
+NOTE: I am no longer actively working on this project. Consider using a fork or looking for another library.
+
 A mostly standalone EVE Online fit display script for inclusion in arbitrary websites.
 (Mostly standalone, requires jQuery and uses CCP's APIs but no other servers.)
 Basic usage example:
