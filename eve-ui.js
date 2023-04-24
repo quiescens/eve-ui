@@ -604,7 +604,7 @@ var eveui;
     }
     eveui.item_window = item_window;
     function format_char(char_id) {
-        let character = cache_retrieve('/v4/characters/' + char_id);
+        let character = cache_retrieve('/v5/characters/' + char_id);
         let html = `<table><tr><td colspan="2"><img class="float_left" src="${eveui_imageserver('Character/' + char_id + '_128')}" height="128" width="128" />${character.name}<hr /><img class="float_left" src="${eveui_imageserver('Corporation/' + character.corporation_id + '_64')}" height="64" width="64" />Member of <a href="corp:${character.corporation_id}"><eveui key="/v3/corporations/${character.corporation_id}" path="corporation_name">${character.corporation_id}</eveui></a><tr><td>Bio:<td>${character.description.replace(/<font[^>]+>/g, '<font>')}</table>`;
         return html;
     }
@@ -620,7 +620,7 @@ var eveui;
         }
         mark('char window created');
         // load required chars and set callback to display
-        cache_request('/v4/characters/' + char_id).done(function () {
+        cache_request('/v5/characters/' + char_id).done(function () {
             eveui_window.find('.eveui_content').html(format_char(char_id));
             $(window).trigger('resize');
             mark('char window populated');
@@ -826,7 +826,7 @@ var eveui;
                 return;
             }
             let char_id = selected_element.attr('data-charid') || this.href.substring(this.href.indexOf(':') + 1);
-            cache_request('/v4/characters/' + char_id).done(function () {
+            cache_request('/v5/characters/' + char_id).done(function () {
                 selected_element.replaceWith(`<span class="eveui_content eveui_char">${format_char(char_id)}</span>`);
                 mark('char window expanded');
             });
